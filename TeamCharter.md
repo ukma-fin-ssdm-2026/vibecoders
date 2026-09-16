@@ -56,5 +56,5 @@
 - [ ] Ігор (GitHub: @reonor)
 - [ ] Катерина (GitHub: @katespys2006)
 - [ ] Софія(GitHub: @Sonafi3)
-- [ ] Ірина (GitHub: @iraholdynska)
+- [x] Ірина (GitHub: @iraholdynska)
 
