@@ -55,6 +55,6 @@
 ## 9. Підписи
 - [ ] Ігор (GitHub: @reonor)
 - [ ] Катерина (GitHub: @katespys2006)
-- [ ] Софія(GitHub: @Sonafi3)
+- [X] Софія(GitHub: @Sonafi3)
 - [x] Ірина (GitHub: @iraholdynska)
 
