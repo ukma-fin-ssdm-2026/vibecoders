@@ -1,6 +1,6 @@
 # Організатор Настільних Рольових Ігор (НРІ)
 
-[CI Badge Placeholder]
+[![CI Test](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/workflows/ci.yml/badge.svg)](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/workflows/ci.yml)
 
 Вітаємо у репозиторії команди **VIBECODERS**! 
 Цей проєкт розробляється в рамках курсу "Методи розробки програмних систем". 
