@@ -26,3 +26,6 @@
 Детальніше про наш робочий процес та архітектуру можна дізнатися у відповідних файлах:
 * [Командний статут (TeamCharter.md)](./TeamCharter.md)
 * [Опис проєкту (Project-Description.md)](./Project-Description.md)
+
+## Артефакти вимог
+* [RTM (rtm.md)](./docs/requirements/rtm.md)
