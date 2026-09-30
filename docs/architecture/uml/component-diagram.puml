@@ -1,0 +1,24 @@
+@startuml
+skinparam componentStyle uml2
+
+package "Frontend" {
+  [Web Client (Jinja2 + HTMX)] as Client
+}
+
+package "Backend System (FastAPI)" {
+  [Auth & Routing Controller] as Auth
+  [Game Management Service] as GameService
+  [Room Booking Service] as BookingService
+}
+
+database "Relational DB (MySQL)" {
+  [Database] as DB
+}
+
+Client --> Auth : "HTTP (HTMX AJAX запити)"
+Auth --> GameService : "Внутрішній виклик"
+Auth --> BookingService : "Внутрішній виклик"
+GameService --> DB : "SQL (ORM / SQLAlchemy)"
+BookingService --> DB : "SQL (ACID Транзакції)"
+Auth --> Client : "Відповідь: HTML-фрагменти"
+@enduml
