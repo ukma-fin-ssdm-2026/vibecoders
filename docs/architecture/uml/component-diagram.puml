@@ -1,24 +1,28 @@
 @startuml
 skinparam componentStyle uml2
 
-package "Frontend" {
-  [Web Client (Jinja2 + HTMX)] as Client
+package "Frontend Layer" {
+  component "Web Client (Jinja2 + HTMX)" as Client
 }
 
-package "Backend System (FastAPI)" {
-  [Auth & Routing Controller] as Auth
-  [Game Management Service] as GameService
-  [Room Booking Service] as BookingService
+package "Backend System (FastAPI Monolith)" {
+  component "Auth & Routing\nController" as Auth
+  component "Game Management\nService" as GameSvc
+  component "Room Booking\nService" as RoomSvc
 }
 
-database "Relational DB (MySQL)" {
-  [Database] as DB
-}
+database "Relational DB (MySQL)" as DB
 
-Client --> Auth : "HTTP (HTMX AJAX запити)"
-Auth --> GameService : "Внутрішній виклик"
-Auth --> BookingService : "Внутрішній виклик"
-GameService --> DB : "SQL (ORM / SQLAlchemy)"
-BookingService --> DB : "SQL (ACID Транзакції)"
-Auth --> Client : "Відповідь: HTML-фрагменти"
+Client --> Auth : HTTP (HTMX AJAX)
+Auth --> GameSvc : Виклик функції
+Auth --> RoomSvc : Виклик функції
+GameSvc --> DB : SQL (Читання/Запис)
+RoomSvc --> DB : SQL (Транзакції бронювання)
+Auth --> Client : Повертає HTML-фрагменти
+
+note right of DB
+  Гарантує ACID транзакції
+  для уникнення овербукінгу кімнат
+end note
 @enduml
+*Використання ШІ: Структура документа, базові формулювання та код PlantUML згенеровані за допомогою ШІ (Gemini). Матеріали були вичитані, проаналізовані Керівником архітектури та повністю адаптовані командою під обрану бізнес-логіку проєкту для відповідності критеріям оцінювання Лабораторної роботи.*
