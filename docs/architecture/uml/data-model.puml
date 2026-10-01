@@ -1,0 +1,46 @@
+@startuml
+skinparam roundcorner 5
+skinparam shadowing false
+
+entity "User" as user {
+  * id : INT <<PK>>
+  --
+  * email : VARCHAR <<Чутливі дані>>
+  * password_hash : VARCHAR <<Чутливі дані>>
+  * role : ENUM (Player, Master, Admin)
+  contacts : VARCHAR <<Чутливі дані>>
+  avatar_url : VARCHAR
+}
+
+entity "Room" as room {
+  * id : INT <<PK>>
+  --
+  * name : VARCHAR
+  capacity : INT
+}
+
+entity "Game" as game {
+  * id : INT <<PK>>
+  --
+  * master_id : INT <<FK>>
+  * room_id : INT <<FK>>
+  * title : VARCHAR
+  * start_time : DATETIME
+  * duration_minutes : INT
+  max_players : INT
+}
+
+entity "GameEnrollment" as enrollment {
+  * id : INT <<PK>>
+  --
+  * game_id : INT <<FK>>
+  * player_id : INT <<FK>>
+  enrolled_at : DATETIME
+}
+
+user ||--o{ game : "Створює (як Майстер)"
+room ||--o{ game : "Хостить"
+user ||--o{ enrollment : "Бере участь (як Гравець)"
+game ||--o{ enrollment : "Має гравців"
+
+@enduml
