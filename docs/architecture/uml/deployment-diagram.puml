@@ -1,0 +1,48 @@
+@startuml deployment-diagram
+skinparam wrapWidth 160
+skinparam defaultTextAlignment center
+skinparam nodesep 50
+skinparam ranksep 60
+title Діаграма розгортання — виробниче середовище
+
+node "Клієнтський пристрій\n(ноутбук / телефон)" as ClientDevice {
+  artifact "Браузер\n(рендерить HTML + HTMX)" as Browser
+}
+
+cloud "Інтернет" as Internet
+
+node "Веб-сервер клубу\n(1 виробнича машина / VM)" as WebServer {
+  node "Nginx\n(реверс-проксі, TLS-термінація)" as Nginx
+  node "Uvicorn (ASGI)" as Uvicorn {
+    artifact "FastAPI застосунок" as App
+    artifact "Jinja2-шаблони +\nстатика (CSS/HTMX.js)" as Static
+  }
+}
+
+node "Сервер бази даних" as DBServer {
+  database "MySQL\n(основна БД)" as MySQL
+}
+
+cloud "SMTP-провайдер\n(зовнішній, опційно)" as SMTP
+
+Browser --> Internet : HTTPS
+Internet --> Nginx : HTTPS (443)
+Nginx --> Uvicorn : HTTP (unix-сокет /\nlocalhost:8000)
+App --> MySQL : SQL (TCP 3306, ORM,\nACID-транзакції)
+App ..> SMTP : SMTP (587, опційно,\nUS-008)
+
+note right of Internet
+  Межа довіри 1: Інтернет → Веб-сервер.
+  Недовірений клієнтський ввід перетинає
+  її при кожному HTTP-запиті (валідація,
+  автентифікація на Nginx/FastAPI).
+end note
+
+note right of DBServer
+  Межа довіри 2: Застосунок → БД.
+  Лише Uvicorn/FastAPI має мережевий
+  доступ до MySQL; прямий доступ з
+  інтернету до порту 3306 заборонено.
+end note
+
+@enduml

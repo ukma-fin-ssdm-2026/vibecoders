@@ -1,0 +1,78 @@
+@startuml sequence-diagram
+skinparam wrapWidth 180
+skinparam maxMessageSize 180
+title Діаграма послідовності — Майстер бронює кімнату (US-002, FR-006, REL-001/REL-002)
+
+actor "Майстер" as GM
+participant "Браузер\n(HTMX)" as Browser
+participant "Auth & Routing\nController" as Router
+participant "Game Management\nService" as GameSvc
+participant "Room Booking\nService" as BookingSvc
+database "MySQL" as DB
+
+GM -> Browser : заповнює форму гри\n(дата, час, кімната, ліміт) і тисне "Зберегти"
+activate Browser
+
+Browser -> Router : POST /games\n{roomId, date, start, duration, ...}
+activate Router
+
+Router -> Router : перевірити сесію\nі роль (== Майстер)
+
+note right of Router
+  REL-002 (майстер не може вести дві гри, що
+  перетинаються в часі) перевіряється аналогічним
+  запитом по master_id; опущено для стислості.
+end note
+
+Router -> GameSvc : createGame(masterId, data)
+activate GameSvc
+
+GameSvc -> BookingSvc : reserveRoom(roomId, date, start, duration)
+activate BookingSvc
+
+BookingSvc -> DB : BEGIN TRANSACTION
+activate DB
+BookingSvc -> DB : SELECT ... WHERE room=? AND date=?\nFOR UPDATE
+DB --> BookingSvc : існуючі бронювання\n(рядки заблоковано)
+
+BookingSvc -> BookingSvc : перевірити перетин\nз новим інтервалом часу
+
+note over BookingSvc, DB
+  REL-001: "SELECT ... FOR UPDATE" блокує рядки слоту кімнати —
+  конкурентні запити чекають на транзакцію. Навіть 20 одночасних
+  спроб бронювання того самого слоту не дають жодного дубля.
+end note
+
+alt Кімната вільна на обраний час
+  BookingSvc -> DB : INSERT INTO bookings(room, date, start, end)
+  DB --> BookingSvc : booking_id
+  BookingSvc -> DB : COMMIT
+  deactivate DB
+  BookingSvc --> GameSvc : reserved(booking_id)
+  deactivate BookingSvc
+
+  GameSvc -> DB : INSERT INTO games(title, master_id,\nbooking_id, max_players, ...)
+  activate DB
+  DB --> GameSvc : game_id
+  deactivate DB
+  GameSvc --> Router : 201 {game_id}
+  deactivate GameSvc
+
+  Router --> Browser : 200 OK + HTML-фрагмент\n(картка гри, слот "Зайнято" в календарі)
+  Browser --> GM : "Гру створено,\nкімнату заброньовано"
+
+else Кімната вже зайнята на цей час (перетин)
+  BookingSvc -> DB : ROLLBACK
+  deactivate DB
+  BookingSvc --> GameSvc : conflict
+  deactivate BookingSvc
+  GameSvc --> Router : 409 {error: "Ця кімната вже\nзайнята на обраний час"}
+  deactivate GameSvc
+  Router --> Browser : 409 + HTML-фрагмент\n(повідомлення про помилку)
+  Browser --> GM : показує помилку,\nформа лишається відкритою
+end
+
+deactivate Router
+deactivate Browser
+
+@enduml
