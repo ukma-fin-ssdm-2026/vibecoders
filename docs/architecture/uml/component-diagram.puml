@@ -5,24 +5,32 @@ package "Frontend Layer" {
   component "Web Client (Jinja2 + HTMX)" as Client
 }
 
-package "Backend System (FastAPI Monolith)" {
-  component "Auth & Routing\nController" as Auth
-  component "Game Management\nService" as GameSvc
-  component "Room Booking\nService" as RoomSvc
+node "Cloud Infrastructure (Nginx/Reverse Proxy)" as Cloud {
+  package "Backend System (FastAPI Monolith)" {
+    component "Auth & Routing\nController" as Auth
+    component "Game Management\nService" as GameSvc
+    component "Room Booking\nService" as RoomSvc
+    component "Notification Service" as NotifSvc
+  }
 }
 
 database "Relational DB (MySQL)" as DB
+cloud "External SMTP Server" as SMTP
 
-Client --> Auth : HTTP (HTMX AJAX)
+Client --> Cloud : HTTP (HTMX AJAX)
+Cloud --> Auth : Маршрутизація трафіку
 Auth --> GameSvc : Виклик функції
 Auth --> RoomSvc : Виклик функції
 GameSvc --> DB : SQL (Читання/Запис)
 RoomSvc --> DB : SQL (Транзакції бронювання)
 Auth --> Client : Повертає HTML-фрагменти
 
+GameSvc --> NotifSvc : Тригер сповіщення (FR-011)
+NotifSvc --> SMTP : Відправка Email
+SMTP --> Client : Лист гравцю про скасування
+
 note right of DB
   Гарантує ACID транзакції
   для уникнення овербукінгу кімнат
 end note
 @enduml
-*Використання ШІ: Структура документа, базові формулювання та код PlantUML згенеровані за допомогою ШІ (Gemini). Матеріали були вичитані, проаналізовані Керівником архітектури та повністю адаптовані командою під обрану бізнес-логіку проєкту для відповідності критеріям оцінювання Лабораторної роботи.*
