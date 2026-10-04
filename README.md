@@ -29,3 +29,4 @@
 
 ## Артефакти вимог
 * [RTM (rtm.md)](./docs/requirements/rtm.md)
+* [Архітектурне проєктування та UML (Лабораторна 3)](docs/architecture/)
