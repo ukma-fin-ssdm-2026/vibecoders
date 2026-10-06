@@ -1,0 +1,214 @@
+openapi: 3.1.0
+info:
+  title: NRI Organizer API
+  version: 1.0.0
+paths:
+  /api/v1/games:
+    get:
+      tags:
+      - Games
+      summary: Отримати список ігор
+      operationId: list_games_api_v1_games_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/GameResponse'
+                type: array
+                title: Response List Games Api V1 Games Get
+    post:
+      tags:
+      - Games
+      summary: Створити гру
+      operationId: create_game_api_v1_games_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameBase'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/games/{game_id}:
+    get:
+      tags:
+      - Games
+      summary: Отримати деталі гри
+      operationId: get_game_api_v1_games__game_id__get
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Game Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - Games
+      summary: Оновити гру повністю
+      operationId: update_game_api_v1_games__game_id__put
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Game Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameBase'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Games
+      summary: Скасувати гру
+      operationId: delete_game_api_v1_games__game_id__delete
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Game Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    GameBase:
+      properties:
+        title:
+          type: string
+          minLength: 3
+          title: Title
+          description: Назва гри
+        system:
+          type: string
+          title: System
+          description: Ігрова система
+        max_players:
+          type: integer
+          maximum: 8.0
+          minimum: 2.0
+          title: Max Players
+          description: Максимальна кількість гравців
+      type: object
+      required:
+      - title
+      - system
+      - max_players
+      title: GameBase
+    GameResponse:
+      properties:
+        title:
+          type: string
+          minLength: 3
+          title: Title
+          description: Назва гри
+        system:
+          type: string
+          title: System
+          description: Ігрова система
+        max_players:
+          type: integer
+          maximum: 8.0
+          minimum: 2.0
+          title: Max Players
+          description: Максимальна кількість гравців
+        id:
+          type: string
+          title: Id
+        current_players:
+          type: integer
+          title: Current Players
+          default: 0
+      type: object
+      required:
+      - title
+      - system
+      - max_players
+      - id
+      title: GameResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
