@@ -1,214 +1,1337 @@
 openapi: 3.1.0
 info:
   title: NRI Organizer API
+  description: 'REST API організатора настільних рольових ігор: ігри, гравці та кімнати
+    клубу. Усі відповіді — заглушки в пам''яті процесу. Для захищених операцій натисніть
+    Authorize і введіть демо-токен: master-token, player-token або owner-token.'
   version: 1.0.0
+servers:
+- url: http://localhost:3000
+  description: Локальний сервер
 paths:
-  /api/v1/games:
-    get:
+  /api/v1/auth/login:
+    post:
       tags:
-      - Games
-      summary: Отримати список ігор
-      operationId: list_games_api_v1_games_get
+      - Auth
+      summary: Увійти в систему
+      description: 'Перевіряє пошту та пароль і повертає токен для заголовка Authorization:
+        Bearer. Демо-акаунти: master@club.test / master-pass-1, player@club.test /
+        player-pass-1, owner@club.test / owner-pass-1. Повідомлення про помилку однакове
+        для невідомої пошти та хибного пароля.'
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                items:
-                  $ref: '#/components/schemas/GameResponse'
-                type: array
-                title: Response List Games Api V1 Games Get
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/games:
+    get:
+      tags:
+      - Games
+      summary: Отримати список ігор
+      description: 'Повертає ігри з пагінацією та фільтрами. Порядок гарантований:
+        за часом початку, потім за id.'
+      operationId: list_games
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Максимальна кількість ігор у відповіді
+          default: 20
+          title: Limit
+        description: Максимальна кількість ігор у відповіді
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Скільки ігор пропустити
+          default: 0
+          title: Offset
+        description: Скільки ігор пропустити
+      - name: room_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^room_\d+$
+          - type: 'null'
+          description: Показати лише ігри в цій кімнаті
+          title: Room Id
+        description: Показати лише ігри в цій кімнаті
+      - name: master_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^user_\d+$
+          - type: 'null'
+          description: Показати лише ігри цього майстра
+          title: Master Id
+        description: Показати лише ігри цього майстра
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameListResponse'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
       tags:
       - Games
       summary: Створити гру
-      operationId: create_game_api_v1_games_post
+      description: Створює гру. Майстром стає автор запиту. Доступно ролям master
+        та owner.
+      operationId: create_game
+      security:
+      - HTTPBearer: []
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GameBase'
-        required: true
+              $ref: '#/components/schemas/GameCreate'
       responses:
         '201':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GameResponse'
-        '422':
-          description: Validation Error
+                $ref: '#/components/schemas/Game'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфлікт зі станом системи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/v1/games/{game_id}:
     get:
       tags:
       - Games
-      summary: Отримати деталі гри
-      operationId: get_game_api_v1_games__game_id__get
+      summary: Отримати гру за id
+      description: Повертає деталі однієї гри разом із кількістю записаних гравців.
+      operationId: get_game
       parameters:
       - name: game_id
         in: path
         required: true
         schema:
           type: string
+          pattern: ^game_\d+$
+          description: Ідентифікатор гри
+          examples:
+          - game_1
           title: Game Id
+        description: Ідентифікатор гри
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GameResponse'
-        '422':
-          description: Validation Error
+                $ref: '#/components/schemas/Game'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     put:
       tags:
       - Games
-      summary: Оновити гру повністю
-      operationId: update_game_api_v1_games__game_id__put
+      summary: Повністю замінити гру
+      description: Замінює всі поля гри. Усі поля тіла обов'язкові. Повторний запит
+        з тим самим тілом дає той самий результат.
+      operationId: replace_game
+      security:
+      - HTTPBearer: []
       parameters:
       - name: game_id
         in: path
         required: true
         schema:
           type: string
+          pattern: ^game_\d+$
+          description: Ідентифікатор гри
+          examples:
+          - game_1
           title: Game Id
+        description: Ідентифікатор гри
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GameBase'
+              $ref: '#/components/schemas/GameUpdate'
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GameResponse'
-        '422':
-          description: Validation Error
+                $ref: '#/components/schemas/Game'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-    delete:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфлікт зі станом системи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
       tags:
       - Games
-      summary: Скасувати гру
-      operationId: delete_game_api_v1_games__game_id__delete
+      summary: Частково оновити гру
+      description: Змінює лише передані поля. Порожнє тіло запиту — помилка валідації.
+      operationId: patch_game
+      security:
+      - HTTPBearer: []
       parameters:
       - name: game_id
         in: path
         required: true
         schema:
           type: string
+          pattern: ^game_\d+$
+          description: Ідентифікатор гри
+          examples:
+          - game_1
           title: Game Id
+        description: Ідентифікатор гри
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GamePatch'
       responses:
-        '204':
+        '200':
           description: Successful Response
-        '422':
-          description: Validation Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HTTPValidationError'
+                $ref: '#/components/schemas/Game'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфлікт зі станом системи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+      - Games
+      summary: Видалити гру
+      description: Видаляє гру разом із записами гравців і звільняє кімнату. Доступно
+        майстру гри та власнику клубу.
+      operationId: delete_game
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^game_\d+$
+          description: Ідентифікатор гри
+          examples:
+          - game_1
+          title: Game Id
+        description: Ідентифікатор гри
+      responses:
+        '204':
+          description: Successful Response
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/games/{game_id}/players:
+    get:
+      tags:
+      - Games
+      summary: Отримати список гравців гри
+      description: Повертає записаних гравців та лічильник заповненості. Потрібна
+        автентифікація.
+      operationId: list_players
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^game_\d+$
+          description: Ідентифікатор гри
+          examples:
+          - game_1
+          title: Game Id
+        description: Ідентифікатор гри
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayersResponse'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+      - Games
+      summary: Записатися на гру
+      description: Записує автора запиту на гру. Тіло запиту не потрібне. Помилка
+        409, якщо місць немає або гравець уже записаний.
+      operationId: enroll_player
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^game_\d+$
+          description: Ідентифікатор гри
+          examples:
+          - game_1
+          title: Game Id
+        description: Ідентифікатор гри
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфлікт зі станом системи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/games/{game_id}/players/{user_id}:
+    delete:
+      tags:
+      - Games
+      summary: Скасувати запис гравця
+      description: Скасовує запис гравця. Доступно самому гравцеві, майстру гри та
+        власнику клубу.
+      operationId: remove_player
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: game_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^game_\d+$
+          description: Ідентифікатор гри
+          examples:
+          - game_1
+          title: Game Id
+        description: Ідентифікатор гри
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^user_\d+$
+          description: Ідентифікатор гравця
+          examples:
+          - user_2
+          title: User Id
+        description: Ідентифікатор гравця
+      responses:
+        '204':
+          description: Successful Response
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/rooms:
+    get:
+      tags:
+      - Rooms
+      summary: Отримати список кімнат
+      description: Повертає кімнати клубу з пагінацією. Кімнати відсортовані за id.
+      operationId: list_rooms
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Максимальна кількість кімнат у відповіді
+          default: 20
+          title: Limit
+        description: Максимальна кількість кімнат у відповіді
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Скільки кімнат пропустити
+          default: 0
+          title: Offset
+        description: Скільки кімнат пропустити
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomListResponse'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/rooms/{room_id}:
+    get:
+      tags:
+      - Rooms
+      summary: Отримати кімнату за id
+      description: Повертає одну кімнату клубу з її місткістю та статусом блокування.
+      operationId: get_room
+      parameters:
+      - name: room_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^room_\d+$
+          description: Ідентифікатор кімнати
+          examples:
+          - room_1
+          title: Room Id
+        description: Ідентифікатор кімнати
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      tags:
+      - Rooms
+      summary: Заблокувати або розблокувати кімнату
+      description: 'Доступно лише власнику клубу. Заблокувати кімнату, у якій є ігри,
+        не можна: спочатку їх потрібно видалити (409).'
+      operationId: patch_room
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: room_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^room_\d+$
+          description: Ідентифікатор кімнати
+          examples:
+          - room_1
+          title: Room Id
+        description: Ідентифікатор кімнати
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomPatch'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфлікт зі станом системи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/rooms/{room_id}/bookings:
+    get:
+      tags:
+      - Rooms
+      summary: Отримати календар бронювань кімнати
+      description: Повертає слоти, у які кімната зайнята іграми, відсортовані за часом
+        початку.
+      operationId: list_room_bookings
+      parameters:
+      - name: room_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^room_\d+$
+          description: Ідентифікатор кімнати
+          examples:
+          - room_1
+          title: Room Id
+        description: Ідентифікатор кімнати
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomBookingsResponse'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
-    GameBase:
+    Booking:
       properties:
+        game_id:
+          type: string
+          title: Game Id
+          examples:
+          - game_1
         title:
           type: string
-          minLength: 3
           title: Title
-          description: Назва гри
-        system:
+          examples:
+          - Прокляття Страда
+        master_id:
           type: string
-          title: System
-          description: Ігрова система
-        max_players:
-          type: integer
-          maximum: 8.0
-          minimum: 2.0
-          title: Max Players
-          description: Максимальна кількість гравців
+          title: Master Id
+          examples:
+          - user_1
+        starts_at:
+          type: string
+          format: date-time
+          title: Starts At
+          examples:
+          - '2026-10-10T18:00:00Z'
+        ends_at:
+          type: string
+          format: date-time
+          title: Ends At
+          examples:
+          - '2026-10-10T21:00:00Z'
       type: object
       required:
+      - game_id
       - title
-      - system
-      - max_players
-      title: GameBase
-    GameResponse:
+      - master_id
+      - starts_at
+      - ends_at
+      title: Booking
+    ErrorBody:
+      properties:
+        code:
+          type: string
+          title: Code
+          description: Машинозчитуваний код помилки
+          examples:
+          - VALIDATION_ERROR
+        message:
+          type: string
+          title: Message
+          description: Опис помилки для людини
+          examples:
+          - Вхідні дані не пройшли валідацію
+        details:
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+          type: array
+          title: Details
+          description: Деталі по окремих полях
+      type: object
+      required:
+      - code
+      - message
+      title: ErrorBody
+    ErrorDetail:
+      properties:
+        field:
+          type: string
+          title: Field
+          description: Шлях до проблемного поля
+          examples:
+          - body.max_players
+        message:
+          type: string
+          title: Message
+          description: Що саме не так з полем
+          examples:
+          - Input should be less than or equal to 8
+      type: object
+      required:
+      - field
+      - message
+      title: ErrorDetail
+    ErrorResponse:
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorBody'
+      type: object
+      required:
+      - error
+      title: ErrorResponse
+    Game:
       properties:
         title:
           type: string
+          maxLength: 100
           minLength: 3
           title: Title
           description: Назва гри
+          examples:
+          - Прокляття Страда
         system:
           type: string
+          maxLength: 50
+          minLength: 2
           title: System
           description: Ігрова система
+          examples:
+          - D&D 5e
+        room_id:
+          type: string
+          pattern: ^room_\d+$
+          title: Room Id
+          description: Ідентифікатор кімнати
+          examples:
+          - room_1
+        starts_at:
+          type: string
+          format: date-time
+          title: Starts At
+          description: Початок гри (ISO 8601 з часовим поясом)
+          examples:
+          - '2026-10-10T18:00:00Z'
+        duration_minutes:
+          type: integer
+          maximum: 720.0
+          minimum: 30.0
+          title: Duration Minutes
+          description: Тривалість гри в хвилинах
+          examples:
+          - 180
         max_players:
           type: integer
           maximum: 8.0
           minimum: 2.0
           title: Max Players
           description: Максимальна кількість гравців
+          examples:
+          - 5
         id:
           type: string
           title: Id
+          description: Ідентифікатор гри
+          examples:
+          - game_1
+        master_id:
+          type: string
+          title: Master Id
+          description: Ідентифікатор майстра, який веде гру
+          examples:
+          - user_1
         current_players:
           type: integer
+          minimum: 0.0
           title: Current Players
-          default: 0
+          description: Скільки гравців уже записано
+          examples:
+          - 1
+      additionalProperties: false
       type: object
       required:
       - title
       - system
+      - room_id
+      - starts_at
+      - duration_minutes
       - max_players
       - id
-      title: GameResponse
-    HTTPValidationError:
+      - master_id
+      - current_players
+      title: Game
+      examples:
+      - current_players: 1
+        duration_minutes: 180
+        id: game_1
+        master_id: user_1
+        max_players: 5
+        room_id: room_1
+        starts_at: '2026-10-10T18:00:00Z'
+        system: D&D 5e
+        title: Прокляття Страда
+    GameCreate:
       properties:
-        detail:
-          items:
-            $ref: '#/components/schemas/ValidationError'
-          type: array
-          title: Detail
-      type: object
-      title: HTTPValidationError
-    ValidationError:
-      properties:
-        loc:
-          items:
-            anyOf:
-            - type: string
-            - type: integer
-          type: array
-          title: Location
-        msg:
+        title:
           type: string
-          title: Message
-        type:
+          maxLength: 100
+          minLength: 3
+          title: Title
+          description: Назва гри
+          examples:
+          - Прокляття Страда
+        system:
           type: string
-          title: Error Type
-        input:
-          title: Input
-        ctx:
-          type: object
-          title: Context
+          maxLength: 50
+          minLength: 2
+          title: System
+          description: Ігрова система
+          examples:
+          - D&D 5e
+        room_id:
+          type: string
+          pattern: ^room_\d+$
+          title: Room Id
+          description: Ідентифікатор кімнати
+          examples:
+          - room_1
+        starts_at:
+          type: string
+          format: date-time
+          title: Starts At
+          description: Початок гри (ISO 8601 з часовим поясом)
+          examples:
+          - '2026-10-10T18:00:00Z'
+        duration_minutes:
+          type: integer
+          maximum: 720.0
+          minimum: 30.0
+          title: Duration Minutes
+          description: Тривалість гри в хвилинах
+          examples:
+          - 180
+        max_players:
+          type: integer
+          maximum: 8.0
+          minimum: 2.0
+          title: Max Players
+          description: Максимальна кількість гравців
+          examples:
+          - 5
+      additionalProperties: false
       type: object
       required:
-      - loc
-      - msg
-      - type
-      title: ValidationError
+      - title
+      - system
+      - room_id
+      - starts_at
+      - duration_minutes
+      - max_players
+      title: GameCreate
+    GameListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Game'
+          type: array
+          title: Items
+          description: Ігри, відсортовані за часом початку, потім за id
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      type: object
+      required:
+      - items
+      - pagination
+      title: GameListResponse
+    GamePatch:
+      properties:
+        title:
+          anyOf:
+          - type: string
+            maxLength: 100
+            minLength: 3
+          - type: 'null'
+          title: Title
+          description: Нова назва гри
+        system:
+          anyOf:
+          - type: string
+            maxLength: 50
+            minLength: 2
+          - type: 'null'
+          title: System
+          description: Нова ігрова система
+        room_id:
+          anyOf:
+          - type: string
+            pattern: ^room_\d+$
+          - type: 'null'
+          title: Room Id
+          description: Нова кімната
+        starts_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Starts At
+          description: Новий час початку
+        duration_minutes:
+          anyOf:
+          - type: integer
+            maximum: 720.0
+            minimum: 30.0
+          - type: 'null'
+          title: Duration Minutes
+          description: Нова тривалість у хвилинах
+        max_players:
+          anyOf:
+          - type: integer
+            maximum: 8.0
+            minimum: 2.0
+          - type: 'null'
+          title: Max Players
+          description: Нова максимальна кількість гравців
+      additionalProperties: false
+      type: object
+      title: GamePatch
+    GameUpdate:
+      properties:
+        title:
+          type: string
+          maxLength: 100
+          minLength: 3
+          title: Title
+          description: Назва гри
+          examples:
+          - Прокляття Страда
+        system:
+          type: string
+          maxLength: 50
+          minLength: 2
+          title: System
+          description: Ігрова система
+          examples:
+          - D&D 5e
+        room_id:
+          type: string
+          pattern: ^room_\d+$
+          title: Room Id
+          description: Ідентифікатор кімнати
+          examples:
+          - room_1
+        starts_at:
+          type: string
+          format: date-time
+          title: Starts At
+          description: Початок гри (ISO 8601 з часовим поясом)
+          examples:
+          - '2026-10-10T18:00:00Z'
+        duration_minutes:
+          type: integer
+          maximum: 720.0
+          minimum: 30.0
+          title: Duration Minutes
+          description: Тривалість гри в хвилинах
+          examples:
+          - 180
+        max_players:
+          type: integer
+          maximum: 8.0
+          minimum: 2.0
+          title: Max Players
+          description: Максимальна кількість гравців
+          examples:
+          - 5
+      additionalProperties: false
+      type: object
+      required:
+      - title
+      - system
+      - room_id
+      - starts_at
+      - duration_minutes
+      - max_players
+      title: GameUpdate
+    LoginRequest:
+      properties:
+        email:
+          type: string
+          maxLength: 100
+          minLength: 5
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+          description: Електронна пошта
+          examples:
+          - master@club.test
+        password:
+          type: string
+          maxLength: 100
+          minLength: 8
+          title: Password
+          description: Пароль
+          examples:
+          - master-pass-1
+      additionalProperties: false
+      type: object
+      required:
+      - email
+      - password
+      title: LoginRequest
+    Pagination:
+      properties:
+        limit:
+          type: integer
+          maximum: 100.0
+          minimum: 1.0
+          title: Limit
+          description: Кількість елементів на сторінці
+          examples:
+          - 20
+        offset:
+          type: integer
+          minimum: 0.0
+          title: Offset
+          description: Скільки елементів пропущено
+          examples:
+          - 0
+        total:
+          type: integer
+          minimum: 0.0
+          title: Total
+          description: Загальна кількість елементів за фільтром
+          examples:
+          - 2
+        has_more:
+          type: boolean
+          title: Has More
+          description: Чи є наступна сторінка
+          examples:
+          - false
+      type: object
+      required:
+      - limit
+      - offset
+      - total
+      - has_more
+      title: Pagination
+    Player:
+      properties:
+        user_id:
+          type: string
+          title: User Id
+          description: Ідентифікатор гравця
+          examples:
+          - user_2
+        name:
+          type: string
+          title: Name
+          description: Ім'я або нікнейм гравця
+          examples:
+          - Марія
+        enrolled_at:
+          type: string
+          format: date-time
+          title: Enrolled At
+          description: Коли гравець записався
+      type: object
+      required:
+      - user_id
+      - name
+      - enrolled_at
+      title: Player
+      examples:
+      - enrolled_at: '2026-10-01T09:30:00Z'
+        name: Марія
+        user_id: user_2
+    PlayersResponse:
+      properties:
+        game_id:
+          type: string
+          title: Game Id
+          examples:
+          - game_1
+        current_players:
+          type: integer
+          minimum: 0.0
+          title: Current Players
+          description: Скільки місць зайнято
+          examples:
+          - 1
+        max_players:
+          type: integer
+          minimum: 2.0
+          title: Max Players
+          description: Скільки місць усього
+          examples:
+          - 5
+        players:
+          items:
+            $ref: '#/components/schemas/Player'
+          type: array
+          title: Players
+          description: Записані гравці
+      type: object
+      required:
+      - game_id
+      - current_players
+      - max_players
+      - players
+      title: PlayersResponse
+    Room:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Ідентифікатор кімнати
+          examples:
+          - room_1
+        name:
+          type: string
+          title: Name
+          description: Назва кімнати
+          examples:
+          - Зала «Дракон»
+        capacity:
+          type: integer
+          minimum: 1.0
+          title: Capacity
+          description: Максимальна місткість кімнати
+          examples:
+          - 8
+        is_blocked:
+          type: boolean
+          title: Is Blocked
+          description: Чи заблокована кімната власником клубу
+          examples:
+          - false
+      type: object
+      required:
+      - id
+      - name
+      - capacity
+      - is_blocked
+      title: Room
+      examples:
+      - capacity: 8
+        id: room_1
+        is_blocked: false
+        name: Зала «Дракон»
+    RoomBookingsResponse:
+      properties:
+        room_id:
+          type: string
+          title: Room Id
+          examples:
+          - room_1
+        is_blocked:
+          type: boolean
+          title: Is Blocked
+          examples:
+          - false
+        bookings:
+          items:
+            $ref: '#/components/schemas/Booking'
+          type: array
+          title: Bookings
+          description: Заброньовані слоти, відсортовані за часом початку
+      type: object
+      required:
+      - room_id
+      - is_blocked
+      - bookings
+      title: RoomBookingsResponse
+    RoomListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Room'
+          type: array
+          title: Items
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      type: object
+      required:
+      - items
+      - pagination
+      title: RoomListResponse
+    RoomPatch:
+      properties:
+        is_blocked:
+          type: boolean
+          title: Is Blocked
+          description: Заблокувати (true) або розблокувати (false) кімнату
+      additionalProperties: false
+      type: object
+      required:
+      - is_blocked
+      title: RoomPatch
+    TokenResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+          description: 'Токен для заголовка Authorization: Bearer'
+          examples:
+          - master-token
+        token_type:
+          type: string
+          title: Token Type
+          description: Тип токена
+          default: bearer
+          examples:
+          - bearer
+        role:
+          $ref: '#/components/schemas/UserRole'
+          description: Роль користувача
+      type: object
+      required:
+      - access_token
+      - role
+      title: TokenResponse
+    UserRole:
+      type: string
+      enum:
+      - player
+      - master
+      - owner
+      title: UserRole
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      description: 'Демо-токени: master-token (майстер), player-token (гравець), owner-token
+        (власник клубу)'
+      scheme: bearer
+tags:
+- name: Auth
+  description: Вхід у систему
+- name: Games
+  description: Ігрові сесії та запис гравців
+- name: Rooms
+  description: Кімнати клубу
