@@ -1,0 +1,37 @@
+name: Generate and Deploy API Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/api/**'
+      - 'docs/api/**'
+
+permissions:
+  contents: write
+
+jobs:
+  generate-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        working-directory: ./src/api
+        run: pip install -r requirements.txt
+      
+      - name: Generate OpenAPI spec from code
+        working-directory: ./src/api
+        run: python generate_openapi.py
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/api
