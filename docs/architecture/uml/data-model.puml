@@ -10,6 +10,15 @@ entity "User" as user {
   * role : ENUM (Player, Master, Admin)
   contacts : VARCHAR <<Чутливі дані>>
   avatar_url : VARCHAR
+  is_blocked : BOOLEAN
+  failed_login_attempts : INT
+}
+
+entity "Session" as session {
+  * id : VARCHAR <<PK>>
+  --
+  * user_id : INT <<FK>>
+  * expires_at : DATETIME
 }
 
 entity "Room" as room {
@@ -17,6 +26,16 @@ entity "Room" as room {
   --
   * name : VARCHAR
   capacity : INT
+  is_blocked : BOOLEAN
+}
+
+entity "Booking" as booking {
+  * id : INT <<PK>>
+  --
+  * room_id : INT <<FK>>
+  * start_time : DATETIME
+  * end_time : DATETIME
+  status : VARCHAR
 }
 
 entity "Game" as game {
@@ -38,9 +57,21 @@ entity "GameEnrollment" as enrollment {
   enrolled_at : DATETIME
 }
 
+entity "Notification" as notification {
+  * id : INT <<PK>>
+  --
+  * user_id : INT <<FK>>
+  * message : TEXT
+  is_read : BOOLEAN
+  created_at : DATETIME
+}
+
 user ||--o{ game : "Створює (як Майстер)"
 room ||--o{ game : "Хостить"
-user ||--o{ enrollment : "Бере участь (як Гравець)"
+user ||--o{ enrollment : "Бере участь"
 game ||--o{ enrollment : "Має гравців"
+user ||--o{ session : "Має сесії"
+room ||--o{ booking : "Має бронювання"
+user ||--o{ notification : "Отримує"
 
 @enduml
