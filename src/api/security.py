@@ -14,10 +14,17 @@ bearer_scheme = HTTPBearer(
 
 
 def get_current_user(
-    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(bearer_scheme)],
+    credentials: Annotated[
+        Optional[HTTPAuthorizationCredentials], Depends(bearer_scheme)
+    ],
 ) -> User:
     if credentials is None or credentials.credentials not in TOKENS:
-        raise ApiError(401, "UNAUTHORIZED", "Відсутній або недійсний токен доступу", headers={"WWW-Authenticate": "Bearer"})
+        raise ApiError(
+            401,
+            "UNAUTHORIZED",
+            "Відсутній або недійсний токен доступу",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return USERS[TOKENS[credentials.credentials]]
 
 
