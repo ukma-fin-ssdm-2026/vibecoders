@@ -34,7 +34,10 @@ ERROR_DESCRIPTIONS = {
 
 
 def error_docs(*codes: int) -> dict:
-    return {code: {"model": ErrorResponse, "description": ERROR_DESCRIPTIONS[code]} for code in codes}
+    return {
+        code: {"model": ErrorResponse, "description": ERROR_DESCRIPTIONS[code]}
+        for code in codes
+    }
 
 
 def error_response(
@@ -44,22 +47,33 @@ def error_response(
     details: Optional[List[ErrorDetail]] = None,
     headers: Optional[Dict[str, str]] = None,
 ) -> JSONResponse:
-    body = ErrorResponse(error=ErrorBody(code=code, message=message, details=details or []))
-    return JSONResponse(status_code=status_code, content=body.model_dump(), headers=headers)
+    body = ErrorResponse(
+        error=ErrorBody(code=code, message=message, details=details or [])
+    )
+    return JSONResponse(
+        status_code=status_code, content=body.model_dump(), headers=headers
+    )
 
 
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     async def api_error_handler(request: Request, exc: ApiError):
-        return error_response(exc.status_code, exc.code, exc.message, exc.details, exc.headers)
+        return error_response(
+            exc.status_code, exc.code, exc.message, exc.details, exc.headers
+        )
 
     @app.exception_handler(RequestValidationError)
     async def validation_error_handler(request: Request, exc: RequestValidationError):
         details = [
-            ErrorDetail(field=".".join(str(part) for part in error["loc"]), message=str(error["msg"]))
+            ErrorDetail(
+                field=".".join(str(part) for part in error["loc"]),
+                message=str(error["msg"]),
+            )
             for error in exc.errors()
         ]
-        return error_response(400, "VALIDATION_ERROR", "Вхідні дані не пройшли валідацію", details)
+        return error_response(
+            400, "VALIDATION_ERROR", "Вхідні дані не пройшли валідацію", details
+        )
 
     @app.exception_handler(StarletteHTTPException)
     async def http_error_handler(request: Request, exc: StarletteHTTPException):

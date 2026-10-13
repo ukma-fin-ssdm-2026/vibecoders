@@ -20,7 +20,14 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
 )
 async def login(payload: LoginRequest):
     account = CREDENTIALS.get(payload.email)
-    if account is None or not verify_password(payload.password, account["password_hash"]):
-        raise ApiError(401, "INVALID_CREDENTIALS", "Невірна пошта або пароль", headers={"WWW-Authenticate": "Bearer"})
+    if account is None or not verify_password(
+        payload.password, account["password_hash"]
+    ):
+        raise ApiError(
+            401,
+            "INVALID_CREDENTIALS",
+            "Невірна пошта або пароль",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     user = USERS[account["user_id"]]
     return TokenResponse(access_token=USER_TOKENS[user.id], role=user.role)

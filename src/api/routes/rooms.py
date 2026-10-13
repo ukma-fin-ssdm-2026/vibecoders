@@ -4,7 +4,15 @@ from typing import List
 from fastapi import APIRouter, Path, Query
 
 from errors import ApiError, error_docs
-from schemas import Booking, Pagination, Room, RoomBookingsResponse, RoomListResponse, RoomPatch, UserRole
+from schemas import (
+    Booking,
+    Pagination,
+    Room,
+    RoomBookingsResponse,
+    RoomListResponse,
+    RoomPatch,
+    UserRole,
+)
 from security import CurrentUser, require_roles
 from store import GAMES, ROOMS, sorted_games
 
@@ -26,13 +34,20 @@ def get_room_or_404(room_id: str) -> Room:
     responses=error_docs(400),
 )
 async def list_rooms(
-    limit: int = Query(20, ge=1, le=100, description="Максимальна кількість кімнат у відповіді"),
+    limit: int = Query(
+        20, ge=1, le=100, description="Максимальна кількість кімнат у відповіді"
+    ),
     offset: int = Query(0, ge=0, description="Скільки кімнат пропустити"),
 ):
     rooms: List[Room] = sorted(ROOMS.values(), key=lambda room: room.id)
     return RoomListResponse(
         items=rooms[offset : offset + limit],
-        pagination=Pagination(limit=limit, offset=offset, total=len(rooms), has_more=offset + limit < len(rooms)),
+        pagination=Pagination(
+            limit=limit,
+            offset=offset,
+            total=len(rooms),
+            has_more=offset + limit < len(rooms),
+        ),
     )
 
 
@@ -44,7 +59,12 @@ async def list_rooms(
     responses=error_docs(400, 404),
 )
 async def get_room(
-    room_id: str = Path(..., pattern=r"^room_\d+$", description="Ідентифікатор кімнати", examples=["room_1"]),
+    room_id: str = Path(
+        ...,
+        pattern=r"^room_\d+$",
+        description="Ідентифікатор кімнати",
+        examples=["room_1"],
+    ),
 ):
     return get_room_or_404(room_id)
 
@@ -57,7 +77,12 @@ async def get_room(
     responses=error_docs(400, 404),
 )
 async def list_room_bookings(
-    room_id: str = Path(..., pattern=r"^room_\d+$", description="Ідентифікатор кімнати", examples=["room_1"]),
+    room_id: str = Path(
+        ...,
+        pattern=r"^room_\d+$",
+        description="Ідентифікатор кімнати",
+        examples=["room_1"],
+    ),
 ):
     room = get_room_or_404(room_id)
     bookings = [
@@ -71,7 +96,9 @@ async def list_room_bookings(
         for g in sorted_games(list(GAMES.values()))
         if g.room_id == room_id
     ]
-    return RoomBookingsResponse(room_id=room_id, is_blocked=room.is_blocked, bookings=bookings)
+    return RoomBookingsResponse(
+        room_id=room_id, is_blocked=room.is_blocked, bookings=bookings
+    )
 
 
 @router.patch(
@@ -87,12 +114,19 @@ async def list_room_bookings(
 async def patch_room(
     payload: RoomPatch,
     user: CurrentUser,
-    room_id: str = Path(..., pattern=r"^room_\d+$", description="Ідентифікатор кімнати", examples=["room_1"]),
+    room_id: str = Path(
+        ...,
+        pattern=r"^room_\d+$",
+        description="Ідентифікатор кімнати",
+        examples=["room_1"],
+    ),
 ):
     require_roles(user, UserRole.owner)
     room = get_room_or_404(room_id)
     if payload.is_blocked and any(g.room_id == room_id for g in GAMES.values()):
-        raise ApiError(409, "ROOM_HAS_GAMES", "У кімнаті є заплановані ігри, спочатку видаліть їх")
+        raise ApiError(
+            409, "ROOM_HAS_GAMES", "У кімнаті є заплановані ігри, спочатку видаліть їх"
+        )
     updated = room.model_copy(update={"is_blocked": payload.is_blocked})
     ROOMS[room_id] = updated
     return updated
