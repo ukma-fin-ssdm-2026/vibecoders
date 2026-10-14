@@ -23,10 +23,14 @@
   Пише та підтримує ключову документацію, веде опис проєкту, узгоджує його межі та загальну архітектуру.
 
 ## Документація
-Детальніше про наш робочий процес та архітектуру можна дізнатися у відповідних файлах:
-* [Командний статут (TeamCharter.md)](./TeamCharter.md)
-* [Опис проєкту (Project-Description.md)](./Project-Description.md)
+Детальніше про наш робочий процес, оцінку якості та архітектуру можна дізнатися у відповідних файлах:
+- [Командний статут (TeamCharter.md)](./TeamCharter.md)
+- [Опис проєкту (Project-Description.md)](./Project-Description.md)
+- [Звіт про прогрес (progress.md)](./progress.md)
+- [Звіт з якості коду та статичного аналізу (static-analysis.md)](./docs/code-quality/static-analysis.md)
+- [Рецензія на код іншої команди (review-report.md)](./review-report.md)
 
 ## Артефакти вимог
-* [RTM (rtm.md)](./docs/requirements/rtm.md)
-* [Архітектурне проєктування та UML (Лабораторна 3)](docs/architecture/)
+- [RTM (rtm.md)](./docs/requirements/rtm.md)
+- [Модель загроз (threat-model.md)](./docs/requirements/threat-model.md)
+- [Архітектурне проєктування та UML (Лабораторна 3)](docs/architecture/)
