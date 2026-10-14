@@ -9,17 +9,12 @@ from store import TOKENS, USERS
 
 bearer_scheme = HTTPBearer(
     auto_error=False,
-    description=(
-        "Демо-токени: master-token (майстер), "
-        "player-token (гравець), owner-token (власник клубу)"
-    ),
+    description=("Демо-токени: master-token (майстер), " "player-token (гравець), owner-token (власник клубу)"),
 )
 
 
 def get_current_user(
-    credentials: Annotated[
-        Optional[HTTPAuthorizationCredentials], Depends(bearer_scheme)
-    ],
+    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(bearer_scheme)],
 ) -> User:
     if credentials is None or credentials.credentials not in TOKENS:
         raise ApiError(
