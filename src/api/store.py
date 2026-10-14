@@ -28,9 +28,7 @@ PASSWORD_SALT = b"nri-demo-salt"
 
 
 def hash_password(password: str) -> str:
-    return hashlib.pbkdf2_hmac(
-        "sha256", password.encode("utf-8"), PASSWORD_SALT, 100_000
-    ).hex()
+    return hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), PASSWORD_SALT, 100_000).hex()
 
 
 def verify_password(password: str, password_hash: str) -> bool:
@@ -102,21 +100,15 @@ def next_game_id() -> str:
 
 
 def to_game(record: GameRecord) -> Game:
-    return Game(
-        **record.model_dump(), current_players=len(ENROLLMENTS.get(record.id, []))
-    )
+    return Game(**record.model_dump(), current_players=len(ENROLLMENTS.get(record.id, [])))
 
 
 def sorted_games(records: List[GameRecord]) -> List[GameRecord]:
     return sorted(records, key=lambda r: (r.starts_at, r.id))
 
 
-def time_overlap(
-    start_a: datetime, minutes_a: int, start_b: datetime, minutes_b: int
-) -> bool:
-    return start_a < start_b + timedelta(
-        minutes=minutes_b
-    ) and start_b < start_a + timedelta(minutes=minutes_a)
+def time_overlap(start_a: datetime, minutes_a: int, start_b: datetime, minutes_b: int) -> bool:
+    return start_a < start_b + timedelta(minutes=minutes_b) and start_b < start_a + timedelta(minutes=minutes_a)
 
 
 def find_busy_game(

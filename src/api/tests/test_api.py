@@ -31,10 +31,7 @@ def test_get_games_public():
 
 def test_get_games_authorized():
     """Тест отримання списку ігор з валідним токеном (200)"""
-    response = client.get(
-        "/api/v1/games",
-        headers={"Authorization": "Bearer player-token"}
-    )
+    response = client.get("/api/v1/games", headers={"Authorization": "Bearer player-token"})
     assert response.status_code == 200
     data = response.json()
     assert "items" in data

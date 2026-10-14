@@ -20,9 +20,7 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
 )
 async def login(payload: LoginRequest):
     account = CREDENTIALS.get(payload.email)
-    if account is None or not verify_password(
-        payload.password, account["password_hash"]
-    ):
+    if account is None or not verify_password(payload.password, account["password_hash"]):
         raise ApiError(
             401,
             "INVALID_CREDENTIALS",
