@@ -240,7 +240,7 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str = Field(
         ...,
-        description="Токен для заголовка Authorization: Bearer",
+        description=("Токен для заголовка Authorization: Bearer"),
         examples=["master-token"],
     )
     token_type: str = Field("bearer", description="Тип токена", examples=["bearer"])
@@ -267,5 +267,6 @@ class RoomBookingsResponse(BaseModel):
     room_id: str = Field(..., examples=["room_1"])
     is_blocked: bool = Field(..., examples=[False])
     bookings: List[Booking] = Field(
-        ..., description="Заброньовані слоти, відсортовані за часом початку"
+        ...,
+        description=("Заброньовані слоти, відсортовані за часом початку"),
     )

@@ -9,7 +9,10 @@ from store import TOKENS, USERS
 
 bearer_scheme = HTTPBearer(
     auto_error=False,
-    description="Демо-токени: master-token (майстер), player-token (гравець), owner-token (власник клубу)",
+    description=(
+        "Демо-токени: master-token (майстер), "
+        "player-token (гравець), owner-token (власник клубу)"
+    ),
 )
 
 

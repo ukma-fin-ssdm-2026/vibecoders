@@ -96,7 +96,10 @@ def ensure_schedule_is_valid(
     "",
     response_model=GameListResponse,
     summary="Отримати список ігор",
-    description="Повертає ігри з пагінацією та фільтрами. Порядок гарантований: за часом початку, потім за id.",
+    description=(
+        "Повертає ігри з пагінацією та фільтрами. "
+        "Порядок гарантований: за часом початку, потім за id."
+    ),
     responses=error_docs(400),
 )
 async def list_games(
@@ -133,7 +136,9 @@ async def list_games(
     response_model=Game,
     status_code=201,
     summary="Створити гру",
-    description="Створює гру. Майстром стає автор запиту. Доступно ролям master та owner.",
+    description=(
+        "Створює гру. Майстром стає автор запиту. " "Доступно ролям master та owner."
+    ),
     responses=error_docs(400, 401, 403, 404, 409),
 )
 async def create_game(payload: GameCreate, response: Response, user: CurrentUser):
@@ -161,7 +166,10 @@ async def get_game(game_id: str = GameId):
     "/{game_id}",
     response_model=Game,
     summary="Повністю замінити гру",
-    description="Замінює всі поля гри. Усі поля тіла обов'язкові. Повторний запит з тим самим тілом дає той самий результат.",
+    description=(
+        "Замінює всі поля гри. Усі поля тіла обов'язкові. "
+        "Повторний запит з тим самим тілом дає той самий результат."
+    ),
     responses=error_docs(400, 401, 403, 404, 409),
 )
 async def replace_game(payload: GameUpdate, user: CurrentUser, game_id: str = GameId):
@@ -179,7 +187,9 @@ async def replace_game(payload: GameUpdate, user: CurrentUser, game_id: str = Ga
     "/{game_id}",
     response_model=Game,
     summary="Частково оновити гру",
-    description="Змінює лише передані поля. Порожнє тіло запиту — помилка валідації.",
+    description=(
+        "Змінює лише передані поля. " "Порожнє тіло запиту — помилка валідації."
+    ),
     responses=error_docs(400, 401, 403, 404, 409),
 )
 async def patch_game(payload: GamePatch, user: CurrentUser, game_id: str = GameId):
@@ -206,7 +216,10 @@ async def patch_game(payload: GamePatch, user: CurrentUser, game_id: str = GameI
     "/{game_id}",
     status_code=204,
     summary="Видалити гру",
-    description="Видаляє гру разом із записами гравців і звільняє кімнату. Доступно майстру гри та власнику клубу.",
+    description=(
+        "Видаляє гру разом із записами гравців і звільняє кімнату. "
+        "Доступно майстру гри та власнику клубу."
+    ),
     responses=error_docs(400, 401, 403, 404),
 )
 async def delete_game(user: CurrentUser, game_id: str = GameId):
@@ -221,7 +234,10 @@ async def delete_game(user: CurrentUser, game_id: str = GameId):
     "/{game_id}/players",
     response_model=PlayersResponse,
     summary="Отримати список гравців гри",
-    description="Повертає записаних гравців та лічильник заповненості. Потрібна автентифікація.",
+    description=(
+        "Повертає записаних гравців та лічильник заповненості. "
+        "Потрібна автентифікація."
+    ),
     responses=error_docs(400, 401, 404),
 )
 async def list_players(user: CurrentUser, game_id: str = GameId):
@@ -240,7 +256,10 @@ async def list_players(user: CurrentUser, game_id: str = GameId):
     response_model=Player,
     status_code=201,
     summary="Записатися на гру",
-    description="Записує автора запиту на гру. Тіло запиту не потрібне. Помилка 409, якщо місць немає або гравець уже записаний.",
+    description=(
+        "Записує автора запиту на гру. Тіло запиту не потрібне. "
+        "Помилка 409, якщо місць немає або гравець уже записаний."
+    ),
     responses=error_docs(400, 401, 404, 409),
 )
 async def enroll_player(response: Response, user: CurrentUser, game_id: str = GameId):
@@ -262,7 +281,10 @@ async def enroll_player(response: Response, user: CurrentUser, game_id: str = Ga
     "/{game_id}/players/{user_id}",
     status_code=204,
     summary="Скасувати запис гравця",
-    description="Скасовує запис гравця. Доступно самому гравцеві, майстру гри та власнику клубу.",
+    description=(
+        "Скасовує запис гравця. "
+        "Доступно самому гравцеві, майстру гри та власнику клубу."
+    ),
     responses=error_docs(400, 401, 403, 404),
 )
 async def remove_player(
