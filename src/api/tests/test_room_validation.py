@@ -1,4 +1,5 @@
 import pytest
+from pydantic import ValidationError
 from src.api.schemas import Room
 
 def test_room_is_not_full_initially():
@@ -12,3 +13,13 @@ def test_room_is_full_when_capacity_reached():
 def test_room_exceeds_capacity():
     room = Room(id="room_1", name="Зала «Дракон»", capacity=3, is_blocked=False, current_players=5)
     assert room.is_full() is True
+
+def test_room_cannot_exceed_capacity():
+    with pytest.raises((ValueError, ValidationError)):
+        Room(
+            id="room_1",
+            name="Зала «Дракон»",
+            capacity=3,
+            is_blocked=False,
+            current_players=5,
+        )
