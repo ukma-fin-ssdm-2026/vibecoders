@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 
 class UserRole(str, Enum):
@@ -210,7 +210,18 @@ class Room(BaseModel):
     is_blocked: bool = Field(
         ..., description="Чи заблокована кімната власником клубу", examples=[False]
     )
-    current_players: int = Field(0, description="Поточна кількість гравців", examples=[2])
+    current_players: int = Field(
+        0, description="Поточна кількість гравців", examples=[2]
+    )
+
+    @model_validator(mode="after")
+    def check_players_not_exceed_capacity(self) -> "Room":
+        if self.current_players > self.capacity:
+            raise ValueError(
+                "Поточна кількість гравців не може перевищувати місткість кімнати"
+            )
+        return self
+
     def is_full(self) -> bool:
         return self.current_players >= self.capacity
 
