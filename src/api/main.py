@@ -1,3 +1,5 @@
+import os
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -8,6 +10,8 @@ from routes.auth import router as auth_router
 from routes.games import router as games_router
 from routes.rooms import router as rooms_router
 from spec import install_openapi, save_openapi_spec
+
+host = os.getenv("API_HOST", "127.0.0.1")
 
 
 def operation_id(route: APIRoute) -> str:
@@ -50,4 +54,4 @@ app.include_router(rooms_router)
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=3000)
+    uvicorn.run(app, host=os.getenv("API_HOST", "127.0.0.1"), port=3000)

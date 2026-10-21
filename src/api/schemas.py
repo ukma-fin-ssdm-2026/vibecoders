@@ -18,9 +18,7 @@ class User(BaseModel):
 
 
 class ErrorDetail(BaseModel):
-    field: str = Field(
-        ..., description="Шлях до проблемного поля", examples=["body.max_players"]
-    )
+    field: str = Field(..., description="Шлях до проблемного поля", examples=["body.max_players"])
     message: str = Field(
         ...,
         description="Що саме не так з полем",
@@ -29,17 +27,13 @@ class ErrorDetail(BaseModel):
 
 
 class ErrorBody(BaseModel):
-    code: str = Field(
-        ..., description="Машинозчитуваний код помилки", examples=["VALIDATION_ERROR"]
-    )
+    code: str = Field(..., description="Машинозчитуваний код помилки", examples=["VALIDATION_ERROR"])
     message: str = Field(
         ...,
         description="Опис помилки для людини",
         examples=["Вхідні дані не пройшли валідацію"],
     )
-    details: List[ErrorDetail] = Field(
-        default_factory=list, description="Деталі по окремих полях"
-    )
+    details: List[ErrorDetail] = Field(default_factory=list, description="Деталі по окремих полях")
 
 
 class ErrorResponse(BaseModel):
@@ -47,15 +41,9 @@ class ErrorResponse(BaseModel):
 
 
 class Pagination(BaseModel):
-    limit: int = Field(
-        ..., ge=1, le=100, description="Кількість елементів на сторінці", examples=[20]
-    )
-    offset: int = Field(
-        ..., ge=0, description="Скільки елементів пропущено", examples=[0]
-    )
-    total: int = Field(
-        ..., ge=0, description="Загальна кількість елементів за фільтром", examples=[2]
-    )
+    limit: int = Field(..., ge=1, le=100, description="Кількість елементів на сторінці", examples=[20])
+    offset: int = Field(..., ge=0, description="Скільки елементів пропущено", examples=[0])
+    total: int = Field(..., ge=0, description="Загальна кількість елементів за фільтром", examples=[2])
     has_more: bool = Field(..., description="Чи є наступна сторінка", examples=[False])
 
 
@@ -87,12 +75,8 @@ class GameBase(BaseModel):
         description="Початок гри (ISO 8601 з часовим поясом)",
         examples=["2026-10-10T18:00:00Z"],
     )
-    duration_minutes: int = Field(
-        ..., ge=30, le=720, description="Тривалість гри в хвилинах", examples=[180]
-    )
-    max_players: int = Field(
-        ..., ge=2, le=8, description="Максимальна кількість гравців", examples=[5]
-    )
+    duration_minutes: int = Field(..., ge=30, le=720, description="Тривалість гри в хвилинах", examples=[180])
+    max_players: int = Field(..., ge=2, le=8, description="Максимальна кількість гравців", examples=[5])
 
 
 class GameCreate(GameBase):
@@ -106,22 +90,12 @@ class GameUpdate(GameBase):
 class GamePatch(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    title: Optional[str] = Field(
-        None, min_length=3, max_length=100, description="Нова назва гри"
-    )
-    system: Optional[str] = Field(
-        None, min_length=2, max_length=50, description="Нова ігрова система"
-    )
-    room_id: Optional[str] = Field(
-        None, pattern=r"^room_\d+$", description="Нова кімната"
-    )
+    title: Optional[str] = Field(None, min_length=3, max_length=100, description="Нова назва гри")
+    system: Optional[str] = Field(None, min_length=2, max_length=50, description="Нова ігрова система")
+    room_id: Optional[str] = Field(None, pattern=r"^room_\d+$", description="Нова кімната")
     starts_at: Optional[AwareDatetime] = Field(None, description="Новий час початку")
-    duration_minutes: Optional[int] = Field(
-        None, ge=30, le=720, description="Нова тривалість у хвилинах"
-    )
-    max_players: Optional[int] = Field(
-        None, ge=2, le=8, description="Нова максимальна кількість гравців"
-    )
+    duration_minutes: Optional[int] = Field(None, ge=30, le=720, description="Нова тривалість у хвилинах")
+    max_players: Optional[int] = Field(None, ge=2, le=8, description="Нова максимальна кількість гравців")
 
 
 class Game(GameBase):
@@ -144,18 +118,12 @@ class Game(GameBase):
     )
 
     id: str = Field(..., description="Ідентифікатор гри", examples=["game_1"])
-    master_id: str = Field(
-        ..., description="Ідентифікатор майстра, який веде гру", examples=["user_1"]
-    )
-    current_players: int = Field(
-        ..., ge=0, description="Скільки гравців уже записано", examples=[1]
-    )
+    master_id: str = Field(..., description="Ідентифікатор майстра, який веде гру", examples=["user_1"])
+    current_players: int = Field(..., ge=0, description="Скільки гравців уже записано", examples=[1])
 
 
 class GameListResponse(BaseModel):
-    items: List[Game] = Field(
-        ..., description="Ігри, відсортовані за часом початку, потім за id"
-    )
+    items: List[Game] = Field(..., description="Ігри, відсортовані за часом початку, потім за id")
     pagination: Pagination
 
 
@@ -179,12 +147,8 @@ class Player(BaseModel):
 
 class PlayersResponse(BaseModel):
     game_id: str = Field(..., examples=["game_1"])
-    current_players: int = Field(
-        ..., ge=0, description="Скільки місць зайнято", examples=[1]
-    )
-    max_players: int = Field(
-        ..., ge=2, description="Скільки місць усього", examples=[5]
-    )
+    current_players: int = Field(..., ge=0, description="Скільки місць зайнято", examples=[1])
+    max_players: int = Field(..., ge=2, description="Скільки місць усього", examples=[5])
     players: List[Player] = Field(..., description="Записані гравці")
 
 
@@ -204,6 +168,7 @@ class Room(BaseModel):
 
     id: str = Field(..., description="Ідентифікатор кімнати", examples=["room_1"])
     name: str = Field(..., description="Назва кімнати", examples=["Зала «Дракон»"])
+<<<<<<< HEAD
     capacity: int = Field(
         ..., ge=1, description="Максимальна місткість кімнати", examples=[8]
     )
@@ -224,6 +189,10 @@ class Room(BaseModel):
 
     def is_full(self) -> bool:
         return self.current_players >= self.capacity
+=======
+    capacity: int = Field(..., ge=1, description="Максимальна місткість кімнати", examples=[8])
+    is_blocked: bool = Field(..., description="Чи заблокована кімната власником клубу", examples=[False])
+>>>>>>> 09b8fe140a0422e515a98f310b00609e8ae66988
 
 
 class RoomListResponse(BaseModel):
@@ -254,7 +223,7 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str = Field(
         ...,
-        description="Токен для заголовка Authorization: Bearer",
+        description=("Токен для заголовка Authorization: Bearer"),
         examples=["master-token"],
     )
     token_type: str = Field("bearer", description="Тип токена", examples=["bearer"])
@@ -264,9 +233,7 @@ class TokenResponse(BaseModel):
 class RoomPatch(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    is_blocked: bool = Field(
-        ..., description="Заблокувати (true) або розблокувати (false) кімнату"
-    )
+    is_blocked: bool = Field(..., description="Заблокувати (true) або розблокувати (false) кімнату")
 
 
 class Booking(BaseModel):
@@ -281,5 +248,6 @@ class RoomBookingsResponse(BaseModel):
     room_id: str = Field(..., examples=["room_1"])
     is_blocked: bool = Field(..., examples=[False])
     bookings: List[Booking] = Field(
-        ..., description="Заброньовані слоти, відсортовані за часом початку"
+        ...,
+        description=("Заброньовані слоти, відсортовані за часом початку"),
     )

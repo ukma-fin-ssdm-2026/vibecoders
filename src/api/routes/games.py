@@ -21,7 +21,6 @@ from store import (
     ENROLLMENTS,
     GAMES,
     ROOMS,
-    USERS,
     GameRecord,
     find_busy_game,
     next_game_id,
@@ -31,9 +30,7 @@ from store import (
 
 router = APIRouter(prefix="/api/v1/games", tags=["Games"])
 
-GameId = Path(
-    ..., pattern=r"^game_\d+$", description="Ідентифікатор гри", examples=["game_1"]
-)
+GameId = Path(..., pattern=r"^game_\d+$", description="Ідентифікатор гри", examples=["game_1"])
 
 
 def get_game_or_404(game_id: str) -> GameRecord:
@@ -45,14 +42,10 @@ def get_game_or_404(game_id: str) -> GameRecord:
 
 def ensure_can_manage(record: GameRecord, user_id: str, role: UserRole) -> None:
     if role != UserRole.owner and record.master_id != user_id:
-        raise ApiError(
-            403, "FORBIDDEN", "Керувати грою може лише її майстер або власник клубу"
-        )
+        raise ApiError(403, "FORBIDDEN", "Керувати грою може лише її майстер або власник клубу")
 
 
-def ensure_schedule_is_valid(
-    data: GameBase, master_id: str, exclude_game_id: Optional[str] = None
-) -> None:
+def ensure_schedule_is_valid(data: GameBase, master_id: str, exclude_game_id: Optional[str] = None) -> None:
     room = ROOMS.get(data.room_id)
     if room is None:
         raise ApiError(404, "ROOM_NOT_FOUND", f"Кімнату {data.room_id} не знайдено")
@@ -71,9 +64,7 @@ def ensure_schedule_is_valid(
         exclude_game_id=exclude_game_id,
     )
     if room_conflict:
-        raise ApiError(
-            409, "ROOM_BUSY", f"Кімната зайнята на цей час грою {room_conflict.id}"
-        )
+        raise ApiError(409, "ROOM_BUSY", f"Кімната зайнята на цей час грою {room_conflict.id}")
     master_conflict = find_busy_game(
         data.starts_at,
         data.duration_minutes,
@@ -81,9 +72,7 @@ def ensure_schedule_is_valid(
         exclude_game_id=exclude_game_id,
     )
     if master_conflict:
-        raise ApiError(
-            409, "MASTER_BUSY", f"Майстер уже веде гру {master_conflict.id} у цей час"
-        )
+        raise ApiError(409, "MASTER_BUSY", f"Майстер уже веде гру {master_conflict.id} у цей час")
     if exclude_game_id and data.max_players < len(ENROLLMENTS.get(exclude_game_id, [])):
         raise ApiError(
             409,
@@ -96,20 +85,14 @@ def ensure_schedule_is_valid(
     "",
     response_model=GameListResponse,
     summary="Отримати список ігор",
-    description="Повертає ігри з пагінацією та фільтрами. Порядок гарантований: за часом початку, потім за id.",
+    description=("Повертає ігри з пагінацією та фільтрами. " "Порядок гарантований: за часом початку, потім за id."),
     responses=error_docs(400),
 )
 async def list_games(
-    limit: int = Query(
-        20, ge=1, le=100, description="Максимальна кількість ігор у відповіді"
-    ),
+    limit: int = Query(20, ge=1, le=100, description="Максимальна кількість ігор у відповіді"),
     offset: int = Query(0, ge=0, description="Скільки ігор пропустити"),
-    room_id: Optional[str] = Query(
-        None, pattern=r"^room_\d+$", description="Показати лише ігри в цій кімнаті"
-    ),
-    master_id: Optional[str] = Query(
-        None, pattern=r"^user_\d+$", description="Показати лише ігри цього майстра"
-    ),
+    room_id: Optional[str] = Query(None, pattern=r"^room_\d+$", description="Показати лише ігри в цій кімнаті"),
+    master_id: Optional[str] = Query(None, pattern=r"^user_\d+$", description="Показати лише ігри цього майстра"),
 ):
     records = sorted_games(list(GAMES.values()))
     if room_id:
@@ -133,7 +116,7 @@ async def list_games(
     response_model=Game,
     status_code=201,
     summary="Створити гру",
-    description="Створює гру. Майстром стає автор запиту. Доступно ролям master та owner.",
+    description=("Створює гру. Майстром стає автор запиту. " "Доступно ролям master та owner."),
     responses=error_docs(400, 401, 403, 404, 409),
 )
 async def create_game(payload: GameCreate, response: Response, user: CurrentUser):
@@ -161,15 +144,15 @@ async def get_game(game_id: str = GameId):
     "/{game_id}",
     response_model=Game,
     summary="Повністю замінити гру",
-    description="Замінює всі поля гри. Усі поля тіла обов'язкові. Повторний запит з тим самим тілом дає той самий результат.",
+    description=(
+        "Замінює всі поля гри. Усі поля тіла обов'язкові. " "Повторний запит з тим самим тілом дає той самий результат."
+    ),
     responses=error_docs(400, 401, 403, 404, 409),
 )
 async def replace_game(payload: GameUpdate, user: CurrentUser, game_id: str = GameId):
     record = get_game_or_404(game_id)
     ensure_can_manage(record, user.id, user.role)
-    ensure_schedule_is_valid(
-        payload, master_id=record.master_id, exclude_game_id=game_id
-    )
+    ensure_schedule_is_valid(payload, master_id=record.master_id, exclude_game_id=game_id)
     updated = GameRecord(id=game_id, master_id=record.master_id, **payload.model_dump())
     GAMES[game_id] = updated
     return to_game(updated)
@@ -179,24 +162,18 @@ async def replace_game(payload: GameUpdate, user: CurrentUser, game_id: str = Ga
     "/{game_id}",
     response_model=Game,
     summary="Частково оновити гру",
-    description="Змінює лише передані поля. Порожнє тіло запиту — помилка валідації.",
+    description=("Змінює лише передані поля. " "Порожнє тіло запиту — помилка валідації."),
     responses=error_docs(400, 401, 403, 404, 409),
 )
 async def patch_game(payload: GamePatch, user: CurrentUser, game_id: str = GameId):
     record = get_game_or_404(game_id)
     ensure_can_manage(record, user.id, user.role)
-    changes = {
-        key: value for key, value in payload.model_dump().items() if value is not None
-    }
+    changes = {key: value for key, value in payload.model_dump().items() if value is not None}
     if not changes:
-        raise ApiError(
-            400, "VALIDATION_ERROR", "Передайте хоча б одне поле для оновлення"
-        )
+        raise ApiError(400, "VALIDATION_ERROR", "Передайте хоча б одне поле для оновлення")
     base_fields = {key: getattr(record, key) for key in GameBase.model_fields}
     merged = GameBase(**{**base_fields, **changes})
-    ensure_schedule_is_valid(
-        merged, master_id=record.master_id, exclude_game_id=game_id
-    )
+    ensure_schedule_is_valid(merged, master_id=record.master_id, exclude_game_id=game_id)
     updated = GameRecord(id=game_id, master_id=record.master_id, **merged.model_dump())
     GAMES[game_id] = updated
     return to_game(updated)
@@ -206,7 +183,9 @@ async def patch_game(payload: GamePatch, user: CurrentUser, game_id: str = GameI
     "/{game_id}",
     status_code=204,
     summary="Видалити гру",
-    description="Видаляє гру разом із записами гравців і звільняє кімнату. Доступно майстру гри та власнику клубу.",
+    description=(
+        "Видаляє гру разом із записами гравців і звільняє кімнату. " "Доступно майстру гри та власнику клубу."
+    ),
     responses=error_docs(400, 401, 403, 404),
 )
 async def delete_game(user: CurrentUser, game_id: str = GameId):
@@ -221,7 +200,7 @@ async def delete_game(user: CurrentUser, game_id: str = GameId):
     "/{game_id}/players",
     response_model=PlayersResponse,
     summary="Отримати список гравців гри",
-    description="Повертає записаних гравців та лічильник заповненості. Потрібна автентифікація.",
+    description=("Повертає записаних гравців та лічильник заповненості. " "Потрібна автентифікація."),
     responses=error_docs(400, 401, 404),
 )
 async def list_players(user: CurrentUser, game_id: str = GameId):
@@ -240,7 +219,10 @@ async def list_players(user: CurrentUser, game_id: str = GameId):
     response_model=Player,
     status_code=201,
     summary="Записатися на гру",
-    description="Записує автора запиту на гру. Тіло запиту не потрібне. Помилка 409, якщо місць немає або гравець уже записаний.",
+    description=(
+        "Записує автора запиту на гру. Тіло запиту не потрібне. "
+        "Помилка 409, якщо місць немає або гравець уже записаний."
+    ),
     responses=error_docs(400, 401, 404, 409),
 )
 async def enroll_player(response: Response, user: CurrentUser, game_id: str = GameId):
@@ -250,9 +232,7 @@ async def enroll_player(response: Response, user: CurrentUser, game_id: str = Ga
         raise ApiError(409, "ALREADY_ENROLLED", "Ви вже записані на цю гру")
     if len(players) >= record.max_players:
         raise ApiError(409, "GAME_FULL", "Вільних місць немає")
-    player = Player(
-        user_id=user.id, name=user.name, enrolled_at=datetime.now(timezone.utc)
-    )
+    player = Player(user_id=user.id, name=user.name, enrolled_at=datetime.now(timezone.utc))
     players.append(player)
     response.headers["Location"] = f"/api/v1/games/{game_id}/players/{user.id}"
     return player
@@ -262,7 +242,7 @@ async def enroll_player(response: Response, user: CurrentUser, game_id: str = Ga
     "/{game_id}/players/{user_id}",
     status_code=204,
     summary="Скасувати запис гравця",
-    description="Скасовує запис гравця. Доступно самому гравцеві, майстру гри та власнику клубу.",
+    description=("Скасовує запис гравця. " "Доступно самому гравцеві, майстру гри та власнику клубу."),
     responses=error_docs(400, 401, 403, 404),
 )
 async def remove_player(

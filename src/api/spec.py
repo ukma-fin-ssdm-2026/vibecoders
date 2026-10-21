@@ -4,9 +4,7 @@ import yaml
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
-SPEC_PATH = (
-    Path(__file__).resolve().parents[2] / "docs" / "api" / "openapi-generated.yaml"
-)
+SPEC_PATH = Path(__file__).resolve().parents[2] / "docs" / "api" / "openapi-generated.yaml"
 
 
 def build_openapi(app: FastAPI) -> dict:
