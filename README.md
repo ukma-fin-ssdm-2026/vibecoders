@@ -28,9 +28,37 @@
 - [Опис проєкту (Project-Description.md)](./Project-Description.md)
 - [Звіт про прогрес (progress.md)](./progress.md)
 - [Звіт з якості коду та статичного аналізу (static-analysis.md)](./docs/code-quality/static-analysis.md)
-- [Рецензія на код іншої команди (review-report.md)](./review-report.md)
+- [Рецензія на код іншої команди (review-report.md)](./docs/code-quality/review-report.md)
+- [Проєктування API (api-design.md)](./docs/api/api-design.md)
+- [Атрибути якості API (quality-attributes.md)](./docs/api/quality-attributes.md)
 
 ## Артефакти вимог
 - [RTM (rtm.md)](./docs/requirements/rtm.md)
-- [Модель загроз (threat-model.md)](./docs/requirements/threat-model.md)
+- [Модель загроз (threat-model.md)](./docs/architecture/threat-model.md)
 - [Архітектурне проєктування та UML (Лабораторна 3)](docs/architecture/)
+
+## API (Лабораторна 4)
+
+Документація API: https://ukma-fin-ssdm-2026.github.io/vibecoders/ (Swagger UI, специфікація автоматично генерується з коду при кожному push у `main` і публікується з гілки `gh-pages`).
+
+### Запуск API
+
+З кореня репозиторію:
+
+```
+pip install -r src/api/requirements.txt
+cd src/api
+python main.py
+```
+
+Сервер стартує на `http://127.0.0.1:3000`. Swagger UI: `http://127.0.0.1:3000/api-docs`, ReDoc: `http://127.0.0.1:3000/redoc`. Для захищених операцій у Swagger UI натисніть Authorize і введіть демо-токен: `master-token`, `player-token` або `owner-token`. Щоб слухати не лише localhost, задайте змінну середовища `API_HOST`.
+
+При кожному запуску сервер перезаписує `docs/api/openapi-generated.yaml`. Специфікацію можна згенерувати й окремо: `python generate_openapi.py` (з `src/api`).
+
+### Тести
+
+З кореня репозиторію:
+
+```
+python -m pytest
+```
