@@ -130,8 +130,12 @@ def find_busy_game(
     return None
 
 
+def game_end(record: GameRecord) -> datetime:
+    return record.starts_at + timedelta(minutes=record.duration_minutes)
+
+
 def next_free_start(room_id: str, desired_start: datetime, duration_minutes: int) -> datetime:
     busy = find_busy_game(desired_start, duration_minutes, room_id=room_id)
     if busy is None:
         return desired_start
-    return busy.starts_at + timedelta(minutes=busy.duration_minutes)
+    return game_end(busy)
