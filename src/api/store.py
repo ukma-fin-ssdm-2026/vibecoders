@@ -131,4 +131,7 @@ def find_busy_game(
 
 
 def next_free_start(room_id: str, desired_start: datetime, duration_minutes: int) -> datetime:
-    return desired_start
+    busy = find_busy_game(desired_start, duration_minutes, room_id=room_id)
+    if busy is None:
+        return desired_start
+    return busy.starts_at + timedelta(minutes=busy.duration_minutes)
