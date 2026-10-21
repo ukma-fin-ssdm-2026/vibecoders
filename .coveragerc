@@ -1,0 +1,5 @@
+[run]
+source = src/api
+branch = True
+omit =
+    src/api/tests/*
