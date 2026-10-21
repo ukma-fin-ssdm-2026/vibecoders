@@ -11,8 +11,8 @@ def test_room_is_full_when_capacity_reached():
     assert room.is_full() is True
 
 def test_room_exceeds_capacity():
-    room = Room(id="room_1", name="Зала «Дракон»", capacity=3, is_blocked=False, current_players=5)
-    assert room.is_full() is True
+    with pytest.raises(ValidationError):
+        Room(id="room_1", name="Зала «Дракон»", capacity=3, is_blocked=False, current_players=5)
 
 def test_room_cannot_exceed_capacity():
     with pytest.raises((ValueError, ValidationError)):
