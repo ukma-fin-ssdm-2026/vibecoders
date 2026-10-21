@@ -210,6 +210,8 @@ class Room(BaseModel):
     is_blocked: bool = Field(
         ..., description="Чи заблокована кімната власником клубу", examples=[False]
     )
+    def is_full(self) -> bool:
+        return False
 
 
 class RoomListResponse(BaseModel):
