@@ -138,4 +138,4 @@ def next_free_start(room_id: str, desired_start: datetime, duration_minutes: int
     busy = find_busy_game(desired_start, duration_minutes, room_id=room_id)
     if busy is None:
         return desired_start
-    return game_end(busy)
+    return next_free_start(room_id, game_end(busy), duration_minutes)
