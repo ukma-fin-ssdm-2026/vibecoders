@@ -28,6 +28,7 @@ def test_get_room_returns_capacity_and_status(client):
         "name": "Зала «Лабіринт»",
         "capacity": 6,
         "is_blocked": False,
+        "current_players": 0,
     }
 
 
