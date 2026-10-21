@@ -1,5 +1,1 @@
-{
-  "src/api/tests/test_api.py::test_get_games_unauthorized": true,
-  "src/api/tests/test_room_validation.py::test_room_is_full": true,
-  "src/api/tests/test_room_validation.py::test_room_is_not_full": true
-}
+{}

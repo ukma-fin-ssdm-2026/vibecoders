@@ -168,7 +168,6 @@ class Room(BaseModel):
 
     id: str = Field(..., description="Ідентифікатор кімнати", examples=["room_1"])
     name: str = Field(..., description="Назва кімнати", examples=["Зала «Дракон»"])
-<<<<<<< HEAD
     capacity: int = Field(
         ..., ge=1, description="Максимальна місткість кімнати", examples=[8]
     )
@@ -189,10 +188,6 @@ class Room(BaseModel):
 
     def is_full(self) -> bool:
         return self.current_players >= self.capacity
-=======
-    capacity: int = Field(..., ge=1, description="Максимальна місткість кімнати", examples=[8])
-    is_blocked: bool = Field(..., description="Чи заблокована кімната власником клубу", examples=[False])
->>>>>>> 09b8fe140a0422e515a98f310b00609e8ae66988
 
 
 class RoomListResponse(BaseModel):
