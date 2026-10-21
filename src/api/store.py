@@ -128,3 +128,7 @@ def find_busy_game(
         ):
             return record
     return None
+
+
+def next_free_start(room_id, desired_start, duration_minutes):
+    return desired_start
