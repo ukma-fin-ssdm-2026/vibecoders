@@ -8,6 +8,18 @@
 - **Де налаштовано:** `.github/workflows/ci.yml`, крок «Run tests with Pytest and coverage»; конфігурація покриття в `.coveragerc`.
 - **Успішний прогін:** https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/39595344779
 
+### Мутаційне тестування
+
+Інструмент: mutmut. Модуль: `src/api/store.py`. Запуск: `bash scripts/run_mutation.sh`.
+Результат: 57 мутантів, 55 вбито, оцінка мутації 96,5%.
+Мутант, що вижив: у функції `find_busy_game` оператор `continue` (пропуск гри, яку редагують) замінено на `break`. Тести цього не помічали, бо виключена гра ніколи не стояла першою серед конфліктів. Додано тест `test_find_busy_game_skips_excluded_game_and_still_finds_later_conflict`, після чого мутант убито.
+Другий приклад: `and` замінено на `or` у перевірці майстра (`same_master`). Додано `test_find_busy_game_ignores_games_of_other_master`.
+Два мутанти, що лишилися (`"sha256"` → `"SHA256"` і `"utf-8"` → `"UTF-8"` у `hash_password`), еквівалентні: результат хешування не змінюється, тому вбити їх неможливо.
+
+### Тести на основі властивостей
+
+Бібліотека: Hypothesis, файл `src/api/tests/test_properties.py`. Приклад: `test_time_overlap_is_symmetric_for_any_slots` перевіряє, що `time_overlap(a, b)` дорівнює `time_overlap(b, a)` для будь-яких двох слотів, бо перетин двох інтервалів не залежить від того, який із них названо першим.
+
 ## Використання ШІ:
 
 Пункт про бонуси сформовано за допомогою Claude. Деякі дані внесено вручну, деякі звірено з файлами.
