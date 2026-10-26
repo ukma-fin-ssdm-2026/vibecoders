@@ -35,7 +35,9 @@ jobs:
       run: python -m bandit -x src/api/tests -r src/api
 
     - name: Run tests with Pytest and coverage
+
       run: python -m pytest src/api/tests --cov=src/api --cov-fail-under=95 --cov-report=html --cov-report=term
+
 
     - name: Upload coverage report
       if: always()
