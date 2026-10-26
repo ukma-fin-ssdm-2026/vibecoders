@@ -52,6 +52,12 @@ CREDENTIALS: Dict[str, Dict[str, str]] = {
 
 USER_TOKENS: Dict[str, str] = {user_id: token for token, user_id in TOKENS.items()}
 
+MAX_FAILED_LOGINS = 5
+LOGIN_WINDOW = timedelta(minutes=15)
+LOCK_DURATION = timedelta(minutes=15)
+LOGIN_FAILURES: Dict[str, List[datetime]] = {}
+LOCKED_UNTIL: Dict[str, datetime] = {}
+
 ROOMS: Dict[str, Room] = {
     "room_1": Room(id="room_1", name="Зала «Дракон»", capacity=8, is_blocked=False),
     "room_2": Room(id="room_2", name="Зала «Лабіринт»", capacity=6, is_blocked=False),
