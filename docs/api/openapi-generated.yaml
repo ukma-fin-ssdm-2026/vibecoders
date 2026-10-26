@@ -17,7 +17,8 @@ paths:
       description: 'Перевіряє пошту та пароль і повертає токен для заголовка Authorization:
         Bearer. Демо-акаунти: master@club.test / master-pass-1, player@club.test /
         player-pass-1, owner@club.test / owner-pass-1. Повідомлення про помилку однакове
-        для невідомої пошти та хибного пароля.'
+        для невідомої пошти та хибного пароля. Після 5 невдалих спроб за 15 хвилин
+        акаунт блокується на 15 хвилин (429, заголовок Retry-After).'
       operationId: login
       requestBody:
         content:
@@ -40,6 +41,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Акаунт тимчасово заблоковано після невдалих спроб входу
           content:
             application/json:
               schema:
