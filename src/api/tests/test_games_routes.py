@@ -280,6 +280,13 @@ def test_enroll_last_free_seat_succeeds_then_game_is_full(client, master_headers
     assert len(ENROLLMENTS["game_2"]) == 2
 
 
+def test_player_can_enroll_again_after_cancelling(client, player_headers):
+    assert client.delete("/api/v1/games/game_1/players/user_2", headers=player_headers).status_code == 204
+    assert client.get("/api/v1/games/game_1").json()["current_players"] == 0
+    assert client.post("/api/v1/games/game_1/players", headers=player_headers).status_code == 201
+    assert client.get("/api/v1/games/game_1").json()["current_players"] == 1
+
+
 def test_ensure_can_manage_allows_owner_and_own_master():
     record = GAMES["game_1"]
     games_module.ensure_can_manage(record, "user_3", UserRole.owner)
