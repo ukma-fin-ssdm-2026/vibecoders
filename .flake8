@@ -5,5 +5,9 @@ exclude =
     .git,
     __pycache__,
     .venv,
+    venv,
+    env,
+    built,
+    dist,
     htmlcov,
     .pytest_cache
