@@ -287,6 +287,11 @@ def test_player_can_enroll_again_after_cancelling(client, player_headers):
     assert client.get("/api/v1/games/game_1").json()["current_players"] == 1
 
 
+def test_remove_player_without_token_returns_401_and_keeps_enrollment(client):
+    assert client.delete("/api/v1/games/game_1/players/user_2").status_code == 401
+    assert len(ENROLLMENTS["game_1"]) == 1
+
+
 def test_ensure_can_manage_allows_owner_and_own_master():
     record = GAMES["game_1"]
     games_module.ensure_can_manage(record, "user_3", UserRole.owner)
