@@ -1,6 +1,10 @@
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pytest
+
+import routes.auth as auth_module
+import store
 
 
 @pytest.mark.parametrize(
@@ -65,3 +69,106 @@ def test_issued_token_grants_access_to_protected_endpoint(client):
     headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
     response = client.get("/api/v1/games/game_1/players", headers=headers)
     assert response.status_code == 200
+
+
+# SEC-003: після 5 невдалих спроб входу за 15 хвилин акаунт блокується на 15 хвилин.
+# Специфікація поведінки: HTTP 429, код ACCOUNT_LOCKED, заголовок Retry-After (секунди до розблокування).
+# Стан лічильників тримають store.LOGIN_FAILURES (email -> час невдалих спроб)
+# і store.LOCKED_UNTIL (email -> час розблокування).
+
+LOGIN_URL = "/api/v1/auth/login"
+MASTER_EMAIL = "master@club.test"
+LOCK_MINUTES = 15
+
+
+@pytest.fixture(autouse=True)
+def clean_login_state():
+    def clear():
+        for name in ("LOGIN_FAILURES", "LOCKED_UNTIL"):
+            getattr(store, name, {}).clear()
+
+    clear()
+    yield
+    clear()
+
+
+@pytest.fixture
+def clock():
+    class Clock(datetime):
+        current = datetime(2026, 10, 26, 12, 0, tzinfo=timezone.utc)
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.current
+
+    with patch.object(auth_module, "datetime", Clock, create=True):
+        yield Clock
+
+
+def login(client, email=MASTER_EMAIL, password="master-pass-1"):
+    return client.post(LOGIN_URL, json={"email": email, "password": password})
+
+
+def fail_login(client, times, email=MASTER_EMAIL):
+    for _ in range(times):
+        assert login(client, email, "wrong-pass-1").status_code == 401
+
+
+def test_fifth_failed_login_returns_401_and_sixth_attempt_is_locked(client, clock):
+    fail_login(client, 5)
+    response = login(client, password="wrong-pass-1")
+    assert response.status_code == 429
+    assert response.json()["error"]["code"] == "ACCOUNT_LOCKED"
+
+
+def test_locked_account_rejects_correct_password_and_reports_retry_after(client, clock):
+    fail_login(client, 5)
+    assert login(client).status_code == 429
+    assert login(client).headers["retry-after"] == str(LOCK_MINUTES * 60)
+    clock.current += timedelta(minutes=5)
+    assert login(client).headers["retry-after"] == str((LOCK_MINUTES - 5) * 60)
+
+
+def test_four_failed_logins_do_not_lock_and_success_resets_counter(client, clock):
+    fail_login(client, 4)
+    assert login(client).status_code == 200
+    fail_login(client, 4)
+    assert login(client).status_code == 200
+
+
+def test_lock_expires_exactly_after_15_minutes(client, clock):
+    fail_login(client, 5)
+    clock.current += timedelta(minutes=14, seconds=59)
+    assert login(client).status_code == 429
+    clock.current += timedelta(seconds=1)
+    assert login(client).status_code == 200
+
+
+def test_attempts_during_lock_do_not_extend_it(client, clock):
+    fail_login(client, 5)
+    clock.current += timedelta(minutes=10)
+    assert login(client).status_code == 429
+    clock.current += timedelta(minutes=5)
+    assert login(client).status_code == 200
+
+
+def test_failures_older_than_15_minutes_are_not_counted(client, clock):
+    fail_login(client, 3)
+    clock.current += timedelta(minutes=16)
+    fail_login(client, 2)
+    assert login(client).status_code == 200
+
+
+def test_lock_applies_only_to_the_attacked_account(client, clock):
+    fail_login(client, 5)
+    assert login(client).status_code == 429
+    assert login(client, "player@club.test", "player-pass-1").status_code == 200
+
+
+def test_unknown_email_gets_locked_the_same_way_as_known_one(client, clock):
+    fail_login(client, 5, email="ghost@club.test")
+    fail_login(client, 5)
+    unknown = login(client, "ghost@club.test", "wrong-pass-1")
+    known = login(client, MASTER_EMAIL, "wrong-pass-1")
+    assert unknown.status_code == known.status_code == 429
+    assert unknown.json() == known.json()
