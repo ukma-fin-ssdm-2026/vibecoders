@@ -270,6 +270,28 @@ def test_remove_player_not_enrolled_returns_404(client, master_headers):
     assert response.json()["error"]["code"] == "ENROLLMENT_NOT_FOUND"
 
 
+def test_enroll_last_free_seat_succeeds_then_game_is_full(client, master_headers, player_headers, owner_headers):
+    GAMES["game_2"] = GAMES["game_2"].model_copy(update={"max_players": 2})
+    assert client.post("/api/v1/games/game_2/players", headers=master_headers).status_code == 201
+    assert client.post("/api/v1/games/game_2/players", headers=player_headers).status_code == 201
+    assert client.get("/api/v1/games/game_2").json()["current_players"] == 2
+    response = client.post("/api/v1/games/game_2/players", headers=owner_headers)
+    assert response.status_code == 409
+    assert len(ENROLLMENTS["game_2"]) == 2
+
+
+def test_player_can_enroll_again_after_cancelling(client, player_headers):
+    assert client.delete("/api/v1/games/game_1/players/user_2", headers=player_headers).status_code == 204
+    assert client.get("/api/v1/games/game_1").json()["current_players"] == 0
+    assert client.post("/api/v1/games/game_1/players", headers=player_headers).status_code == 201
+    assert client.get("/api/v1/games/game_1").json()["current_players"] == 1
+
+
+def test_remove_player_without_token_returns_401_and_keeps_enrollment(client):
+    assert client.delete("/api/v1/games/game_1/players/user_2").status_code == 401
+    assert len(ENROLLMENTS["game_1"]) == 1
+
+
 def test_ensure_can_manage_allows_owner_and_own_master():
     record = GAMES["game_1"]
     games_module.ensure_can_manage(record, "user_3", UserRole.owner)
