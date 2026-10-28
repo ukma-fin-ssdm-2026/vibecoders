@@ -34,6 +34,9 @@ jobs:
     - name: Security check with Bandit
       run: python -m bandit -x src/api/tests -r src/api
 
+    - name: Check requirement traceability
+      run: python scripts/check_traceability.py
+
     - name: Run tests with Pytest and coverage
       run: python -m pytest src/api/tests --cov=src/api --cov-report=term-missing --cov-report=html --cov-fail-under=95
 
