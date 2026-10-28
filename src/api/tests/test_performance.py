@@ -4,12 +4,15 @@
 запис гравця (POST) і наступне читання лічильника (GET) разом мають вкластися в поріг.
 """
 
+import pytest
+
 from store import ENROLLMENTS
 
 PERF_001_THRESHOLD_SECONDS = 1.0
 GAME_URL = "/api/v1/games/game_2"
 
 
+@pytest.mark.requirement("PERF-001", "US-001")
 def test_enroll_and_counter_refresh_fit_into_one_second(benchmark, client, player_headers):
     def reset_enrollments():
         ENROLLMENTS["game_2"] = []
