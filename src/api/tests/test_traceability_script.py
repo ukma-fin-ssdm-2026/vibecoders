@@ -86,11 +86,13 @@ def test_technical_mark_counts_as_declared_but_covers_nothing(workspace):
 
 
 @pytest.mark.technical
-def test_main_returns_nonzero_exit_code_on_gap(workspace, capsys):
+def test_main_returns_nonzero_exit_code_on_gap(workspace, capsys, monkeypatch):
     rtm, tests = workspace
     write_test(tests, "test_a.py", '@pytest.mark.requirement("US-001")\ndef test_a():\n    pass\n')
+    monkeypatch.setattr(check_traceability, "RTM_PATH", rtm)
+    monkeypatch.setattr(check_traceability, "TESTS_DIR", tests)
 
-    code = check_traceability.main(["--rtm", str(rtm), "--tests", str(tests)])
+    code = check_traceability.main()
 
     assert code == 1
     assert "вимога без жодного тесту: SEC-003" in capsys.readouterr().out
