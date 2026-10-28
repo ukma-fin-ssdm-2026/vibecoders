@@ -1,8 +1,11 @@
-import argparse
 import ast
 import re
 import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+RTM_PATH = ROOT / "docs" / "requirements" / "rtm.md"
+TESTS_DIR = ROOT / "src" / "api" / "tests"
 
 REQUIREMENT_ID = re.compile(r"^(US|FR|SEC|PERF|REL|USAB|MAINT)-\d{3}$")
 
@@ -78,12 +81,8 @@ def check(rtm_path, tests_dir):
     return errors, coverage, tests
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description="Перевірка простежуваності вимог і тестів")
-    parser.add_argument("--rtm", default="docs/requirements/rtm.md")
-    parser.add_argument("--tests", default="src/api/tests")
-    args = parser.parse_args(argv)
-    errors, coverage, tests = check(args.rtm, args.tests)
+def main():
+    errors, coverage, tests = check(RTM_PATH, TESTS_DIR)
     for req, covered_by in coverage.items():
         status = f"відкладено ({DEFERRED[req]})" if req in DEFERRED and not covered_by else f"тестів: {len(covered_by)}"
         print(f"{req}: {status}")
