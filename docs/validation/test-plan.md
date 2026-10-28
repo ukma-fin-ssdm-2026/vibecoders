@@ -41,12 +41,43 @@
 | 17 | `POST /games/{id}/players` + `GET /games/{id}` (нефункціональний) | інтеграційний | позитивний | Запис гравця й наступне читання `current_players` разом тривають менше 1 с (найповільніший із 50 прогонів) | Голдинська | PERF-001 |
 | 18 | `POST /auth/login` | інтеграційний | негативний | 5 невдалих входів за 15 хв → наступна спроба, навіть із правильним паролем, повертає 429 `ACCOUNT_LOCKED` із `Retry-After`; невідома пошта блокується так само; інші акаунти не блокуються | Голдинська | SEC-003 |
 | 19 | `POST /auth/login` | інтеграційний | позитивний | 4 невдалі входи не блокують, а успішний вхід скидає лічильник; невдачі старші за 15 хв не рахуються; блокування знімається рівно через 15 хв, спроби під час нього його не подовжують | Голдинська | SEC-003 |
+| 20 | `store.hash_password`, `store.verify_password` | модульний | позитивний | Хеш детермінований і є hex-рядком; різні паролі дають різні хеші; `verify_password` приймає правильний пароль і відхиляє хибний | Спис | SEC-001 |
+| 21 | `POST /api/v1/games` (таблиця рішень) | інтеграційний | негативний | Кожне з 9 правил таблиці рішень (див. «Бонуси») дає очікуваний статус і код помилки; при будь-якій відмові нова гра не з'являється; при кількох порушеннях діє пріоритет перевірок | Спис | US-002 (REL-002) |
+| 22 | `GET /games`, `GET /games/{id}` | інтеграційний | позитивний | Список відсортований за часом початку, потім за id; пагінація на межах 1 і 100; фільтри за кімнатою та майстром; недійсні параметри → 400; невідомий id → 404 | Спис | US-006 (Test-10) |
+
+## Трасування
+
+У тестах ми пишемо мітку `@pytest.mark.requirement("ID")`, щоб було видно, яку вимогу з `rtm.md` перевіряє тест. Скрипт `scripts/check_traceability.py` перевіряє це в CI. Якщо в тесту немає прямої вимоги (формат помилок, OpenAPI, звичайний вхід), він має мітку `@pytest.mark.technical`.
+
+| Рядок плану | Тести | Результат |
+|---|---|---|
+| 1 | `test_store.py`: `test_time_overlap_*`; `test_properties.py`: `test_time_overlap_is_symmetric_for_any_slots`, `test_back_to_back_slots_never_overlap` | зелений |
+| 2 | `test_store.py`: `test_find_busy_game_*` | зелений |
+| 3 | `test_games_routes.py`: `test_create_game_success_sets_master_and_location`; `test_scenarios.py`: `test_scenario_master_books_free_room_and_slot_appears_in_calendar` | зелений |
+| 4 | `test_games_routes.py`: `test_create_game_room_busy_returns_409`, `test_create_game_master_busy_returns_409`, `test_create_game_capacity_boundary`, `test_create_game_forbidden_for_player` | зелений |
+| 5, 6 | `test_schemas.py`: `test_duration_*`, `test_max_players_*`, `test_title_length_*`, `test_room_id_pattern_rejects_malformed_values` | зелений |
+| 7 | `test_store.py`: `test_to_game_*` | зелений |
+| 8 | `test_games_routes.py`: `test_enroll_player_uses_current_time_from_stubbed_clock`, `test_enroll_last_free_seat_succeeds_then_game_is_full` | зелений |
+| 9 | `test_games_routes.py`: `test_enroll_player_twice_returns_409`, `test_enroll_player_in_full_game_returns_409` | зелений |
+| 10 | `test_games_routes.py`: `test_remove_player_allowed_for_self_master_and_owner`, `test_player_can_enroll_again_after_cancelling` | зелений |
+| 11 | `test_games_routes.py`: `test_remove_player_by_stranger_is_forbidden`, `test_remove_player_not_enrolled_returns_404`, `test_remove_player_without_token_returns_401_and_keeps_enrollment` | зелений |
+| 12 | `test_games_routes.py`: `test_delete_game_removes_game_and_enrollments`; `test_scenarios.py`: `test_scenario_deleting_game_frees_its_slot_for_a_new_booking` | зелений |
+| 13 | `test_security.py` | зелений |
+| 14 | `test_rooms_routes.py`: `test_block_room_without_games_succeeds`; `test_scenarios.py`: `test_scenario_blocked_room_rejects_new_games` | зелений |
+| 15 | `test_rooms_routes.py`: `test_block_room_with_games_returns_409`, `test_block_room_requires_owner` | зелений |
+| 16 | `test_list_players_access.py`: `test_list_players_forbidden_for_player_who_does_not_run_the_game` (xfail, D-1), `test_list_players_allowed_for_master_of_the_game`; `test_games_routes.py`: `test_list_players_requires_authentication` | частково: 403 для стороннього гравця не виконується (xfail) |
+| 17 | `test_performance.py` | зелений |
+| 18, 19 | `test_auth_routes.py`: тести блокування (8 тестів) | зелений |
+| 20 | `test_store.py`: `test_hash_password_*`, `test_verify_password_*`; `test_properties.py`: `test_password_hash_verifies_only_original` | зелений |
+| 21 | `test_decision_table.py`: `test_create_game_decision_table[DT-1…DT-9]` | зелений |
+| 22 | `test_games_routes.py`: `test_list_games_*`, `test_get_game_*`; `test_api.py`: `test_get_games_public`, `test_get_games_authorized` | зелений |
+
+Останній прогін локально (Python 3.12): 230 тестів, 229 пройшли, 1 xfailed (D-1), покриття 99,53%. Скрипт простежуваності: кожна вимога з `rtm.md` має хоча б один тест, окрім US-004, яку ми відклали.
 
 ## Примітки
 
 - **Рядок 15.** RTM (Test-06) і FR-007 вимагають блокувати зайнятий слот «з підтвердженням» і автоматично скасовувати ігри, а API повертає 409. Очікування в таблиці записано за API. Треба або виправити RTM, або змінити код.
 - **Не реалізовано в API:** US-004 (FR-008), SEC-004, FR-011. Хеш паролів (SEC-001) є в коді й тестах, але в колонці NFR у RTM його немає.
-
 
 ## Бонуси
 
