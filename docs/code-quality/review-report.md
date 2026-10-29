@@ -2,6 +2,22 @@
 
 **Команда:** Ctrl-Alt-Defeat (Movie Platform API)
  
+## Що рецензовано
+
+- Репозиторій: https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat
+- Коміт: `002e39bdce0574737d3954d7b6f430efc42b1415` від 8 жовтня 2026, https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/tree/002e39bdce0574737d3954d7b6f430efc42b1415
+- Файл: `src/api/main.py`, рядки 1-283 (весь файл): https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L1-L283
+
+| Знахідка | Рядки в `src/api/main.py` |
+| :--- | :--- |
+| Блок 404 `REVIEW_NOT_FOUND`, скопійований тричі | [233-238](https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L233-L238) (GET), [252-256](https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L252-L256) (PATCH), [273-277](https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L273-L277) (DELETE) |
+| `user_id` береться з тіла запиту | [38](https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L38) (схема `ReviewBase`, від якої успадковується `ReviewCreate`), [188-197](https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L188-L197) (`create_review`) |
+| PATCH і DELETE не перевіряють власника відгуку | [248-264](https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L248-L264) (PATCH), [272-279](https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L272-L279) (DELETE) |
+| PATCH з `null` проходить повз валідацію | [259-262](https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L259-L262) |
+| `host="0.0.0.0"` | [283](https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L283) |
+| `save_openapi_spec` у `lifespan` пише файл при старті | [15-24](https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L15-L24), [27-29](https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L27-L29) |
+| `datetime.utcnow()` | [193](https://github.com/ukma-fin-ssdm-2026/ctrl-alt-defeat/blob/002e39bdce0574737d3954d7b6f430efc42b1415/src/api/main.py#L193) |
+
 ## Три сильні сторони
 1. Вхідні дані перевіряються через Pydantic, ліміти на пагінацію до 100. Некоректні дані не доходять до логіки.
 2. Усі помилки мають однаковий формат. Зроблено через глобальні обробники, і він потрапляє в OpenAPI.
@@ -31,7 +47,7 @@ user_id береться з тіла запиту, тож можна створ�
 
 ## Code Review: команда Ctrl-Alt-Defeat
 
-**Об'єкт рев'ю:** репозиторій `ctrl-alt-defeat` (Movie Platform API, FastAPI).
+**Об'єкт рев'ю:** репозиторій `ctrl-alt-defeat` (Movie Platform API, FastAPI), коміт `002e39bdce0574737d3954d7b6f430efc42b1415`.
 **Переглянуто:** `src/api/main.py` (283 рядки — єдиний файл з кодом), `.pre-commit-config.yaml`, `.github/workflows/*`, `docs/api`, `docs/architecture/threat-model.md`, `README.md`.
 **Інструменти:** `flake8` (max-line-length 100) і `ruff` (правила E, F, W, N, D, B, UP, S), ручний перегляд, а також запуск застосунку через `TestClient` для перевірки поведінки.
 
