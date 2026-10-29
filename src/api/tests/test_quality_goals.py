@@ -1,12 +1,9 @@
 """Тести, що перевіряють числові межі з docs/api/quality-attributes.md."""
 
-from datetime import datetime, timedelta, timezone
-
 import pytest
 import yaml
 
 import spec
-from booking_db import BookingRepository, SlotTakenError
 from main import app
 from store import CREDENTIALS
 
@@ -18,15 +15,12 @@ DEMO_LOGINS = {
 
 
 @pytest.mark.requirement("REL-002")
-def test_hundred_overlapping_attempts_of_one_master_are_all_rejected(tmp_path):
-    repo = BookingRepository(str(tmp_path / "bookings.db"))
-    start = datetime(2026, 11, 10, 18, 0, tzinfo=timezone.utc)
-    repo.book("room_1", "user_1", start, 120)
+def test_hundred_overlapping_attempts_of_one_master_are_all_rejected(client, master_headers, game_payload):
     rejected = 0
-    for minutes in range(100):
-        try:
-            repo.book("room_2", "user_1", start + timedelta(minutes=minutes), 30)
-        except SlotTakenError:
+    for minute in range(100):
+        game_payload.update(room_id="room_3", starts_at=f"2026-10-10T{18 + minute // 60}:{minute % 60:02d}:00Z")
+        response = client.post("/api/v1/games", json=game_payload, headers=master_headers)
+        if response.status_code == 409 and response.json()["error"]["code"] == "MASTER_BUSY":
             rejected += 1
     assert rejected == 100
 
