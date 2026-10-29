@@ -26,7 +26,7 @@
 Детальніше про наш робочий процес, оцінку якості та архітектуру можна дізнатися у відповідних файлах:
 - [Командний статут (TeamCharter.md)](./TeamCharter.md)
 - [Опис проєкту (Project-Description.md)](./Project-Description.md)
-- [Звіт про прогрес (progress.md)](./progress.md)
+- [Звіт про прогрес (progress.md)](./docs/code-quality/progress.md)
 - [Звіт з якості коду та статичного аналізу (static-analysis.md)](./docs/code-quality/static-analysis.md)
 - [Рецензія на код іншої команди (review-report.md)](./docs/code-quality/review-report.md)
 - [Проєктування API (api-design.md)](./docs/api/api-design.md)
