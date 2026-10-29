@@ -17,19 +17,22 @@ node "Веб-сервер клубу\n(1 виробнича машина / VM)" 
     artifact "FastAPI застосунок" as App
     artifact "Jinja2-шаблони +\nстатика (CSS/HTMX.js)" as Static
   }
+  node "systemd\n(автоперезапуск, REL-003)" as Systemd
 }
 
 node "Сервер бази даних" as DBServer {
   database "MySQL\n(основна БД)" as MySQL
 }
 
-cloud "SMTP-провайдер\n(зовнішній, опційно)" as SMTP
+cloud "SMTP-провайдер\n(зовнішній)" as SMTP
 
 Browser --> Internet : HTTPS
 Internet --> Nginx : HTTPS (443)
 Nginx --> Uvicorn : HTTP (unix-сокет /\nlocalhost:8000)
 App --> MySQL : SQL (TCP 3306, ORM,\nACID-транзакції)
-App ..> SMTP : SMTP (587, опційно,\nUS-008)
+App --> SMTP : SMTP + TLS (587),\nсповіщення (FR-011)
+
+Systemd ..> Uvicorn : запуск і автоперезапуск
 
 note right of Internet
   Межа довіри 1: Інтернет → Веб-сервер.
@@ -43,6 +46,12 @@ note right of DBServer
   Лише Uvicorn/FastAPI має мережевий
   доступ до MySQL; прямий доступ з
   інтернету до порту 3306 заборонено.
+end note
+
+note right of SMTP
+  Межа довіри 3 (TB3): Застосунок → зовнішній SMTP-провайдер.
+  Дані сповіщень залишають нашу систему; з'єднання лише
+  через TLS (SMTP_TLS=True), див. threat-model.md.
 end note
 
 @enduml
