@@ -7,7 +7,9 @@ package "Frontend Layer" {
 
 node "Cloud Infrastructure (Nginx/Reverse Proxy)" as Cloud {
   package "Backend System (FastAPI Monolith)" {
-    component "Auth & Routing\nController" as Auth
+    component "Auth Controller" as Auth
+    component "Security & Hashing\nModule" as Sec
+    component "Configuration\nManager" as Conf
     component "Game Management\nService" as GameSvc
     component "Room Booking\nService" as RoomSvc
     component "Notification Service" as NotifSvc
@@ -17,17 +19,20 @@ node "Cloud Infrastructure (Nginx/Reverse Proxy)" as Cloud {
 database "Relational DB (MySQL)" as DB
 cloud "External SMTP Server" as SMTP
 
-Client --> Cloud : HTTP (HTMX AJAX)
+Client --> Cloud : HTTPS (HTMX AJAX)
 Cloud --> Auth : Маршрутизація трафіку
+Auth --> Sec : Хешування паролів, ліміт невдалих входів\n(SEC-001, SEC-003)
+Auth --> DB : SQL (користувачі, сесії)
+Sec --> DB : SQL (лічильник невдалих входів)
 Auth --> GameSvc : Виклик функції
 Auth --> RoomSvc : Виклик функції
-GameSvc --> DB : SQL (Читання/Запис)
-RoomSvc --> DB : SQL (Транзакції бронювання)
+RoomSvc --> Conf : Налаштування кімнат (MAINT-001)
+GameSvc --> DB : SQL (читання/запис)
+RoomSvc --> DB : SQL (транзакції бронювання)
 Auth --> Client : Повертає HTML-фрагменти
 
 GameSvc --> NotifSvc : Тригер сповіщення (FR-011)
-NotifSvc --> SMTP : Відправка Email
-SMTP --> Client : Лист гравцю про скасування
+NotifSvc --> SMTP : Лист гравцю про скасування гри (SMTP + TLS)
 
 note right of DB
   Гарантує ACID транзакції

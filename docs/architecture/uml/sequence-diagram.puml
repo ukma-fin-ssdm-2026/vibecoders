@@ -5,7 +5,7 @@ title Діаграма послідовності — Майстер броню�
 
 actor "Майстер" as GM
 participant "Браузер\n(HTMX)" as Browser
-participant "Auth & Routing\nController" as Router
+participant "Auth Controller" as Router
 participant "Game Management\nService" as GameSvc
 participant "Room Booking\nService" as BookingSvc
 database "MySQL" as DB
