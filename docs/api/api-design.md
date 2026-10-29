@@ -135,7 +135,7 @@ PUT повністю замінює ігровий ресурс, тому час
 
 ## 11. Узгодженість із кодом
 
-Перевіряється автоматично тестами `src/api/tests/test_api.py`: кожна кінцева точка має summary, description і описані 4xx; формат помилок єдиний; коди статусів відповідають таблиці розділу 5.
+Перевіряється автоматично тестами `src/api/tests/test_spec.py` (кожна кінцева точка має summary, description і описані 4xx, `test_every_operation_has_summary_description_and_documented_4xx`) та `src/api/tests/test_quality_goals.py` (збіг закоміченого `openapi-generated.yaml` зі специфікацією з коду); формат помилок єдиний, коди статусів відповідають таблиці розділу 5.
 
 ### Використання ШІ
 

@@ -1,5 +1,3 @@
-"""Тести, що перевіряють числові межі з docs/api/quality-attributes.md."""
-
 import pytest
 import yaml
 
