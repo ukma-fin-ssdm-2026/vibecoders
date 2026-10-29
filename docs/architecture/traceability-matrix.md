@@ -14,7 +14,7 @@
 | FR-008 | Власник сайту блокує акаунт користувача | Високий | Auth Controller, Relational DB | Прапорець `is_blocked` в таблиці користувачів, перевірка при кожному логіні | Інтеграційний тест | Test-07; Test-08 (відкладено: не реалізовано в API) |
 | FR-009 | Гравець скасовує бронювання, лічильник збільшується на 1 | Високий | Game Management Service, Relational DB | Атомарна транзакція скасування | Модульний тест | Test-09; TP-14 |
 | FR-010 | Майстер бачить список гравців та лічильник заповненості | Середній | Game Management Service, Auth Controller, Relational DB | Запит списку учасників з перевіркою ролі (лише майстер гри) | Інтеграційний тест | Test-11; Test-17; TP-1 |
-| FR-011 | Автоматичне сповіщення гравцю при скасуванні гри Майстром | Середній | Game Management Service, Notification Service, External SMTP Server | Внутрішній виклик Notification Service → SMTP при скасуванні | Інтеграційний тест (мок SMTP) | Відкладено: сповіщень немає в API |
+| FR-011 | Автоматичне сповіщення гравцю при скасуванні гри Майстром | Середній | Game Management Service, Notification Service, External SMTP Server | Внутрішній виклик Notification Service → SMTP при скасуванні | Інтеграційний тест (мок SMTP) | test_notifications.py |
 
 ## Нефункціональні вимоги (NFR)
 
