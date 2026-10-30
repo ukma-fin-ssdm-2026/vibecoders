@@ -49,12 +49,12 @@ def test_get_current_user_uses_token_lookup_table(monkeypatch):
     assert get_current_user(make_credentials("stub-token")) is stub_user
 
 
-@pytest.mark.requirement("SEC-002")
+@pytest.mark.requirement("SEC-002", "FR-001")
 def test_require_roles_allows_listed_role():
     require_roles(USERS["user_1"], UserRole.master, UserRole.owner)
 
 
-@pytest.mark.requirement("SEC-002")
+@pytest.mark.requirement("SEC-002", "FR-001")
 def test_require_roles_rejects_unlisted_role():
     with pytest.raises(ApiError) as error:
         require_roles(USERS["user_2"], UserRole.master, UserRole.owner)
