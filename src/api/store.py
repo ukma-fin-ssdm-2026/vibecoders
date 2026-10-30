@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import itertools
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
@@ -24,7 +25,9 @@ TOKENS: Dict[str, str] = {
     "owner-token": "user_3",
 }
 
-PASSWORD_SALT = b"nri-demo-salt"
+# Replace Inline Code with Function Call:
+# Статичний рядок замінено на виклик функції, що генерує унікальну сіль при кожному запуску модуля
+PASSWORD_SALT = secrets.token_bytes(16)
 
 
 def hash_password(password: str) -> str:
