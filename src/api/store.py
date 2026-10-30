@@ -7,9 +7,11 @@ from typing import Dict, List, Optional
 
 from schemas import Game, GameBase, Player, Room, User, UserRole
 
+
 class GameRecord(GameBase):
     id: str
     master_id: str
+
 
 USERS: Dict[str, User] = {
     "user_1": User(id="user_1", name="Андрій", role=UserRole.master),
@@ -23,10 +25,12 @@ TOKENS: Dict[str, str] = {
     "owner-token": "user_3",
 }
 
+
 def hash_password(password: str) -> str:
     salt = secrets.token_bytes(16)
     hash_bytes = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100_000)
     return f"{salt.hex()}${hash_bytes.hex()}"
+
 
 def verify_password(password: str, password_hash: str) -> bool:
     try:
@@ -36,6 +40,7 @@ def verify_password(password: str, password_hash: str) -> bool:
         return hmac.compare_digest(computed_hash_bytes.hex(), expected_hash_hex)
     except ValueError:
         return False
+
 
 CREDENTIALS: Dict[str, Dict[str, str]] = {
     "master@club.test": {
@@ -102,17 +107,22 @@ ENROLLMENTS: Dict[str, List[Player]] = {
 
 _game_sequence = itertools.count(3)
 
+
 def next_game_id() -> str:
     return f"game_{next(_game_sequence)}"
+
 
 def to_game(record: GameRecord) -> Game:
     return Game(**record.model_dump(), current_players=len(ENROLLMENTS.get(record.id, [])))
 
+
 def sorted_games(records: List[GameRecord]) -> List[GameRecord]:
     return sorted(records, key=lambda r: (r.starts_at, r.id))
 
+
 def time_overlap(start_a: datetime, minutes_a: int, start_b: datetime, minutes_b: int) -> bool:
     return start_a < start_b + timedelta(minutes=minutes_b) and start_b < start_a + timedelta(minutes=minutes_a)
+
 
 def find_busy_game(
     starts_at: datetime,
@@ -132,8 +142,10 @@ def find_busy_game(
             return record
     return None
 
+
 def game_end(record: GameRecord) -> datetime:
     return record.starts_at + timedelta(minutes=record.duration_minutes)
+
 
 def next_free_start(room_id: str, desired_start: datetime, duration_minutes: int) -> datetime:
     start = desired_start
