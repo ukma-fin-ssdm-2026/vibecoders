@@ -7,9 +7,11 @@ from typing import Dict, List, Optional
 
 from schemas import Game, GameBase, Player, Room, User, UserRole
 
+
 class GameRecord(GameBase):
     id: str
     master_id: str
+
 
 USERS: Dict[str, User] = {
     "user_1": User(id="user_1", name="Андрій", role=UserRole.master),
@@ -23,15 +25,18 @@ TOKENS: Dict[str, str] = {
     "owner-token": "user_3",
 }
 
-# Replace Inline Code with Function Call: 
+# Replace Inline Code with Function Call:
 # Статичний рядок замінено на виклик функції, що генерує унікальну сіль при кожному запуску модуля
 PASSWORD_SALT = secrets.token_bytes(16)
+
 
 def hash_password(password: str) -> str:
     return hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), PASSWORD_SALT, 100_000).hex()
 
+
 def verify_password(password: str, password_hash: str) -> bool:
     return hmac.compare_digest(hash_password(password), password_hash)
+
 
 CREDENTIALS: Dict[str, Dict[str, str]] = {
     "master@club.test": {
