@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Path, Query, Response
 
 from errors import ApiError, error_docs
+from notifications import notify_game_cancelled
 from schemas import (
     Game,
     GameBase,
@@ -191,6 +192,7 @@ async def patch_game(payload: GamePatch, user: CurrentUser, game_id: str = GameI
 async def delete_game(user: CurrentUser, game_id: str = GameId):
     record = get_game_or_404(game_id)
     ensure_can_manage(record, user.id, user.role)
+    notify_game_cancelled(game_id, record.title, ENROLLMENTS.get(game_id, []))
     del GAMES[game_id]
     ENROLLMENTS.pop(game_id, None)
     return Response(status_code=204)

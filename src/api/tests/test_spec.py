@@ -53,3 +53,13 @@ def test_openapi_endpoint_serves_installed_schema(client):
     response = client.get("/openapi.json")
     assert response.status_code == 200
     assert response.json()["info"]["version"] == "1.0.0"
+
+
+@pytest.mark.technical
+def test_every_operation_has_summary_description_and_documented_4xx():
+    for path, path_item in app.openapi()["paths"].items():
+        for method, operation in path_item.items():
+            where = f"{method.upper()} {path}"
+            assert operation.get("summary"), f"{where}: немає summary"
+            assert operation.get("description"), f"{where}: немає description"
+            assert any(code.startswith("4") for code in operation["responses"]), f"{where}: немає описаних 4xx"
