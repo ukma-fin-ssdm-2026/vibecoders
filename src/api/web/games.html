@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ігри — NRI Club</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">NRI Club</a>
+      <nav id="nav-container" aria-label="Головне меню"></nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1>Ігри</h1>
+      </div>
+
+      <!-- Фільтр кімнат -->
+      <section class="card filter-card">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="room-filter">Фільтр за кімнатою</label>
+          <select id="room-filter">
+            <option value="">Усі кімнати</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Область помилок -->
+      <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
+
+      <!-- Порожній стан -->
+      <div id="empty-state" class="card empty-state" style="display: none;">
+        <p>Ігор поки немає</p>
+      </div>
+
+      <!-- Список ігор -->
+      <div id="games-container" class="games-grid"></div>
+
+      <!-- Пагінація -->
+      <div class="pagination-block" style="text-align: center; margin-top: 1rem;">
+        <button type="button" id="load-more-btn" class="btn btn-secondary" style="display: none;">Показати ще</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      App.renderNav();
+
+      var roomFilter = document.getElementById('room-filter');
+      var gamesContainer = document.getElementById('games-container');
+      var loadMoreBtn = document.getElementById('load-more-btn');
+      var emptyState = document.getElementById('empty-state');
+      var errorContainer = document.getElementById('error-message');
+
+      var roomsMap = {};
+      var currentOffset = 0;
+      var limit = 12;
+      var selectedRoomId = '';
+
+      function renderGameCard(game) {
+        var card = App.el('article', { className: 'card game-card' });
+
+        var title = App.el('h2', { className: 'game-title' }, game.title);
+        card.appendChild(title);
+
+        var system = App.el('p', { className: 'game-meta game-system' }, [
+          App.el('strong', {}, 'Система: '),
+          game.system
+        ]);
+        card.appendChild(system);
+
+        var roomName = roomsMap[game.room_id] || game.room_id;
+        var room = App.el('p', { className: 'game-meta game-room' }, [
+          App.el('strong', {}, 'Кімната: '),
+          roomName
+        ]);
+        card.appendChild(room);
+
+        var formattedDate = App.formatDateTime(game.starts_at);
+        var slotStr = App.formatSlot(game.starts_at, game.duration_minutes);
+        var timeText = formattedDate + (slotStr ? ' (' + slotStr + ')' : '');
+        var timeElem = App.el('p', { className: 'game-meta game-time' }, [
+          App.el('strong', {}, 'Час: '),
+          timeText
+        ]);
+        card.appendChild(timeElem);
+
+        var counterRow = App.el('div', { className: 'game-counter-row' });
+        var playersText = 'Гравці: ' + game.current_players + '/' + game.max_players;
+        counterRow.appendChild(App.el('span', { className: 'players-count' }, playersText));
+
+        if (game.current_players >= game.max_players) {
+          counterRow.appendChild(App.el('span', { className: 'badge badge-full' }, 'Місць немає'));
+        }
+        card.appendChild(counterRow);
+
+        var actions = App.el('div', { className: 'game-actions' });
+        var detailLink = App.el('a', {
+          href: 'game.html?id=' + encodeURIComponent(game.id),
+          className: 'btn btn-primary btn-sm'
+        }, 'Детальніше');
+        actions.appendChild(detailLink);
+        card.appendChild(actions);
+
+        return card;
+      }
+
+      async function loadRooms() {
+        try {
+          var data = await App.api('GET', '/rooms?limit=100');
+          if (data && data.items) {
+            for (var i = 0; i < data.items.length; i++) {
+              var r = data.items[i];
+              roomsMap[r.id] = r.name;
+              var opt = App.el('option', { value: r.id }, r.name);
+              roomFilter.appendChild(opt);
+            }
+          }
+        } catch (err) {
+          // Якщо кімнати не завантажилися, відображатиметься room_id
+        }
+      }
+
+      async function loadGames(reset) {
+        App.showError(null, errorContainer);
+        if (reset) {
+          currentOffset = 0;
+          while (gamesContainer.firstChild) {
+            gamesContainer.removeChild(gamesContainer.firstChild);
+          }
+          emptyState.style.display = 'none';
+        }
+
+        var path = '/games?limit=' + limit + '&offset=' + currentOffset;
+        if (selectedRoomId) {
+          path += '&room_id=' + encodeURIComponent(selectedRoomId);
+        }
+
+        loadMoreBtn.disabled = true;
+
+        try {
+          var res = await App.api('GET', path);
+          loadMoreBtn.disabled = false;
+
+          var items = res.items || [];
+          if (reset && items.length === 0) {
+            emptyState.style.display = 'block';
+            loadMoreBtn.style.display = 'none';
+            return;
+          }
+
+          emptyState.style.display = 'none';
+
+          for (var i = 0; i < items.length; i++) {
+            gamesContainer.appendChild(renderGameCard(items[i]));
+          }
+
+          var hasMore = res.pagination && res.pagination.has_more;
+          if (hasMore) {
+            loadMoreBtn.style.display = 'inline-block';
+          } else {
+            loadMoreBtn.style.display = 'none';
+          }
+        } catch (err) {
+          loadMoreBtn.disabled = false;
+          App.showError(err, errorContainer);
+        }
+      }
+
+      roomFilter.addEventListener('change', function () {
+        selectedRoomId = roomFilter.value;
+        loadGames(true);
+      });
+
+      loadMoreBtn.addEventListener('click', function () {
+        currentOffset += limit;
+        loadGames(false);
+      });
+
+      async function init() {
+        await loadRooms();
+        await loadGames(true);
+      }
+
+      init();
+    });
+  </script>
+</body>
+</html>
+
