@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Організатор настільних рольових ігор</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">NRI Club</a>
+      <nav id="nav-container" aria-label="Головне меню"></nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <section class="card intro-card">
+        <h1>Клуб настільних рольових ігор</h1>
+        <p class="description">
+          Система для організації ігрових сесій, бронювання клубних кімнат та зручного запису гравців на ігри.
+        </p>
+
+        <h2>Ролі в системі</h2>
+        <ul class="roles-list">
+          <li><strong>Гравець (player):</strong> переглядає доступні партії, записується на сесії та переглядає власний розклад.</li>
+          <li><strong>Майстер (master):</strong> створює та проводить ігри, бронює клубні кімнати та керує учасниками.</li>
+          <li><strong>Власник клубу (owner):</strong> адмініструє клубні кімнати, розклад та користувачів системи.</li>
+        </ul>
+      </section>
+
+      <section class="card auth-card" id="auth-section">
+        <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
+
+        <!-- Відображення для залогіненого користувача -->
+        <div id="logged-in-view" style="display: none;">
+          <p id="user-info-text"></p>
+          <button type="button" id="logout-btn" class="btn btn-danger">Вийти</button>
+        </div>
+
+        <!-- Тимчасова форма входу для гостя -->
+        <div id="login-view" style="display: none;">
+          <h2>Вхід у систему</h2>
+          <form id="login-form">
+            <div class="form-group">
+              <label for="login-email">Електронна пошта</label>
+              <input type="email" id="login-email" name="email" required autocomplete="email" placeholder="master@club.test">
+            </div>
+            <div class="form-group">
+              <label for="login-password">Пароль</label>
+              <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn btn-primary">Увійти</button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      App.renderNav();
+
+      var errorContainer = document.getElementById('error-message');
+      var loggedInView = document.getElementById('logged-in-view');
+      var loginView = document.getElementById('login-view');
+      var userInfoText = document.getElementById('user-info-text');
+      var logoutBtn = document.getElementById('logout-btn');
+      var loginForm = document.getElementById('login-form');
+
+      function updateView() {
+        var session = App.getSession();
+        if (session && session.token) {
+          loginView.style.display = 'none';
+          loggedInView.style.display = 'block';
+          userInfoText.textContent = 'Ви увійшли як ' + session.role;
+        } else {
+          loggedInView.style.display = 'none';
+          loginView.style.display = 'block';
+        }
+      }
+
+      updateView();
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+          App.clearSession();
+          App.renderNav();
+          updateView();
+          App.showError(null, errorContainer);
+        });
+      }
+
+      if (loginForm) {
+        loginForm.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          App.showError(null, errorContainer);
+
+          var email = document.getElementById('login-email').value.trim();
+          var password = document.getElementById('login-password').value;
+
+          try {
+            var data = await App.api('POST', '/auth/login', {
+              email: email,
+              password: password
+            });
+            App.saveSession(data.access_token, data.role);
+            App.renderNav();
+            updateView();
+          } catch (err) {
+            App.showError(err, errorContainer);
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
