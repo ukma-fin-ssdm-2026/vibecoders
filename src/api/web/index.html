@@ -36,23 +36,21 @@
         <!-- Відображення для залогіненого користувача -->
         <div id="logged-in-view" style="display: none;">
           <p id="user-info-text"></p>
-          <button type="button" id="logout-btn" class="btn btn-danger">Вийти</button>
+          <div class="auth-actions" style="margin-top: 1rem;">
+            <button type="button" id="logout-btn" class="btn btn-danger">Вийти</button>
+          </div>
         </div>
 
-        <!-- Тимчасова форма входу для гостя -->
-        <div id="login-view" style="display: none;">
-          <h2>Вхід у систему</h2>
-          <form id="login-form">
-            <div class="form-group">
-              <label for="login-email">Електронна пошта</label>
-              <input type="email" id="login-email" name="email" required autocomplete="email" placeholder="master@club.test">
-            </div>
-            <div class="form-group">
-              <label for="login-password">Пароль</label>
-              <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="••••••••">
-            </div>
-            <button type="submit" class="btn btn-primary">Увійти</button>
-          </form>
+        <!-- Дії для гостя -->
+        <div id="guest-view" style="display: none;">
+          <h2>Приєднуйтесь до гри</h2>
+          <p class="description">
+            Увійдіть або зареєструйтесь, щоб записуватися на партії або організовувати власні ігри.
+          </p>
+          <div class="auth-buttons">
+            <a href="login.html" class="btn btn-primary">Увійти</a>
+            <a href="register.html" class="btn btn-secondary">Зареєструватися</a>
+          </div>
         </div>
       </section>
     </div>
@@ -65,20 +63,19 @@
 
       var errorContainer = document.getElementById('error-message');
       var loggedInView = document.getElementById('logged-in-view');
-      var loginView = document.getElementById('login-view');
+      var guestView = document.getElementById('guest-view');
       var userInfoText = document.getElementById('user-info-text');
       var logoutBtn = document.getElementById('logout-btn');
-      var loginForm = document.getElementById('login-form');
 
       function updateView() {
         var session = App.getSession();
         if (session && session.token) {
-          loginView.style.display = 'none';
+          guestView.style.display = 'none';
           loggedInView.style.display = 'block';
           userInfoText.textContent = 'Ви увійшли як ' + session.role;
         } else {
           loggedInView.style.display = 'none';
-          loginView.style.display = 'block';
+          guestView.style.display = 'block';
         }
       }
 
@@ -92,30 +89,7 @@
           App.showError(null, errorContainer);
         });
       }
-
-      if (loginForm) {
-        loginForm.addEventListener('submit', async function (e) {
-          e.preventDefault();
-          App.showError(null, errorContainer);
-
-          var email = document.getElementById('login-email').value.trim();
-          var password = document.getElementById('login-password').value;
-
-          try {
-            var data = await App.api('POST', '/auth/login', {
-              email: email,
-              password: password
-            });
-            App.saveSession(data.access_token, data.role);
-            App.renderNav();
-            updateView();
-          } catch (err) {
-            App.showError(err, errorContainer);
-          }
-        });
-      }
     });
   </script>
 </body>
 </html>
-
