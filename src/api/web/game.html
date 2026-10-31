@@ -67,6 +67,33 @@
         </div>
       </article>
 
+      <!-- Секція керування для майстра та власника -->
+      <section id="manage" class="card manage-card" hidden>
+        <h2>Керування грою</h2>
+        <p id="manage-players-count" class="manage-counter"></p>
+
+        <div id="manage-players-empty" class="empty-state" style="display: none; padding: 1.5rem 0;">
+          <p>Поки ніхто не записаний</p>
+        </div>
+
+        <div id="manage-table-container" class="table-responsive" style="display: none; margin-top: 1rem;">
+          <table class="table manage-players-table">
+            <thead>
+              <tr>
+                <th>Ім'я гравця</th>
+                <th>Дата запису</th>
+                <th>Дія</th>
+              </tr>
+            </thead>
+            <tbody id="manage-players-tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="manage-danger-zone" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border);">
+          <button type="button" id="delete-game-btn" class="btn btn-danger">Видалити гру</button>
+        </div>
+      </section>
+
       <!-- Посилання до списку ігор при 404 або некоректному id -->
       <div id="not-found-block" class="card" style="display: none;">
         <p id="not-found-message"></p>
@@ -74,9 +101,6 @@
           <a href="games.html" class="btn btn-secondary">До списку ігор</a>
         </p>
       </div>
-
-      <!-- Секція керування для майстра та власника (зарезервована для наступного етапу) -->
-      <section id="manage" hidden></section>
     </div>
   </main>
 
@@ -105,6 +129,13 @@
       var enrollBtn = document.getElementById('enroll-btn');
       var unenrollBtn = document.getElementById('unenroll-btn');
       var loginLink = document.getElementById('login-link');
+
+      var manageSection = document.getElementById('manage');
+      var managePlayersCount = document.getElementById('manage-players-count');
+      var manageEmpty = document.getElementById('manage-players-empty');
+      var manageTableContainer = document.getElementById('manage-table-container');
+      var managePlayersTbody = document.getElementById('manage-players-tbody');
+      var deleteGameBtn = document.getElementById('delete-game-btn');
 
       var params = new URLSearchParams(window.location.search);
       var gameId = params.get('id');
@@ -209,6 +240,124 @@
         }
       }
 
+      async function loadManageSection() {
+        if (!session || !session.token) {
+          manageSection.hidden = true;
+          return;
+        }
+
+        if (session.role !== 'master' && session.role !== 'owner') {
+          manageSection.hidden = true;
+          return;
+        }
+
+        if (session.role === 'master') {
+          try {
+            var me = await App.getMe();
+            if (me && me.id && currentGame && currentGame.master_id && me.id !== currentGame.master_id) {
+              manageSection.hidden = true;
+              return;
+            }
+          } catch (e) {}
+        }
+
+        try {
+          var data = await App.api('GET', '/games/' + encodeURIComponent(gameId) + '/players');
+          renderManageSection(data);
+          manageSection.hidden = false;
+        } catch (err) {
+          manageSection.hidden = true;
+        }
+      }
+
+      function renderManageSection(data) {
+        var players = (data && data.players) || [];
+        var current = data.current_players !== undefined ? data.current_players : players.length;
+        var max = data.max_players !== undefined ? data.max_players : (currentGame ? currentGame.max_players : 0);
+
+        managePlayersCount.textContent = 'Записано: ' + current + ' з ' + max;
+
+        while (managePlayersTbody.firstChild) {
+          managePlayersTbody.removeChild(managePlayersTbody.firstChild);
+        }
+
+        if (players.length === 0) {
+          manageEmpty.style.display = 'block';
+          manageTableContainer.style.display = 'none';
+        } else {
+          manageEmpty.style.display = 'none';
+          manageTableContainer.style.display = 'block';
+
+          for (var i = 0; i < players.length; i++) {
+            var player = players[i];
+            var tr = App.el('tr', {});
+            var tdName = App.el('td', {}, player.name);
+            var tdDate = App.el('td', {}, App.formatDateTime(player.enrolled_at));
+            var tdAction = App.el('td', {});
+
+            var deleteBtn = App.el('button', {
+              type: 'button',
+              className: 'btn btn-danger btn-sm',
+              'data-user-id': player.user_id,
+              'data-user-name': player.name,
+              onclick: function () {
+                var targetId = this.getAttribute('data-user-id');
+                var targetName = this.getAttribute('data-user-name');
+                handleRemovePlayer(targetId, targetName);
+              }
+            }, 'Видалити гравця');
+
+            tdAction.appendChild(deleteBtn);
+            tr.appendChild(tdName);
+            tr.appendChild(tdDate);
+            tr.appendChild(tdAction);
+            managePlayersTbody.appendChild(tr);
+          }
+        }
+      }
+
+      async function handleRemovePlayer(userId, userName) {
+        var confirmed = window.confirm('Видалити гравця ' + (userName || '') + '?');
+        if (!confirmed) return;
+
+        App.showError(null, errorContainer);
+        showStatus(null);
+
+        try {
+          await App.api('DELETE', '/games/' + encodeURIComponent(gameId) + '/players/' + encodeURIComponent(userId));
+          showStatus('Гравця видалено');
+          await fetchGameDetails();
+          await loadManageSection();
+        } catch (err) {
+          if (err.status === 404 && err.code === 'ENROLLMENT_NOT_FOUND') {
+            await fetchGameDetails();
+            await loadManageSection();
+          } else {
+            App.showError(err, errorContainer);
+          }
+        }
+      }
+
+      if (deleteGameBtn) {
+        deleteGameBtn.addEventListener('click', async function () {
+          var title = (currentGame && currentGame.title) || '';
+          var confirmed = window.confirm('Видалити гру "' + title + '"? Записані гравці отримають сповіщення про скасування.');
+          if (!confirmed) return;
+
+          App.showError(null, errorContainer);
+          showStatus(null);
+          deleteGameBtn.disabled = true;
+
+          try {
+            await App.api('DELETE', '/games/' + encodeURIComponent(gameId));
+            window.location.href = 'games.html?deleted=1';
+          } catch (err) {
+            deleteGameBtn.disabled = false;
+            App.showError(err, errorContainer);
+          }
+        });
+      }
+
       enrollBtn.addEventListener('click', async function () {
         App.showError(null, errorContainer);
         showStatus(null);
@@ -226,6 +375,7 @@
           showStatus('Ви записані на гру');
           await fetchGameDetails();
           updateActionState(true);
+          await loadManageSection();
         } catch (err) {
           enrollBtn.disabled = false;
 
@@ -235,9 +385,11 @@
             } catch (e) {}
             showStatus('Ви вже записані на цю гру');
             updateActionState(true);
+            await loadManageSection();
           } else if (err.status === 409 && err.code === 'GAME_FULL') {
             App.showError(new Error('Вільних місць немає'), errorContainer);
             await fetchGameDetails();
+            await loadManageSection();
           } else {
             App.showError(err, errorContainer);
           }
@@ -285,6 +437,7 @@
           showStatus('Запис скасовано');
           await fetchGameDetails();
           updateActionState(false);
+          await loadManageSection();
         } catch (err) {
           unenrollBtn.disabled = false;
           App.showError(err, errorContainer);
@@ -293,8 +446,8 @@
 
       await loadRooms();
       await fetchGameDetails();
+      await loadManageSection();
     });
   </script>
 </body>
 </html>
-

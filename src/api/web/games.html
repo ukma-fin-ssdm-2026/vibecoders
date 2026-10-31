@@ -16,9 +16,15 @@
 
   <main class="main-content">
     <div class="container">
-      <div class="page-header">
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <h1>Ігри</h1>
+        <div id="create-game-action" style="display: none;">
+          <a href="create-game.html" class="btn btn-primary">Створити гру</a>
+        </div>
       </div>
+
+      <!-- Повідомлення про успішні дії -->
+      <div id="status-message" class="alert alert-success" style="display: none;" role="status"></div>
 
       <!-- Фільтр кімнат -->
       <section class="card filter-card">
@@ -58,6 +64,19 @@
       var loadMoreBtn = document.getElementById('load-more-btn');
       var emptyState = document.getElementById('empty-state');
       var errorContainer = document.getElementById('error-message');
+      var statusContainer = document.getElementById('status-message');
+      var createGameAction = document.getElementById('create-game-action');
+
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('deleted') === '1') {
+        statusContainer.textContent = 'Гру видалено';
+        statusContainer.style.display = 'block';
+      }
+
+      var session = App.getSession();
+      if (session && (session.role === 'master' || session.role === 'owner')) {
+        createGameAction.style.display = 'block';
+      }
 
       var roomsMap = {};
       var currentOffset = 0;
@@ -194,4 +213,3 @@
   </script>
 </body>
 </html>
-

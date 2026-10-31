@@ -570,3 +570,49 @@ button:disabled {
   text-decoration: underline;
 }
 
+
+
+/* Керування грою та форма створення гри */
+.field-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: 0.2rem;
+}
+
+.manage-card {
+  margin-top: 1.5rem;
+}
+
+.manage-counter {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.manage-players-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.manage-players-table th,
+.manage-players-table td {
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.manage-players-table th {
+  background-color: #f8f9fa;
+  font-size: 0.9rem;
+}
+
+.manage-players-table td {
+  font-size: 0.95rem;
+}
+
+.manage-danger-zone {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}

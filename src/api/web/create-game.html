@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Створити гру — NRI Club</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">NRI Club</a>
+      <nav id="nav-container" aria-label="Головне меню"></nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <div class="page-nav">
+        <a href="games.html" class="nav-back">&larr; До списку ігор</a>
+      </div>
+
+      <!-- Повідомлення для гостя -->
+      <section id="guest-block" class="card" style="display: none;">
+        <h1>Створення гри</h1>
+        <p>Увійдіть як майстер або власник клубу, щоб створювати ігри.</p>
+        <div class="auth-actions" style="margin-top: 1rem;">
+          <a href="login.html" class="btn btn-primary">Увійти</a>
+        </div>
+      </section>
+
+      <!-- Повідомлення для звичайного гравця (player) -->
+      <section id="player-block" class="card" style="display: none;">
+        <h1>Створення гри</h1>
+        <p>Створювати ігри можуть майстри й власник клубу.</p>
+        <div class="auth-actions" style="margin-top: 1rem;">
+          <a href="games.html" class="btn btn-secondary">До списку ігор</a>
+        </div>
+      </section>
+
+      <!-- Форма створення гри для master та owner -->
+      <section id="create-game-section" class="card" style="display: none;">
+        <h1>Створення нової гри</h1>
+
+        <!-- Область помилок -->
+        <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
+
+        <form id="create-game-form" novalidate>
+          <div class="form-group">
+            <label for="game-title">Назва гри</label>
+            <input type="text" id="game-title" name="title" required minlength="3" maxlength="100" placeholder="Прокляття Страда">
+            <span id="title-error" class="field-error" style="display: none;"></span>
+            <span class="field-hint">Від 3 до 100 символів</span>
+          </div>
+
+          <div class="form-group">
+            <label for="game-system">Ігрова система</label>
+            <input type="text" id="game-system" name="system" required minlength="2" maxlength="50" placeholder="D&D 5e">
+            <span id="system-error" class="field-error" style="display: none;"></span>
+            <span class="field-hint">Від 2 до 50 символів</span>
+          </div>
+
+          <div class="form-group">
+            <label for="game-room">Кімната</label>
+            <select id="game-room" name="room_id" required>
+              <option value="">Оберіть кімнату</option>
+            </select>
+            <span id="room-error" class="field-error" style="display: none;"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="game-starts-at">Дата й час початку</label>
+            <input type="datetime-local" id="game-starts-at" name="starts_at" required>
+            <span id="starts-at-error" class="field-error" style="display: none;"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="game-duration">Тривалість (хвилини)</label>
+            <input type="number" id="game-duration" name="duration_minutes" value="180" min="30" max="720" required>
+            <span id="duration-error" class="field-error" style="display: none;"></span>
+            <span class="field-hint">Від 30 до 720 хвилин</span>
+          </div>
+
+          <div class="form-group">
+            <label for="game-max-players">Максимум гравців</label>
+            <input type="number" id="game-max-players" name="max_players" value="5" min="2" max="8" required>
+            <span id="max-players-error" class="field-error" style="display: none;"></span>
+            <span class="field-hint">Від 2 до 8 гравців, не більше за місткість обраної кімнати</span>
+          </div>
+
+          <div class="form-actions" style="margin-top: 1.5rem;">
+            <button type="submit" id="create-game-submit-btn" class="btn btn-primary">Створити гру</button>
+            <a href="games.html" class="btn btn-secondary" style="margin-left: 0.5rem;">Скасувати</a>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      App.renderNav();
+
+      var session = App.getSession();
+      var guestBlock = document.getElementById('guest-block');
+      var playerBlock = document.getElementById('player-block');
+      var formSection = document.getElementById('create-game-section');
+
+      if (!session || !session.token) {
+        guestBlock.style.display = 'block';
+        return;
+      }
+
+      if (session.role === 'player') {
+        playerBlock.style.display = 'block';
+        return;
+      }
+
+      formSection.style.display = 'block';
+
+      var form = document.getElementById('create-game-form');
+      var titleInput = document.getElementById('game-title');
+      var systemInput = document.getElementById('game-system');
+      var roomSelect = document.getElementById('game-room');
+      var startsAtInput = document.getElementById('game-starts-at');
+      var durationInput = document.getElementById('game-duration');
+      var maxPlayersInput = document.getElementById('game-max-players');
+      var submitBtn = document.getElementById('create-game-submit-btn');
+      var errorContainer = document.getElementById('error-message');
+
+      var titleError = document.getElementById('title-error');
+      var systemError = document.getElementById('system-error');
+      var roomError = document.getElementById('room-error');
+      var startsAtError = document.getElementById('starts-at-error');
+      var durationError = document.getElementById('duration-error');
+      var maxPlayersError = document.getElementById('max-players-error');
+
+      var roomsMap = {};
+
+      async function loadRooms() {
+        try {
+          var res = await App.api('GET', '/rooms?limit=100');
+          var rooms = (res && res.items) || [];
+          for (var i = 0; i < rooms.length; i++) {
+            var r = rooms[i];
+            roomsMap[r.id] = r;
+            var opt = App.el('option', { value: r.id });
+            var labelText = r.name + ' (місткість: ' + r.capacity + ')';
+            if (r.is_blocked) {
+              labelText += ' (заблокована)';
+              opt.disabled = true;
+            }
+            opt.textContent = labelText;
+            opt.setAttribute('data-capacity', r.capacity);
+            opt.setAttribute('data-blocked', r.is_blocked ? 'true' : 'false');
+            roomSelect.appendChild(opt);
+          }
+        } catch (err) {
+          App.showError(err, errorContainer);
+        }
+      }
+
+      function clearValidationErrors() {
+        App.showError(null, errorContainer);
+        var inputs = [titleInput, systemInput, roomSelect, startsAtInput, durationInput, maxPlayersInput];
+        var spans = [titleError, systemError, roomError, startsAtError, durationError, maxPlayersError];
+        for (var i = 0; i < inputs.length; i++) {
+          inputs[i].classList.remove('error');
+          spans[i].textContent = '';
+          spans[i].style.display = 'none';
+        }
+      }
+
+      function showFieldError(input, errorSpan, message) {
+        input.classList.add('error');
+        errorSpan.textContent = message;
+        errorSpan.style.display = 'block';
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearValidationErrors();
+
+        var title = titleInput.value.trim();
+        var system = systemInput.value.trim();
+        var roomId = roomSelect.value;
+        var startsAtVal = startsAtInput.value;
+        var duration = parseInt(durationInput.value, 10);
+        var maxPlayers = parseInt(maxPlayersInput.value, 10);
+
+        var hasError = false;
+        var firstInvalid = null;
+
+        if (!title) {
+          showFieldError(titleInput, titleError, 'Введіть назву гри');
+          hasError = true;
+          firstInvalid = firstInvalid || titleInput;
+        } else if (title.length < 3 || title.length > 100) {
+          showFieldError(titleInput, titleError, 'Назва має містити від 3 до 100 символів');
+          hasError = true;
+          firstInvalid = firstInvalid || titleInput;
+        }
+
+        if (!system) {
+          showFieldError(systemInput, systemError, 'Введіть ігрову систему');
+          hasError = true;
+          firstInvalid = firstInvalid || systemInput;
+        } else if (system.length < 2 || system.length > 50) {
+          showFieldError(systemInput, systemError, 'Система має містити від 2 до 50 символів');
+          hasError = true;
+          firstInvalid = firstInvalid || systemInput;
+        }
+
+        if (!roomId) {
+          showFieldError(roomSelect, roomError, 'Оберіть кімнату');
+          hasError = true;
+          firstInvalid = firstInvalid || roomSelect;
+        } else {
+          var selectedRoom = roomsMap[roomId];
+          if (selectedRoom && selectedRoom.is_blocked) {
+            showFieldError(roomSelect, roomError, 'Ця кімната заблокована');
+            hasError = true;
+            firstInvalid = firstInvalid || roomSelect;
+          }
+        }
+
+        if (!startsAtVal) {
+          showFieldError(startsAtInput, startsAtError, 'Вкажіть дату й час початку');
+          hasError = true;
+          firstInvalid = firstInvalid || startsAtInput;
+        } else {
+          var dateObj = new Date(startsAtVal);
+          if (isNaN(dateObj.getTime())) {
+            showFieldError(startsAtInput, startsAtError, 'Некоректний формат дати й часу');
+            hasError = true;
+            firstInvalid = firstInvalid || startsAtInput;
+          }
+        }
+
+        if (isNaN(duration) || duration < 30 || duration > 720) {
+          showFieldError(durationInput, durationError, 'Тривалість має бути від 30 до 720 хвилин');
+          hasError = true;
+          firstInvalid = firstInvalid || durationInput;
+        }
+
+        if (isNaN(maxPlayers) || maxPlayers < 2 || maxPlayers > 8) {
+          showFieldError(maxPlayersInput, maxPlayersError, 'Кількість гравців має бути від 2 до 8');
+          hasError = true;
+          firstInvalid = firstInvalid || maxPlayersInput;
+        } else if (roomId && roomsMap[roomId]) {
+          var roomCapacity = roomsMap[roomId].capacity;
+          if (maxPlayers > roomCapacity) {
+            showFieldError(
+              maxPlayersInput,
+              maxPlayersError,
+              'Максимум гравців (' + maxPlayers + ') не може перевищувати місткість кімнати (' + roomCapacity + ')'
+            );
+            hasError = true;
+            firstInvalid = firstInvalid || maxPlayersInput;
+          }
+        }
+
+        if (hasError) {
+          App.showError(new Error('Будь ласка, виправте помилки у формі'), errorContainer);
+          if (firstInvalid) firstInvalid.focus();
+          return;
+        }
+
+        submitBtn.disabled = true;
+
+        var isoStartsAt = new Date(startsAtVal).toISOString();
+        var payload = {
+          title: title,
+          system: system,
+          room_id: roomId,
+          starts_at: isoStartsAt,
+          duration_minutes: duration,
+          max_players: maxPlayers
+        };
+
+        try {
+          var createdGame = await App.api('POST', '/games', payload);
+          window.location.href = 'game.html?id=' + encodeURIComponent(createdGame.id);
+        } catch (err) {
+          submitBtn.disabled = false;
+
+          var displayErr = err;
+          if (err.code === 'ROOM_BUSY' || err.code === 'MASTER_BUSY' || err.code === 'ROOM_BLOCKED') {
+            displayErr = new Error('Конфлікт розкладу: ' + err.message);
+            displayErr.status = err.status;
+            displayErr.code = err.code;
+            displayErr.details = err.details;
+          } else if (err.code === 'ROOM_CAPACITY_EXCEEDED') {
+            displayErr = new Error('Занадто багато гравців для кімнати: ' + err.message);
+            displayErr.status = err.status;
+            displayErr.code = err.code;
+            displayErr.details = err.details;
+          } else if (err.code === 'VALIDATION_ERROR' && err.details && err.details.length > 0) {
+            displayErr = new Error(err.message || 'Вхідні дані не пройшли валідацію');
+            displayErr.status = err.status;
+            displayErr.code = err.code;
+            displayErr.details = err.details;
+          }
+
+          App.showError(displayErr, errorContainer);
+        }
+      });
+
+      await loadRooms();
+    });
+  </script>
+</body>
+</html>
+
