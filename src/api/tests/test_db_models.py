@@ -20,11 +20,11 @@ def test_database_initialization(monkeypatch):
     # Отримуємо список створених таблиць із метаданих
     tables = Base.metadata.tables.keys()
 
-    # Перевіряємо, що всі наші моделі зареєстровані за точними назвами з models.py
+    # Перевіряємо, що всі наші моделі зареєстровані
     assert "users" in tables
     assert "rooms" in tables
     assert "games" in tables
-    assert "game_enrollments" in tables
+    assert "enrollments" in tables
     assert "notifications" in tables
-    assert "bookings" in tables
-    assert "sessions" in tables
+    assert "room_blocks" in tables
+    assert "tokens" in tables
