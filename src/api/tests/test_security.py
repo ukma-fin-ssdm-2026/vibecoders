@@ -46,6 +46,7 @@ def test_get_current_user_uses_token_lookup_table(monkeypatch):
     stub_user = MagicMock(name="stub_user")
     monkeypatch.setattr(security, "TOKENS", {"stub-token": "stub_id"})
     monkeypatch.setattr(security, "USERS", {"stub_id": stub_user})
+    monkeypatch.setattr(security, "is_user_blocked", lambda user_id: False)
     assert get_current_user(make_credentials("stub-token")) is stub_user
 
 

@@ -2,9 +2,12 @@ import hashlib
 import hmac
 import os
 import itertools
+import secrets
 import threading
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
+
+from sqlalchemy.exc import IntegrityError
 
 from schemas import Game, GameBase, Player, Room, User
 from db import SessionLocal
@@ -14,6 +17,7 @@ from models import (
     Game as GameModel,
     Enrollment as EnrollmentModel,
     Token as TokenModel,
+    RoomBlock as RoomBlockModel,
 )
 
 db_lock = threading.RLock()
@@ -238,6 +242,64 @@ class UserTokensProxy:
             db.close()
 
 
+def is_user_blocked(user_id: str) -> bool:
+    db = SessionLocal()
+    try:
+        user = db.query(UserModel).filter(UserModel.id == user_id).first()
+        return user is None or user.is_blocked
+    finally:
+        db.close()
+
+
+def create_registered_user(name: str, email: str, password: str):
+    db = SessionLocal()
+    try:
+        if db.query(UserModel).filter(UserModel.email == email).first():
+            return None
+        existing_ids = db.query(UserModel.id).all()
+        next_id = (
+            max(
+                (int(user_id.removeprefix("user_")) for (user_id,) in existing_ids if user_id.startswith("user_")),
+                default=0,
+            )
+            + 1
+        )
+        user = UserModel(
+            id=f"user_{next_id}",
+            email=email,
+            password_hash=hash_password(password),
+            name=name,
+            role="player",
+        )
+        token = TokenModel(id=secrets.token_urlsafe(32), user_id=user.id)
+        db.add_all([user, token])
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            if db.query(UserModel).filter(UserModel.email == email).first():
+                return None
+            raise
+        return user.id, token.id
+    finally:
+        db.close()
+
+
+def set_user_blocked(user_id: str, is_blocked: bool):
+    db = SessionLocal()
+    try:
+        user = db.query(UserModel).filter(UserModel.id == user_id).first()
+        if user is None:
+            return None
+        user.is_blocked = is_blocked
+        if is_blocked:
+            db.query(TokenModel).filter(TokenModel.user_id == user_id).delete()
+        db.commit()
+        return User(id=user.id, name=user.name, role=user.role), user.is_blocked
+    finally:
+        db.close()
+
+
 def _game_transform(obj: GameModel) -> GameRecord:
     starts_at = obj.starts_at.replace(tzinfo=timezone.utc) if obj.starts_at.tzinfo is None else obj.starts_at
     return GameRecord(
@@ -306,6 +368,24 @@ def find_busy_game(
 
 def game_end(record: GameRecord) -> datetime:
     return record.starts_at + timedelta(minutes=record.duration_minutes)
+
+
+def find_room_block(room_id: str, starts_at: datetime, duration_minutes: int):
+    start = starts_at.astimezone(timezone.utc).replace(tzinfo=None)
+    end = start + timedelta(minutes=duration_minutes)
+    db = SessionLocal()
+    try:
+        return (
+            db.query(RoomBlockModel)
+            .filter(
+                RoomBlockModel.room_id == room_id,
+                RoomBlockModel.starts_at < end,
+                RoomBlockModel.ends_at > start,
+            )
+            .first()
+        )
+    finally:
+        db.close()
 
 
 def next_free_start(room_id: str, desired_start: datetime, duration_minutes: int) -> datetime:
