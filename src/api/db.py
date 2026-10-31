@@ -53,6 +53,7 @@ engine = configure_engine(
     create_engine(DATABASE_URL, connect_args={"check_same_thread": False, "timeout": 30} if _is_sqlite else {})
 )
 
+
 def resolve_database_url(database_url: Optional[str] = None) -> URL:
     configured_url = database_url or os.getenv("DATABASE_URL")
     if configured_url is None:
