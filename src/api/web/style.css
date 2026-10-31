@@ -348,3 +348,111 @@ tr:hover {
   }
 }
 
+/* Додаткові стилі для форм автентифікації */
+input.error,
+select.error,
+textarea.error {
+  border-color: var(--color-danger);
+  background-color: #fffbfa;
+}
+
+input.error:focus-visible,
+select.error:focus-visible,
+textarea.error:focus-visible {
+  outline-color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.field-error {
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  line-height: 1.3;
+}
+
+.btn:disabled,
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.auth-actions,
+.auth-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.auth-switch {
+  margin-top: 1.25rem;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+.auth-switch a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.auth-switch a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* Демо-акаунти */
+.demo-accounts {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1rem;
+  background-color: #f9fafb;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+}
+
+.demo-accounts summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-text);
+  padding: 0.25rem 0;
+}
+
+.demo-accounts summary:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.demo-list {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.demo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  background-color: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+
+.demo-info {
+  font-size: 0.85rem;
+  overflow-wrap: break-word;
+}
+
+.demo-info code {
+  background-color: #f3f4f6;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.btn-sm {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+}
+

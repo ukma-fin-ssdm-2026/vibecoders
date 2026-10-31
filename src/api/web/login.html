@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вхід у систему — NRI Club</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">NRI Club</a>
+      <nav id="nav-container" aria-label="Головне меню"></nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <section class="card auth-card">
+        <!-- Блок, якщо користувач уже залогінений -->
+        <div id="already-logged-in" style="display: none;">
+          <p id="already-logged-in-text"></p>
+          <div class="auth-actions" style="margin-top: 1rem;">
+            <a href="index.html" class="btn btn-secondary">На головну</a>
+          </div>
+        </div>
+
+        <!-- Форма входу для гостей -->
+        <div id="login-section" style="display: none;">
+          <h1>Вхід у систему</h1>
+
+          <!-- Повідомлення про успішну реєстрацію -->
+          <div id="success-message" class="alert alert-success" style="display: none;" role="status"></div>
+
+          <!-- Область повідомлень про помилки -->
+          <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
+
+          <form id="login-form" novalidate>
+            <div class="form-group">
+              <label for="login-email">Електронна пошта</label>
+              <input type="email" id="login-email" name="email" required autocomplete="email" placeholder="master@club.test">
+              <span id="login-email-error" class="field-error" style="display: none;"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="login-password">Пароль</label>
+              <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="••••••••">
+              <span id="login-password-error" class="field-error" style="display: none;"></span>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" id="login-submit-btn" class="btn btn-primary">Увійти</button>
+            </div>
+          </form>
+
+          <p class="auth-switch">
+            Немає акаунта? <a href="register.html">Зареєструватися</a>
+          </p>
+
+          <details class="demo-accounts">
+            <summary>Демо-акаунти</summary>
+            <div class="demo-list">
+              <div class="demo-item">
+                <div class="demo-info">
+                  <strong>Майстер:</strong> <code>master@club.test</code> / <code>master-pass-1</code>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" data-email="master@club.test" data-password="master-pass-1">Підставити</button>
+              </div>
+              <div class="demo-item">
+                <div class="demo-info">
+                  <strong>Гравець:</strong> <code>player@club.test</code> / <code>player-pass-1</code>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" data-email="player@club.test" data-password="player-pass-1">Підставити</button>
+              </div>
+              <div class="demo-item">
+                <div class="demo-info">
+                  <strong>Власник клубу:</strong> <code>owner@club.test</code> / <code>owner-pass-1</code>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" data-email="owner@club.test" data-password="owner-pass-1">Підставити</button>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      App.renderNav();
+
+      var session = App.getSession();
+      var alreadyLoggedIn = document.getElementById('already-logged-in');
+      var alreadyLoggedInText = document.getElementById('already-logged-in-text');
+      var loginSection = document.getElementById('login-section');
+
+      if (session && session.token) {
+        alreadyLoggedIn.style.display = 'block';
+        alreadyLoggedInText.textContent = 'Ви вже увійшли як ' + session.role;
+        return;
+      }
+
+      loginSection.style.display = 'block';
+
+      var form = document.getElementById('login-form');
+      var emailInput = document.getElementById('login-email');
+      var passwordInput = document.getElementById('login-password');
+      var submitBtn = document.getElementById('login-submit-btn');
+      var errorContainer = document.getElementById('error-message');
+      var successContainer = document.getElementById('success-message');
+      var countdownTimer = null;
+
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('registered') === '1') {
+        successContainer.textContent = 'Акаунт створено, увійдіть';
+        successContainer.style.display = 'block';
+      }
+
+      function getNextUrl() {
+        var next = params.get('next');
+        if (next && /^[a-z0-9-]+\.html$/.test(next)) {
+          return next;
+        }
+        return 'index.html';
+      }
+
+      var demoButtons = document.querySelectorAll('.demo-accounts button[data-email]');
+      for (var i = 0; i < demoButtons.length; i++) {
+        demoButtons[i].addEventListener('click', function () {
+          emailInput.value = this.getAttribute('data-email');
+          passwordInput.value = this.getAttribute('data-password');
+          emailInput.classList.remove('error');
+          passwordInput.classList.remove('error');
+          App.showError(null, errorContainer);
+          emailInput.focus();
+        });
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        if (countdownTimer) return;
+
+        App.showError(null, errorContainer);
+        successContainer.style.display = 'none';
+        emailInput.classList.remove('error');
+        passwordInput.classList.remove('error');
+
+        var email = emailInput.value.trim();
+        var password = passwordInput.value;
+
+        if (!email) {
+          emailInput.classList.add('error');
+          App.showError(new Error('Будь ласка, введіть електронну пошту'), errorContainer);
+          emailInput.focus();
+          return;
+        }
+
+        if (!password) {
+          passwordInput.classList.add('error');
+          App.showError(new Error('Будь ласка, введіть пароль'), errorContainer);
+          passwordInput.focus();
+          return;
+        }
+
+        submitBtn.disabled = true;
+
+        try {
+          var data = await App.api('POST', '/auth/login', {
+            email: email,
+            password: password
+          });
+          App.saveSession(data.access_token, data.role);
+          window.location.href = getNextUrl();
+        } catch (err) {
+          submitBtn.disabled = false;
+
+          var displayErr = err;
+          if (err.status === 403 && err.code === 'ACCOUNT_BLOCKED') {
+            displayErr = new Error('Акаунт заблоковано власником клубу');
+            displayErr.status = 403;
+            displayErr.code = 'ACCOUNT_BLOCKED';
+            displayErr.details = err.details;
+          }
+
+          if (err.status === 429 && typeof err.retryAfter === 'number' && err.retryAfter > 0) {
+            var secondsLeft = err.retryAfter;
+            submitBtn.disabled = true;
+
+            function tickCountdown() {
+              if (secondsLeft > 0) {
+                var countErr = new Error('Забагато невдалих спроб. Спробуйте через ' + secondsLeft + ' с');
+                countErr.status = 429;
+                countErr.code = 'ACCOUNT_LOCKED';
+                App.showError(countErr, errorContainer);
+                submitBtn.textContent = 'Зачекайте (' + secondsLeft + ' с)';
+                secondsLeft--;
+              } else {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Увійти';
+                App.showError(null, errorContainer);
+              }
+            }
+
+            tickCountdown();
+            countdownTimer = setInterval(tickCountdown, 1000);
+          } else {
+            App.showError(displayErr, errorContainer);
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+

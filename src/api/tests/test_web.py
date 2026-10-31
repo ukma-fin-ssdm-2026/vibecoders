@@ -22,3 +22,21 @@ def test_web_style_css_served(client):
     response = client.get("/app/style.css")
     assert response.status_code == 200
     assert ":root" in response.text
+
+
+@pytest.mark.technical
+def test_web_login_html_served(client):
+    response = client.get("/app/login.html")
+    assert response.status_code == 200
+    assert '<html lang="uk">' in response.text
+    assert "app.js" in response.text
+    assert "style.css" in response.text
+
+
+@pytest.mark.technical
+def test_web_register_html_served(client):
+    response = client.get("/app/register.html")
+    assert response.status_code == 200
+    assert '<html lang="uk">' in response.text
+    assert "app.js" in response.text
+    assert "style.css" in response.text
