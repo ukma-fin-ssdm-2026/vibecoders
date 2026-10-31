@@ -24,6 +24,7 @@ from store import (
     ROOMS,
     GameRecord,
     find_busy_game,
+    find_room_block,
     next_game_id,
     sorted_games,
     to_game,
@@ -53,6 +54,8 @@ def ensure_schedule_is_valid(data: GameBase, master_id: str, exclude_game_id: Op
         raise ApiError(404, "ROOM_NOT_FOUND", f"Кімнату {data.room_id} не знайдено")
     if room.is_blocked:
         raise ApiError(409, "ROOM_BLOCKED", "Кімната заблокована власником клубу")
+    if find_room_block(data.room_id, data.starts_at, data.duration_minutes):
+        raise ApiError(409, "ROOM_BLOCKED", "Кімната заблокована на цей час")
     if data.max_players > room.capacity:
         raise ApiError(
             409,

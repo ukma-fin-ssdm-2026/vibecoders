@@ -38,6 +38,41 @@ def test_login_password_of_another_user_is_rejected(client):
     assert response.status_code == 401
 
 
+@pytest.mark.requirement("US-009", "FR-001", "SEC-001", "SEC-004")
+def test_register_creates_player_with_hashed_password_and_token(client):
+    response = client.post(
+        "/api/v1/auth/register",
+        json={"name": "Новий гравець", "email": "New.Player@club.test", "password": "new-player-pass-1"},
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["role"] == "player"
+    assert body["access_token"]
+    from db import SessionLocal
+    from models import User
+
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.email == "new.player@club.test").one()
+        assert user.password_hash != "new-player-pass-1"
+        assert client.get(
+            "/api/v1/games/game_1/players",
+            headers={"Authorization": f"Bearer {body['access_token']}"},
+        ).status_code == 200
+    finally:
+        db.close()
+
+
+@pytest.mark.requirement("SEC-004")
+def test_register_rejects_existing_account_email(client):
+    response = client.post(
+        "/api/v1/auth/register",
+        json={"name": "Інший гравець", "email": "PLAYER@club.test", "password": "new-player-pass-1"},
+    )
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "EMAIL_ALREADY_REGISTERED"
+
+
 @pytest.mark.technical
 def test_login_rejects_short_password_with_validation_error(client):
     response = client.post("/api/v1/auth/login", json={"email": "master@club.test", "password": "short"})

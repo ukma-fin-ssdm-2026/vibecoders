@@ -8,7 +8,7 @@ spec = importlib.util.spec_from_file_location("check_traceability", SCRIPT)
 check_traceability = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(check_traceability)
 
-RTM = "| Історія | Тип |\n|---|---|\n| US-001 | FR |\n| US-004 | FR |\n| SEC-003 | NFR |\n"
+RTM = "| Історія | Тип |\n|---|---|\n| US-001 | FR |\n| REL-003 | NFR |\n| SEC-003 | NFR |\n"
 
 
 @pytest.fixture
@@ -28,7 +28,7 @@ def write_test(tests, name, body):
 def test_read_requirements_takes_ids_from_first_column(workspace):
     rtm, _ = workspace
 
-    assert check_traceability.read_requirements(rtm) == ["US-001", "US-004", "SEC-003"]
+    assert check_traceability.read_requirements(rtm) == ["US-001", "REL-003", "SEC-003"]
 
 
 @pytest.mark.technical

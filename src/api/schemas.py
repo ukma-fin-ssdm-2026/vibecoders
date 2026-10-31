@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class UserRole(str, Enum):
@@ -197,6 +197,28 @@ class LoginRequest(BaseModel):
     )
 
 
+class RegisterRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(..., min_length=1, max_length=100, description="Ім'я або нікнейм")
+    email: str = Field(
+        ...,
+        min_length=5,
+        max_length=100,
+        pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+        description="Електронна пошта",
+    )
+    password: str = Field(..., min_length=8, max_length=100, description="Пароль")
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("Ім'я не може бути порожнім")
+        return value
+
+
 class TokenResponse(BaseModel):
     access_token: str = Field(
         ...,
@@ -211,6 +233,26 @@ class RoomPatch(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     is_blocked: bool = Field(..., description="Заблокувати (true) або розблокувати (false) кімнату")
+
+
+class RoomBlockCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    starts_at: AwareDatetime = Field(..., description="Початок блокування (ISO 8601 з часовим поясом)")
+    ends_at: AwareDatetime = Field(..., description="Кінець блокування (ISO 8601 з часовим поясом)")
+
+    @model_validator(mode="after")
+    def validate_period(self):
+        if self.ends_at <= self.starts_at:
+            raise ValueError("Кінець блокування має бути пізніше за початок")
+        return self
+
+
+class RoomBlockResponse(BaseModel):
+    id: int = Field(..., description="Ідентифікатор блокування")
+    room_id: str = Field(..., examples=["room_1"])
+    starts_at: AwareDatetime
+    ends_at: AwareDatetime
 
 
 class Booking(BaseModel):
@@ -228,3 +270,43 @@ class RoomBookingsResponse(BaseModel):
         ...,
         description=("Заброньовані слоти, відсортовані за часом початку"),
     )
+    blocks: List[RoomBlockResponse] = Field(
+        default_factory=list,
+        description="Періоди блокування кімнати, відсортовані за часом початку",
+    )
+
+
+class CalendarRoom(RoomBookingsResponse):
+    name: str
+    capacity: int
+
+
+class CalendarResponse(BaseModel):
+    rooms: List[CalendarRoom] = Field(..., description="Календар усіх кімнат клубу")
+
+
+class UserStatus(BaseModel):
+    id: str
+    name: str
+    role: UserRole
+    is_blocked: bool
+
+
+class UserGameHistory(BaseModel):
+    game_id: str
+    title: str
+    starts_at: AwareDatetime
+    enrolled_at: AwareDatetime
+
+
+class UserDetails(UserStatus):
+    email: str
+    contacts: Optional[str] = None
+    avatar_url: Optional[str] = None
+    game_history: List[UserGameHistory] = Field(default_factory=list)
+
+
+class UserBlockPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    is_blocked: bool = Field(..., description="Заблокувати (true) або розблокувати (false) акаунт")
