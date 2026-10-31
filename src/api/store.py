@@ -257,10 +257,13 @@ def create_registered_user(name: str, email: str, password: str):
         if db.query(UserModel).filter(UserModel.email == email).first():
             return None
         existing_ids = db.query(UserModel.id).all()
-        next_id = max(
-            (int(user_id.removeprefix("user_")) for (user_id,) in existing_ids if user_id.startswith("user_")),
-            default=0,
-        ) + 1
+        next_id = (
+            max(
+                (int(user_id.removeprefix("user_")) for (user_id,) in existing_ids if user_id.startswith("user_")),
+                default=0,
+            )
+            + 1
+        )
         user = UserModel(
             id=f"user_{next_id}",
             email=email,

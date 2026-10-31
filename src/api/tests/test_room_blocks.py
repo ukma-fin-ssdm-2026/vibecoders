@@ -32,9 +32,7 @@ def test_calendar_requires_both_bounds(client):
 
 
 @pytest.mark.requirement("US-003", "FR-007", "FR-011")
-def test_room_block_cancels_overlapping_games_and_notifies_enrolled_players(
-    client, owner_headers, game_payload
-):
+def test_room_block_cancels_overlapping_games_and_notifies_enrolled_players(client, owner_headers, game_payload):
     NOTIFICATIONS.clear()
     response = client.post(
         "/api/v1/rooms/room_1/blocks",

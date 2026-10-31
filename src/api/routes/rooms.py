@@ -242,9 +242,9 @@ async def create_room_block(
             overlapping_games = [
                 game
                 for game in games
-                    if as_utc(game.starts_at) < end
-                    and start < as_utc(game.starts_at) + timedelta(minutes=game.duration_minutes)
-                ]
+                if as_utc(game.starts_at) < end
+                and start < as_utc(game.starts_at) + timedelta(minutes=game.duration_minutes)
+            ]
             for game in overlapping_games:
                 players = [
                     Player(
@@ -252,9 +252,7 @@ async def create_room_block(
                         name=enrollment.player.name,
                         enrolled_at=as_utc(enrollment.enrolled_at),
                     )
-                    for enrollment in db.query(EnrollmentModel)
-                    .filter(EnrollmentModel.game_id == game.id)
-                    .all()
+                    for enrollment in db.query(EnrollmentModel).filter(EnrollmentModel.game_id == game.id).all()
                 ]
                 notifications.append((game.id, game.title, players))
                 db.delete(game)

@@ -55,10 +55,13 @@ def test_register_creates_player_with_hashed_password_and_token(client):
     try:
         user = db.query(User).filter(User.email == "new.player@club.test").one()
         assert user.password_hash != "new-player-pass-1"
-        assert client.get(
-            "/api/v1/games/game_1/players",
-            headers={"Authorization": f"Bearer {body['access_token']}"},
-        ).status_code == 200
+        assert (
+            client.get(
+                "/api/v1/games/game_1/players",
+                headers={"Authorization": f"Bearer {body['access_token']}"},
+            ).status_code
+            == 200
+        )
     finally:
         db.close()
 

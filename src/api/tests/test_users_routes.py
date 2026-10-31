@@ -17,9 +17,7 @@ def test_personal_profile_is_private_to_user_and_owner(client, player_headers, o
 
 
 @pytest.mark.requirement("US-004", "FR-008", "SEC-002")
-def test_owner_can_block_user_and_blocked_user_cannot_login_or_use_token(
-    client, owner_headers, player_headers
-):
+def test_owner_can_block_user_and_blocked_user_cannot_login_or_use_token(client, owner_headers, player_headers):
     response = client.patch(
         "/api/v1/users/user_2",
         json={"is_blocked": True},
@@ -33,10 +31,13 @@ def test_owner_can_block_user_and_blocked_user_cannot_login_or_use_token(
         "is_blocked": True,
     }
 
-    assert client.post(
-        "/api/v1/auth/login",
-        json={"email": "player@club.test", "password": "player-pass-1"},
-    ).status_code == 403
+    assert (
+        client.post(
+            "/api/v1/auth/login",
+            json={"email": "player@club.test", "password": "player-pass-1"},
+        ).status_code
+        == 403
+    )
     assert client.get("/api/v1/games/game_1/players", headers=player_headers).status_code == 401
     owner_profile = client.get("/api/v1/users/user_2", headers=owner_headers)
     assert owner_profile.status_code == 200
@@ -47,11 +48,14 @@ def test_owner_can_block_user_and_blocked_user_cannot_login_or_use_token(
 def test_blocked_email_cannot_be_registered_again_within_300ms(client, owner_headers):
     from time import perf_counter
 
-    assert client.patch(
-        "/api/v1/users/user_2",
-        json={"is_blocked": True},
-        headers=owner_headers,
-    ).status_code == 200
+    assert (
+        client.patch(
+            "/api/v1/users/user_2",
+            json={"is_blocked": True},
+            headers=owner_headers,
+        ).status_code
+        == 200
+    )
     started = perf_counter()
     response = client.post(
         "/api/v1/auth/register",
