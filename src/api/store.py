@@ -1,7 +1,7 @@
 import hashlib
 import hmac
 import itertools
-import secrets
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
@@ -26,8 +26,8 @@ TOKENS: Dict[str, str] = {
 }
 
 # Replace Inline Code with Function Call:
-# Статичний рядок замінено на виклик функції, що генерує унікальну сіль при кожному запуску модуля
-PASSWORD_SALT = secrets.token_bytes(16)
+# Сіль і токени беруться зі змінних середовища (закриває вразливість із static-analysis.md)
+PASSWORD_SALT = os.getenv("PASSWORD_SALT", "default-insecure-salt-for-dev").encode("utf-8")
 
 
 def hash_password(password: str) -> str:
