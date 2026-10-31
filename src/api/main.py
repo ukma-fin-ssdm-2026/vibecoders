@@ -1,6 +1,4 @@
 import os
-import runpy
-from db import init_db
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -8,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 
+from seed import seed_db
 from errors import register_error_handlers
 from routes.auth import router as auth_router
 from routes.games import router as games_router
@@ -25,17 +24,7 @@ def operation_id(route: APIRoute) -> str:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ініціалізуємо базу даних
-    init_db()
-
-    # Викликаємо сід-скрипт для заповнення демо-даними
-    seed_script = Path(__file__).resolve().parents[2] / "scripts" / "seed.py"
-    if seed_script.exists():
-        try:
-            runpy.run_path(str(seed_script))
-        except Exception as e:
-            print(f"Помилка під час сідування БД: {e}")
-
+    seed_db()
     save_openapi_spec(app)
     yield
 

@@ -9,15 +9,16 @@ from sqlalchemy.pool import NullPool
 import store
 from main import app
 import db
-from db import Base
+from db import Base, enable_sqlite_foreign_keys, resolve_database_url
 
-TEST_DATABASE_URL = "sqlite:///test.db"
+TEST_DATABASE_URL = resolve_database_url("sqlite:///test.db")
 
 engine = create_engine(
     TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
     poolclass=NullPool,
 )
+enable_sqlite_foreign_keys(engine)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Жорстко підміняємо engine та SessionLocal у модулях
