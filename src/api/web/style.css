@@ -616,3 +616,243 @@ button:disabled {
   align-items: center;
   justify-content: flex-end;
 }
+
+/* Поля дати й часу */
+input[type="date"],
+input[type="datetime-local"] {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--color-text);
+  background-color: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+input[type="date"]:focus-visible,
+input[type="datetime-local"]:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+  border-color: var(--color-focus-ring);
+}
+
+input[type="datetime-local"].error {
+  border-color: var(--color-danger);
+  background-color: #fffbfa;
+}
+
+/* Календар кімнат */
+.calendar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.calendar-date-group {
+  margin-bottom: 0;
+  min-width: 11rem;
+}
+
+.calendar-nav-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--calendar-cols, 3), minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.calendar-room {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1rem;
+}
+
+.calendar-room-header h2 {
+  margin-top: 0;
+  word-break: break-word;
+}
+
+.calendar-timeline {
+  position: relative;
+  height: 640px;
+  background-color: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.calendar-hour {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.calendar-hour-label {
+  position: absolute;
+  top: 0.1rem;
+  left: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.calendar-slot,
+.calendar-block {
+  position: absolute;
+  left: 3rem;
+  right: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0.15rem 0.35rem;
+  overflow: hidden;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  border-radius: 4px;
+}
+
+.calendar-slot {
+  background-color: var(--color-primary-light);
+  border: 1px solid var(--color-primary);
+  color: #0d3c73;
+  text-decoration: none;
+  z-index: 1;
+}
+
+.calendar-slot:hover {
+  background-color: #bbdefb;
+}
+
+.calendar-block {
+  background: repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 6px, #e5e7eb 6px, #e5e7eb 12px);
+  border: 1px solid var(--color-text-muted);
+  color: var(--color-text-muted);
+}
+
+.calendar-slot-title {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-slot-time {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.calendar-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-danger);
+  transform: translateY(-1px);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.calendar-empty {
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.calendar-slot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+  list-style: disc;
+}
+
+.calendar-slot-list a {
+  color: var(--color-primary);
+}
+
+@media (max-width: 800px) {
+  .calendar-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-timeline {
+    height: 560px;
+  }
+}
+
+/* Адміністрування: кімнати, користувачі, статуси */
+.admin-section {
+  margin-bottom: 1.5rem;
+}
+
+.admin-section h2 {
+  margin-top: 0;
+}
+
+.admin-room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  list-style: none;
+}
+
+.admin-room-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-block-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding-left: 1rem;
+  font-size: 0.9rem;
+  list-style: none;
+}
+
+.admin-block-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.users-table th,
+.users-table td {
+  padding: 0.65rem 0.75rem;
+  font-size: 0.95rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.status-active {
+  background-color: var(--color-success-light);
+  color: #14532d;
+  border: 1px solid var(--color-success);
+}
+
+.status-blocked {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger-hover);
+  border: 1px solid var(--color-danger);
+}

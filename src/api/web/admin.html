@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Адміністрування — NRI Club</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">NRI Club</a>
+      <nav id="nav-container" aria-label="Головне меню"></nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1>Адміністрування</h1>
+      </div>
+
+      <!-- Гість -->
+      <div id="guest-view" class="card" style="display: none;">
+        <p>
+          Увійдіть як власник клубу.
+          <a href="login.html?next=admin.html" class="btn btn-primary btn-sm" style="margin-left: 0.5rem;">Увійти</a>
+        </p>
+      </div>
+
+      <!-- Інші ролі -->
+      <div id="forbidden-view" class="card" style="display: none;">
+        <p>Ця сторінка лише для власника клубу.</p>
+      </div>
+
+      <!-- Вміст для власника -->
+      <div id="admin-view" style="display: none;">
+        <div id="status-message" class="alert alert-success" style="display: none;" role="status"></div>
+        <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
+
+        <!--
+          Розділ «Користувачі» прихований: у бекенді немає ендпоінта списку користувачів
+          (є лише GET /users/{id} та PATCH /users/{id}). Щоб увімкнути, додайте GET /api/v1/users
+          з пагінацією {items, pagination}, а потім змініть USERS_LIST_AVAILABLE на true в скрипті.
+        -->
+        <section id="users-section" class="card admin-section" hidden>
+          <h2>Користувачі</h2>
+          <div class="table-responsive">
+            <table class="table users-table">
+              <thead>
+                <tr>
+                  <th scope="col">Ім'я</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Роль</th>
+                  <th scope="col">Статус</th>
+                  <th scope="col">Дія</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody"></tbody>
+            </table>
+          </div>
+          <div style="text-align: center;">
+            <button type="button" id="users-more-btn" class="btn btn-secondary" style="display: none;">Показати ще</button>
+          </div>
+        </section>
+
+        <section class="card admin-section" aria-labelledby="rooms-title">
+          <h2 id="rooms-title">Кімнати</h2>
+          <p id="rooms-loading" class="game-meta">Завантаження…</p>
+          <ul id="rooms-list" class="admin-room-list"></ul>
+        </section>
+
+        <section class="card admin-section" aria-labelledby="block-title">
+          <h2 id="block-title">Заблокувати кімнату на період</h2>
+          <form id="block-form" novalidate>
+            <div class="form-group">
+              <label for="block-room">Кімната</label>
+              <select id="block-room" required></select>
+            </div>
+            <div class="form-group">
+              <label for="block-from">З</label>
+              <input type="datetime-local" id="block-from" required>
+            </div>
+            <div class="form-group">
+              <label for="block-to">До</label>
+              <input type="datetime-local" id="block-to" required>
+              <span class="field-hint">Ігри кімнати в цей період буде скасовано, гравці отримають сповіщення.</span>
+            </div>
+            <div class="form-actions">
+              <button type="submit" id="block-submit-btn" class="btn btn-danger">Заблокувати</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      App.renderNav();
+
+      // Див. коментар біля розділу «Користувачі»: ендпоінта списку користувачів у бекенді поки немає
+      var USERS_LIST_AVAILABLE = false;
+      var USERS_PAGE_SIZE = 20;
+
+      var guestView = document.getElementById('guest-view');
+      var forbiddenView = document.getElementById('forbidden-view');
+      var adminView = document.getElementById('admin-view');
+      var statusContainer = document.getElementById('status-message');
+      var errorContainer = document.getElementById('error-message');
+
+      var session = App.getSession();
+      if (!session || !session.token) {
+        guestView.style.display = 'block';
+        return;
+      }
+      if (session.role !== 'owner') {
+        forbiddenView.style.display = 'block';
+        return;
+      }
+      adminView.style.display = 'block';
+
+      var roomsList = document.getElementById('rooms-list');
+      var roomsLoading = document.getElementById('rooms-loading');
+      var blockForm = document.getElementById('block-form');
+      var blockRoom = document.getElementById('block-room');
+      var blockFrom = document.getElementById('block-from');
+      var blockTo = document.getElementById('block-to');
+      var blockSubmit = document.getElementById('block-submit-btn');
+
+      var usersSection = document.getElementById('users-section');
+      var usersTbody = document.getElementById('users-tbody');
+      var usersMoreBtn = document.getElementById('users-more-btn');
+
+      function clearMessages() {
+        App.showError(null, errorContainer);
+        statusContainer.style.display = 'none';
+        statusContainer.textContent = '';
+      }
+
+      function showStatus(text) {
+        statusContainer.textContent = text;
+        statusContainer.style.display = 'block';
+      }
+
+      function clearNode(node) {
+        while (node.firstChild) {
+          node.removeChild(node.firstChild);
+        }
+      }
+
+      function period(block) {
+        return App.formatDateTime(block.starts_at) + ' — ' + App.formatDateTime(block.ends_at);
+      }
+
+      // ----- Кімнати -----
+
+      function fillRoomSelect(rooms) {
+        var previous = blockRoom.value;
+        clearNode(blockRoom);
+        for (var i = 0; i < rooms.length; i++) {
+          blockRoom.appendChild(App.el('option', { value: rooms[i].room_id }, rooms[i].name));
+        }
+        if (previous) {
+          blockRoom.value = previous;
+        }
+      }
+
+      function renderRooms(rooms) {
+        clearNode(roomsList);
+        roomsLoading.style.display = 'none';
+
+        for (var i = 0; i < rooms.length; i++) {
+          var room = rooms[i];
+          var head = App.el('div', { className: 'admin-room-head' }, [
+            App.el('strong', {}, room.name),
+            App.el('span', { className: 'game-meta' }, 'Місткість: ' + room.capacity),
+            App.el('span', {
+              className: 'status-badge ' + (room.is_blocked ? 'status-blocked' : 'status-active')
+            }, room.is_blocked ? 'Заблокована' : 'Доступна')
+          ]);
+
+          if (room.is_blocked) {
+            head.appendChild(App.el('button', {
+              type: 'button',
+              className: 'btn btn-secondary btn-sm',
+              'data-room-id': room.room_id,
+              'data-room-name': room.name,
+              onclick: function () {
+                handleUnblockRoom(this.getAttribute('data-room-id'), this.getAttribute('data-room-name'));
+              }
+            }, 'Розблокувати'));
+          }
+
+          var li = App.el('li', { className: 'admin-room' }, [head]);
+
+          if (room.blocks.length > 0) {
+            var blockList = App.el('ul', { className: 'admin-block-list' });
+            for (var j = 0; j < room.blocks.length; j++) {
+              var block = room.blocks[j];
+              blockList.appendChild(App.el('li', {}, [
+                App.el('span', {}, 'Блокування: ' + period(block)),
+                App.el('button', {
+                  type: 'button',
+                  className: 'btn btn-secondary btn-sm',
+                  'data-room-id': room.room_id,
+                  'data-block-id': String(block.id),
+                  onclick: function () {
+                    handleDeleteBlock(this.getAttribute('data-room-id'), this.getAttribute('data-block-id'));
+                  }
+                }, 'Скасувати блокування')
+              ]));
+            }
+            li.appendChild(blockList);
+          }
+
+          roomsList.appendChild(li);
+        }
+      }
+
+      async function loadRooms() {
+        try {
+          // Без параметрів календар повертає кімнати з усіма блокуваннями
+          var data = await App.api('GET', '/rooms/calendar');
+          var rooms = (data && data.rooms) || [];
+          for (var i = 0; i < rooms.length; i++) {
+            rooms[i].blocks = rooms[i].blocks || [];
+          }
+          renderRooms(rooms);
+          fillRoomSelect(rooms);
+        } catch (err) {
+          roomsLoading.style.display = 'none';
+          App.showError(err, errorContainer);
+        }
+      }
+
+      async function handleUnblockRoom(roomId, roomName) {
+        if (!window.confirm('Розблокувати кімнату ' + (roomName || '') + '?')) return;
+        clearMessages();
+        try {
+          await App.api('PATCH', '/rooms/' + encodeURIComponent(roomId), { is_blocked: false });
+          showStatus('Кімнату розблоковано');
+          await loadRooms();
+        } catch (err) {
+          App.showError(err, errorContainer);
+        }
+      }
+
+      async function handleDeleteBlock(roomId, blockId) {
+        var question = 'Скасувати блокування на цей період? Раніше скасовані ігри не відновляться.';
+        if (!window.confirm(question)) return;
+        clearMessages();
+        try {
+          await App.api('DELETE', '/rooms/' + encodeURIComponent(roomId) + '/blocks/' + encodeURIComponent(blockId));
+          showStatus('Блокування скасовано');
+          await loadRooms();
+        } catch (err) {
+          App.showError(err, errorContainer);
+        }
+      }
+
+      blockForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearMessages();
+        blockFrom.classList.remove('error');
+        blockTo.classList.remove('error');
+
+        var roomId = blockRoom.value;
+        if (!roomId) {
+          App.showError(new Error('Оберіть кімнату'), errorContainer);
+          return;
+        }
+
+        var from = blockFrom.value ? new Date(blockFrom.value) : null;
+        var to = blockTo.value ? new Date(blockTo.value) : null;
+        if (!from || isNaN(from.getTime())) {
+          blockFrom.classList.add('error');
+          App.showError(new Error('Вкажіть початок періоду'), errorContainer);
+          return;
+        }
+        if (!to || isNaN(to.getTime())) {
+          blockTo.classList.add('error');
+          App.showError(new Error('Вкажіть кінець періоду'), errorContainer);
+          return;
+        }
+        if (to.getTime() <= from.getTime()) {
+          blockTo.classList.add('error');
+          App.showError(new Error('Кінець періоду має бути пізніше за початок'), errorContainer);
+          return;
+        }
+
+        var confirmText = 'Усі ігри кімнати в цей період буде скасовано, а гравці отримають сповіщення. Продовжити?';
+        if (!window.confirm(confirmText)) return;
+
+        blockSubmit.disabled = true;
+        try {
+          var block = await App.api('POST', '/rooms/' + encodeURIComponent(roomId) + '/blocks', {
+            starts_at: from.toISOString(),
+            ends_at: to.toISOString()
+          });
+          var roomName = blockRoom.options[blockRoom.selectedIndex].textContent;
+          showStatus('Кімнату ' + roomName + ' заблоковано на період ' + period(block) +
+            '. Ігри в цей період скасовано, гравці отримали сповіщення.');
+          blockFrom.value = '';
+          blockTo.value = '';
+          await loadRooms();
+        } catch (err) {
+          App.showError(err, errorContainer);
+        } finally {
+          blockSubmit.disabled = false;
+        }
+      });
+
+      // ----- Користувачі (вимкнено, див. USERS_LIST_AVAILABLE) -----
+
+      var usersOffset = 0;
+      var myId = null;
+
+      function renderUserRow(user) {
+        var statusNode = App.el('span', {
+          className: 'status-badge ' + (user.is_blocked ? 'status-blocked' : 'status-active')
+        }, user.is_blocked ? 'Заблокований' : 'Активний');
+        var actionCell = App.el('td', {});
+
+        if (user.id !== myId) {
+          actionCell.appendChild(App.el('button', {
+            type: 'button',
+            className: 'btn btn-sm ' + (user.is_blocked ? 'btn-secondary' : 'btn-danger'),
+            onclick: function () {
+              handleToggleUser(user, tr);
+            }
+          }, user.is_blocked ? 'Розблокувати' : 'Заблокувати'));
+        }
+
+        var tr = App.el('tr', {}, [
+          App.el('td', {}, user.name),
+          App.el('td', {}, user.email),
+          App.el('td', {}, user.role),
+          App.el('td', {}, [statusNode]),
+          actionCell
+        ]);
+        return tr;
+      }
+
+      async function handleToggleUser(user, row) {
+        var block = !user.is_blocked;
+        var question = (block ? 'Заблокувати користувача ' : 'Розблокувати користувача ') + user.name + '?';
+        if (!window.confirm(question)) return;
+        clearMessages();
+        try {
+          var updated = await App.api('PATCH', '/users/' + encodeURIComponent(user.id), { is_blocked: block });
+          user.is_blocked = updated.is_blocked;
+          usersTbody.replaceChild(renderUserRow(user), row);
+        } catch (err) {
+          App.showError(err, errorContainer);
+        }
+      }
+
+      async function loadUsers(reset) {
+        if (reset) {
+          usersOffset = 0;
+          clearNode(usersTbody);
+        }
+        try {
+          var path = '/users?limit=' + USERS_PAGE_SIZE + '&offset=' + usersOffset;
+          var data = await App.api('GET', path);
+          var items = (data && data.items) || [];
+          for (var i = 0; i < items.length; i++) {
+            usersTbody.appendChild(renderUserRow(items[i]));
+          }
+          usersOffset += USERS_PAGE_SIZE;
+          var hasMore = data && data.pagination && data.pagination.has_more;
+          usersMoreBtn.style.display = hasMore ? 'inline-flex' : 'none';
+        } catch (err) {
+          App.showError(err, errorContainer);
+        }
+      }
+
+      async function initUsers() {
+        var me = await App.getMe();
+        myId = me && me.id ? me.id : null;
+        usersSection.hidden = false;
+        usersMoreBtn.addEventListener('click', function () {
+          loadUsers(false);
+        });
+        await loadUsers(true);
+      }
+
+      loadRooms();
+      if (USERS_LIST_AVAILABLE) {
+        initUsers();
+      }
+    });
+  </script>
+</body>
+</html>
