@@ -58,3 +58,12 @@ def test_web_game_html_served(client):
     assert '<html lang="uk">' in response.text
     assert "app.js" in response.text
     assert "style.css" in response.text
+
+
+@pytest.mark.technical
+def test_web_create_game_html_served(client):
+    response = client.get("/app/create-game.html")
+    assert response.status_code == 200
+    assert '<html lang="uk">' in response.text
+    assert "app.js" in response.text
+    assert "style.css" in response.text
