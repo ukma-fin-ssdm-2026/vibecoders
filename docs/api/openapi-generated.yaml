@@ -6,6 +6,8 @@ info:
     Authorize і введіть демо-токен: master-token, player-token або owner-token.'
   version: 1.0.0
 servers:
+- url: https://vibecoders.onrender.com
+  description: Продакшн сервер
 - url: http://localhost:3000
   description: Локальний сервер
 paths:

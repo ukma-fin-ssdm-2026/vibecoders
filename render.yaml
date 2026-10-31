@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: vibecoders-api
+    env: docker
+    plan: free
+    dockerCommand: uvicorn src.api.main:app --host 0.0000 --port $PORT
+    envVars:
+      - key: PASSWORD_SALT
+        generateValue: true
