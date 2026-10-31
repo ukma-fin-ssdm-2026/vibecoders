@@ -16,7 +16,7 @@ from models import (
     Token as TokenModel,
 )
 
-db_lock = threading.Lock()
+db_lock = threading.RLock()
 
 # Сіль береться зі змінних середовища (закриває вразливість із static-analysis.md)
 PASSWORD_SALT = os.getenv("PASSWORD_SALT", "default-insecure-salt-for-dev").encode("utf-8")

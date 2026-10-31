@@ -37,6 +37,9 @@ def isolated_store():
     store.LOCKED_UNTIL.clear()
     store._game_sequence = itertools.count(3)
 
+    # ДОДАЄМО ОСЬ ЦЕЙ РЯДОК, щоб гарантовано очистити БД від попередніх тестів:
+    Base.metadata.drop_all(bind=engine)
+
     # 2. На кожен тест створюємо нову чисту БД і заливаємо демо-дані
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
