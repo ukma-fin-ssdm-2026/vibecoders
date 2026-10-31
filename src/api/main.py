@@ -1,9 +1,10 @@
 import os
-
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
+from fastapi.staticfiles import StaticFiles
 
 from errors import register_error_handlers
 from routes.auth import router as auth_router
@@ -12,6 +13,7 @@ from routes.rooms import router as rooms_router
 from spec import install_openapi, save_openapi_spec
 
 host = os.getenv("API_HOST", "127.0.0.1")
+WEB_DIR = Path(__file__).resolve().parent / "web"
 
 
 def operation_id(route: APIRoute) -> str:
@@ -50,6 +52,8 @@ install_openapi(app)
 app.include_router(auth_router)
 app.include_router(games_router)
 app.include_router(rooms_router)
+
+app.mount("/app", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
 
 if __name__ == "__main__":
     import uvicorn
