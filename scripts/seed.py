@@ -1,12 +1,13 @@
 import os
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 # Додаємо src/api до шляху для імпортів
 sys.path.append(str(Path(__file__).resolve().parent.parent / "src" / "api"))
 
 from db import SessionLocal, init_db  # noqa: E402
-from models import Room, Token, User  # noqa: E402
+from models import Enrollment, Game, Room, Token, User  # noqa: E402
 import store  # noqa: E402
 
 
@@ -57,6 +58,43 @@ def seed_db():
                 Token(id=os.getenv("OWNER_TOKEN", "owner-token"), user_id="user_3"),
             ]
             db.add_all(tokens)
+
+        # Створення демо-ігор з відносними датами
+        if not db.query(Game).first():
+            now = datetime.now(timezone.utc)
+            games = [
+                Game(
+                    id="game_1",
+                    master_id="user_1",
+                    room_id="room_1",
+                    title="Прокляття Страда",
+                    system="D&D 5e",
+                    starts_at=now + timedelta(hours=2),
+                    duration_minutes=180,
+                    max_players=5,
+                ),
+                Game(
+                    id="game_2",
+                    master_id="user_1",
+                    room_id="room_2",
+                    title="Поклик Ктулху: Маскарад",
+                    system="Call of Cthulhu",
+                    starts_at=now + timedelta(days=1, hours=1),
+                    duration_minutes=240,
+                    max_players=4,
+                ),
+            ]
+            db.add_all(games)
+
+            # Демо-запис гравця
+            enrollments = [
+                Enrollment(
+                    game_id="game_1",
+                    player_id="user_2",
+                    enrolled_at=now,
+                )
+            ]
+            db.add_all(enrollments)
 
         db.commit()
         print("Базу даних успішно заповнено демо-даними!")
