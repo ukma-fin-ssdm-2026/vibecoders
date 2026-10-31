@@ -38,7 +38,48 @@ MAX_FAILED_LOGINS = 5
 LOGIN_WINDOW = timedelta(minutes=15)
 LOCK_DURATION = timedelta(minutes=15)
 LOGIN_FAILURES: Dict[str, List[datetime]] = {}
-LOCKED_UNTIL: Dict[str, datetime] = {}
+
+
+class LockedUntilProxy:
+    def get(self, email: str, default=None):
+        db = SessionLocal()
+        try:
+            user = db.query(UserModel).filter(UserModel.email == email).first()
+            return user.locked_until.replace(tzinfo=timezone.utc) if user and user.locked_until else default
+        finally:
+            db.close()
+
+    def __setitem__(self, email: str, value: datetime):
+        db = SessionLocal()
+        try:
+            user = db.query(UserModel).filter(UserModel.email == email).first()
+            if user:
+                user.locked_until = value.replace(tzinfo=None) if value else None
+                db.commit()
+        finally:
+            db.close()
+
+    def __delitem__(self, email: str):
+        self.__setitem__(email, None)
+
+    def __contains__(self, email: str):
+        return self.get(email) is not None
+
+    def pop(self, email: str, default=None):
+        val = self.get(email, default)
+        self.__setitem__(email, None)
+        return val
+
+    def clear(self):
+        db = SessionLocal()
+        try:
+            db.query(UserModel).update({UserModel.locked_until: None})
+            db.commit()
+        finally:
+            db.close()
+
+
+LOCKED_UNTIL = LockedUntilProxy()
 
 
 class GameRecord(GameBase):
@@ -330,8 +371,26 @@ ENROLLMENTS = EnrollmentsProxy()
 _game_sequence = itertools.count(3)
 
 
+def _highest_game_number() -> int:
+    db = SessionLocal()
+    try:
+        game_ids = [game_id for (game_id,) in db.query(GameModel.id).all()]
+    finally:
+        db.close()
+    numbers = [int(game_id[5:]) for game_id in game_ids if game_id.startswith("game_") and game_id[5:].isdigit()]
+    return max(numbers, default=0)
+
+
 def next_game_id() -> str:
-    return f"game_{next(_game_sequence)}"
+    """Наступний id гри. Після перезапуску лічильник у пам'яті починається з початку,
+    тому він завжди випереджає найбільший id, що вже збережений у БД (інакше нова гра перезаписала б стару)."""
+    global _game_sequence
+    number = next(_game_sequence)
+    first_free = _highest_game_number() + 1
+    if number < first_free:
+        number = first_free
+        _game_sequence = itertools.count(first_free + 1)
+    return f"game_{number}"
 
 
 def to_game(record: GameRecord) -> Game:

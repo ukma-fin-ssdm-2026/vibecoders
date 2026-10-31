@@ -1,109 +1,112 @@
+"""Наповнення БД демо-даними (MAINT-001): кімнати, демо-акаунти, демо-токени, дві ігри та один запис.
+
+Запуск: ``python scripts/seed.py`` (також викликається під час старту сервера).
+
+Скрипт ідемпотентний по кожній сутності окремо: кожна кімната, користувач і токен додаються,
+лише якщо їх ще немає, тому його безпечно запускати на порожній, частково заповненій чи вже готовій БД.
+Демо-ігри додаються лише в порожню таблицю ігор і лише тоді, коли існують їхні майстер і кімната
+(зовнішні ключі не порушуються). Сіль паролів і демо-токени беруться зі змінних середовища
+(PASSWORD_SALT, MASTER_TOKEN, PLAYER_TOKEN, OWNER_TOKEN), а не зі сталих у коді.
+"""
+
 import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Dict
 
 # Додаємо src/api до шляху для імпортів
 sys.path.append(str(Path(__file__).resolve().parent.parent / "src" / "api"))
 
-from db import SessionLocal, init_db  # noqa: E402
-from models import Enrollment, Game, Room, Token, User  # noqa: E402
+import db  # noqa: E402
 import store  # noqa: E402
+from models import Enrollment, Game, Room, Token, User  # noqa: E402
+
+# (id, назва, місткість)
+DEMO_ROOMS = [
+    ("room_1", "Зала «Дракон»", 8),
+    ("room_2", "Зала «Лабіринт»", 6),
+    ("room_3", "Кімната «Таверна»", 5),
+]
+
+# (id, пошта, пароль, ім'я, роль, змінна середовища з токеном, токен за замовчуванням)
+DEMO_USERS = [
+    ("user_1", "master@club.test", "master-pass-1", "Андрій", "master", "MASTER_TOKEN", "master-token"),
+    ("user_2", "player@club.test", "player-pass-1", "Марія", "player", "PLAYER_TOKEN", "player-token"),
+    ("user_3", "owner@club.test", "owner-pass-1", "Олена", "owner", "OWNER_TOKEN", "owner-token"),
+]
 
 
-def seed_db():
-    init_db()
-    db = SessionLocal()
-    try:
-        # Створення кімнат (MAINT-001)
-        if not db.query(Room).first():
-            rooms = [
-                Room(id="room_1", name="Зала «Дракон»", capacity=8, is_blocked=False),
-                Room(id="room_2", name="Зала «Лабіринт»", capacity=6, is_blocked=False),
-                Room(id="room_3", name="Кімната «Таверна»", capacity=5, is_blocked=False),
-            ]
-            db.add_all(rooms)
+def _demo_games(now: datetime):
+    # (id, майстер, кімната, назва, система, початок, тривалість, місць)
+    return [
+        ("game_1", "user_1", "room_1", "Прокляття Страда", "D&D 5e", now + timedelta(hours=2), 180, 5),
+        (
+            "game_2",
+            "user_1",
+            "room_2",
+            "Поклик Ктулху: Маскарад",
+            "Call of Cthulhu",
+            now + timedelta(days=1, hours=1),
+            240,
+            4,
+        ),
+    ]
 
-        # Створення демо-користувачів
-        if not db.query(User).first():
-            users = [
-                User(
-                    id="user_1",
-                    email="master@club.test",
-                    password_hash=store.hash_password("master-pass-1"),
-                    name="Андрій",
-                    role="master",
-                ),
-                User(
-                    id="user_2",
-                    email="player@club.test",
-                    password_hash=store.hash_password("player-pass-1"),
-                    name="Марія",
-                    role="player",
-                ),
-                User(
-                    id="user_3",
-                    email="owner@club.test",
-                    password_hash=store.hash_password("owner-pass-1"),
-                    name="Олена",
-                    role="owner",
-                ),
-            ]
-            db.add_all(users)
 
-            # Створення демо-токенів
-            tokens = [
-                Token(id=os.getenv("MASTER_TOKEN", "master-token"), user_id="user_1"),
-                Token(id=os.getenv("PLAYER_TOKEN", "player-token"), user_id="user_2"),
-                Token(id=os.getenv("OWNER_TOKEN", "owner-token"), user_id="user_3"),
-            ]
-            db.add_all(tokens)
+def seed_db() -> Dict[str, int]:
+    """Створює відсутні демо-дані. Повертає, скільки записів кожного виду додано."""
+    db.init_db()
+    created = {"rooms": 0, "users": 0, "tokens": 0, "games": 0, "enrollments": 0}
+    now = datetime.now(timezone.utc)
 
-        # Створення демо-ігор з відносними датами
-        if not db.query(Game).first():
-            now = datetime.now(timezone.utc)
-            games = [
-                Game(
-                    id="game_1",
-                    master_id="user_1",
-                    room_id="room_1",
-                    title="Прокляття Страда",
-                    system="D&D 5e",
-                    starts_at=now + timedelta(hours=2),
-                    duration_minutes=180,
-                    max_players=5,
-                ),
-                Game(
-                    id="game_2",
-                    master_id="user_1",
-                    room_id="room_2",
-                    title="Поклик Ктулху: Маскарад",
-                    system="Call of Cthulhu",
-                    starts_at=now + timedelta(days=1, hours=1),
-                    duration_minutes=240,
-                    max_players=4,
-                ),
-            ]
-            db.add_all(games)
+    with db.session_scope() as session:
+        for room_id, name, capacity in DEMO_ROOMS:
+            if session.get(Room, room_id) is None:
+                session.add(Room(id=room_id, name=name, capacity=capacity, is_blocked=False))
+                created["rooms"] += 1
 
-            # Демо-запис гравця
-            enrollments = [
-                Enrollment(
-                    game_id="game_1",
-                    player_id="user_2",
-                    enrolled_at=now,
+        for user_id, email, password, name, role, _token_env, _token_default in DEMO_USERS:
+            email_taken = session.query(User).filter(User.email == email).first() is not None
+            if session.get(User, user_id) is None and not email_taken:
+                session.add(
+                    User(id=user_id, email=email, password_hash=store.hash_password(password), name=name, role=role)
                 )
-            ]
-            db.add_all(enrollments)
+                created["users"] += 1
+        session.flush()
 
-        db.commit()
-        print("Базу даних успішно заповнено демо-даними!")
-    except Exception as e:
-        db.rollback()
-        print(f"Помилка під час наповнення БД: {e}")
-    finally:
-        db.close()
+        for user_id, _email, _password, _name, _role, token_env, token_default in DEMO_USERS:
+            user = session.get(User, user_id)
+            token_id = os.getenv(token_env, token_default)
+            if user is not None and not user.is_blocked and session.get(Token, token_id) is None:
+                session.add(Token(id=token_id, user_id=user_id))
+                created["tokens"] += 1
+        session.flush()
+
+        if session.query(Game).count() == 0:
+            for game_id, master_id, room_id, title, system, starts_at, minutes, max_players in _demo_games(now):
+                if session.get(User, master_id) is None or session.get(Room, room_id) is None:
+                    continue
+                session.add(
+                    Game(
+                        id=game_id,
+                        master_id=master_id,
+                        room_id=room_id,
+                        title=title,
+                        system=system,
+                        starts_at=starts_at,
+                        duration_minutes=minutes,
+                        max_players=max_players,
+                    )
+                )
+                created["games"] += 1
+                if game_id == "game_1" and session.get(User, "user_2") is not None:
+                    session.add(Enrollment(game_id=game_id, player_id="user_2", enrolled_at=now))
+                    created["enrollments"] += 1
+
+    return created
 
 
 if __name__ == "__main__":
-    seed_db()
+    summary = seed_db()
+    print(f"Базу даних заповнено демо-даними: {summary}")
