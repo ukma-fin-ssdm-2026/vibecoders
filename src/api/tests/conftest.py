@@ -4,18 +4,19 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool
 
 import store
 from main import app
 import db
 from db import Base
 
-TEST_DATABASE_URL = "sqlite:///:memory:"
+TEST_DATABASE_URL = "sqlite:///test.db"
+
 engine = create_engine(
     TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
+    poolclass=NullPool,
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -35,6 +36,9 @@ def isolated_store():
     store.LOGIN_FAILURES.clear()
     store.LOCKED_UNTIL.clear()
     store._game_sequence = itertools.count(3)
+
+    # ДОДАЄМО ОСЬ ЦЕЙ РЯДОК, щоб гарантовано очистити БД від попередніх тестів:
+    Base.metadata.drop_all(bind=engine)
 
     # 2. На кожен тест створюємо нову чисту БД і заливаємо демо-дані
     Base.metadata.create_all(bind=engine)

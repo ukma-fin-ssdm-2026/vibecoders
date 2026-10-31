@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import os
 import itertools
+import threading
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
@@ -14,6 +15,8 @@ from models import (
     Enrollment as EnrollmentModel,
     Token as TokenModel,
 )
+
+db_lock = threading.RLock()
 
 # Сіль береться зі змінних середовища (закриває вразливість із static-analysis.md)
 PASSWORD_SALT = os.getenv("PASSWORD_SALT", "default-insecure-salt-for-dev").encode("utf-8")
@@ -288,16 +291,17 @@ def find_busy_game(
     master_id: Optional[str] = None,
     exclude_game_id: Optional[str] = None,
 ) -> Optional[GameRecord]:
-    for record in sorted_games(list(GAMES.values())):
-        if record.id == exclude_game_id:
-            continue
-        same_room = room_id is not None and record.room_id == room_id
-        same_master = master_id is not None and record.master_id == master_id
-        if (same_room or same_master) and time_overlap(
-            starts_at, duration_minutes, record.starts_at, record.duration_minutes
-        ):
-            return record
-    return None
+    with db_lock:
+        for record in sorted_games(list(GAMES.values())):
+            if record.id == exclude_game_id:
+                continue
+            same_room = room_id is not None and record.room_id == room_id
+            same_master = master_id is not None and record.master_id == master_id
+            if (same_room or same_master) and time_overlap(
+                starts_at, duration_minutes, record.starts_at, record.duration_minutes
+            ):
+                return record
+        return None
 
 
 def game_end(record: GameRecord) -> datetime:
