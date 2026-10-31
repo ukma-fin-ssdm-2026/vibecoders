@@ -49,6 +49,69 @@
         delete fallbackStorage.access_token;
         delete fallbackStorage.user_role;
       }
+      try {
+        sessionStorage.removeItem('user_me');
+      } catch (e) {}
+    },
+
+    getMe: async function () {
+      var session = App.getSession();
+      if (!session || !session.token) {
+        return null;
+      }
+      try {
+        var cached = sessionStorage.getItem('user_me');
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch (e) {}
+
+      try {
+        var user = await App.api('GET', '/users/me');
+        if (user && user.id) {
+          try {
+            sessionStorage.setItem('user_me', JSON.stringify(user));
+          } catch (e) {}
+          return user;
+        }
+        return null;
+      } catch (err) {
+        return null;
+      }
+    },
+
+    formatDateTime: function (isoString) {
+      if (!isoString) return '';
+      var date = new Date(isoString);
+      if (isNaN(date.getTime())) return String(isoString);
+      try {
+        var formatter = new Intl.DateTimeFormat('uk-UA', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        return formatter.format(date);
+      } catch (e) {
+        return date.toLocaleString();
+      }
+    },
+
+    formatSlot: function (startsAt, durationMinutes) {
+      if (!startsAt) return '';
+      var start = new Date(startsAt);
+      if (isNaN(start.getTime())) return '';
+      var duration = parseInt(durationMinutes, 10) || 0;
+      var end = new Date(start.getTime() + duration * 60000);
+
+      function pad(n) {
+        return n < 10 ? '0' + n : String(n);
+      }
+
+      var startStr = pad(start.getHours()) + ':' + pad(start.getMinutes());
+      var endStr = pad(end.getHours()) + ':' + pad(end.getMinutes());
+      return startStr + '–' + endStr;
     },
 
     el: function (tag, attrs, children) {

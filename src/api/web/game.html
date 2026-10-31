@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Деталі гри — NRI Club</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">NRI Club</a>
+      <nav id="nav-container" aria-label="Головне меню"></nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <div class="page-nav">
+        <a href="games.html" class="nav-back">&larr; До списку ігор</a>
+      </div>
+
+      <!-- Повідомлення про помилки та успіх -->
+      <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
+      <div id="status-message" class="alert alert-success" style="display: none;" role="status"></div>
+
+      <!-- Картка деталей гри -->
+      <article id="game-details" class="card game-detail-card" style="display: none;">
+        <h1 id="game-title"></h1>
+
+        <div class="game-info-grid">
+          <p class="game-meta">
+            <strong>Система:</strong> <span id="game-system"></span>
+          </p>
+          <p class="game-meta">
+            <strong>Кімната:</strong> <span id="game-room"></span>
+          </p>
+          <p class="game-meta">
+            <strong>Час:</strong> <span id="game-time"></span>
+          </p>
+          <p class="game-meta">
+            <strong>Гравці:</strong> <span id="game-players-count"></span>
+            <span id="game-full-badge" class="badge badge-full" style="display: none;">Місць немає</span>
+          </p>
+        </div>
+
+        <!-- Блок дій для запису на гру -->
+        <div id="game-actions-block" class="game-action-block">
+          <!-- Для гостей -->
+          <div id="guest-action" style="display: none;">
+            <p>
+              Увійдіть, щоб записатися на гру.
+              <a id="login-link" href="login.html" class="btn btn-primary btn-sm" style="margin-left: 0.5rem;">Увійти</a>
+            </p>
+          </div>
+
+          <!-- Для залогінених користувачів -->
+          <div id="user-action" style="display: none;">
+            <div id="enroll-box">
+              <button type="button" id="enroll-btn" class="btn btn-primary">Записатися</button>
+            </div>
+            <div id="enrolled-box" style="display: none;">
+              <p class="enrolled-notice" style="margin-bottom: 0.75rem;">Ви записані на гру</p>
+              <button type="button" id="unenroll-btn" class="btn btn-danger">Вийти з гри</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Посилання до списку ігор при 404 або некоректному id -->
+      <div id="not-found-block" class="card" style="display: none;">
+        <p id="not-found-message"></p>
+        <p style="margin-top: 1rem;">
+          <a href="games.html" class="btn btn-secondary">До списку ігор</a>
+        </p>
+      </div>
+
+      <!-- Секція керування для майстра та власника (зарезервована для наступного етапу) -->
+      <section id="manage" hidden></section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      App.renderNav();
+
+      var errorContainer = document.getElementById('error-message');
+      var statusContainer = document.getElementById('status-message');
+      var gameDetails = document.getElementById('game-details');
+      var notFoundBlock = document.getElementById('not-found-block');
+      var notFoundMessage = document.getElementById('not-found-message');
+
+      var gameTitle = document.getElementById('game-title');
+      var gameSystem = document.getElementById('game-system');
+      var gameRoom = document.getElementById('game-room');
+      var gameTime = document.getElementById('game-time');
+      var gamePlayersCount = document.getElementById('game-players-count');
+      var gameFullBadge = document.getElementById('game-full-badge');
+
+      var guestAction = document.getElementById('guest-action');
+      var userAction = document.getElementById('user-action');
+      var enrollBox = document.getElementById('enroll-box');
+      var enrolledBox = document.getElementById('enrolled-box');
+      var enrollBtn = document.getElementById('enroll-btn');
+      var unenrollBtn = document.getElementById('unenroll-btn');
+      var loginLink = document.getElementById('login-link');
+
+      var params = new URLSearchParams(window.location.search);
+      var gameId = params.get('id');
+
+      if (!gameId || !/^game_\d+$/.test(gameId)) {
+        notFoundMessage.textContent = 'Некоректний ідентифікатор гри';
+        notFoundBlock.style.display = 'block';
+        return;
+      }
+
+      var session = App.getSession();
+      var roomsMap = {};
+      var currentGame = null;
+
+      function showStatus(text) {
+        if (!text) {
+          statusContainer.style.display = 'none';
+          statusContainer.textContent = '';
+          return;
+        }
+        statusContainer.textContent = text;
+        statusContainer.style.display = 'block';
+      }
+
+      async function loadRooms() {
+        try {
+          var data = await App.api('GET', '/rooms?limit=100');
+          if (data && data.items) {
+            for (var i = 0; i < data.items.length; i++) {
+              roomsMap[data.items[i].id] = data.items[i].name;
+            }
+          }
+        } catch (e) {}
+      }
+
+      function updateActionState(isEnrolled) {
+        if (!session || !session.token) {
+          guestAction.style.display = 'block';
+          userAction.style.display = 'none';
+          loginLink.href = 'login.html?next=' + encodeURIComponent('game.html?id=' + gameId);
+          return;
+        }
+
+        guestAction.style.display = 'none';
+        userAction.style.display = 'block';
+
+        if (isEnrolled) {
+          enrollBox.style.display = 'none';
+          enrolledBox.style.display = 'block';
+        } else {
+          enrolledBox.style.display = 'none';
+          enrollBox.style.display = 'block';
+
+          if (currentGame && currentGame.current_players >= currentGame.max_players) {
+            enrollBtn.disabled = true;
+            enrollBtn.title = 'Вільних місць немає';
+          } else {
+            enrollBtn.disabled = false;
+            enrollBtn.title = '';
+          }
+        }
+      }
+
+      function updateGameView(game) {
+        currentGame = game;
+        gameTitle.textContent = game.title;
+        gameSystem.textContent = game.system;
+        gameRoom.textContent = roomsMap[game.room_id] || game.room_id;
+
+        var formattedDate = App.formatDateTime(game.starts_at);
+        var slotStr = App.formatSlot(game.starts_at, game.duration_minutes);
+        gameTime.textContent = formattedDate + (slotStr ? ' (' + slotStr + ')' : '');
+
+        gamePlayersCount.textContent = game.current_players + '/' + game.max_players;
+
+        if (game.current_players >= game.max_players) {
+          gameFullBadge.style.display = 'inline-block';
+        } else {
+          gameFullBadge.style.display = 'none';
+        }
+
+        var isEnrolled = false;
+        try {
+          isEnrolled = sessionStorage.getItem('enrolled_game_' + gameId) === 'true';
+        } catch (e) {}
+
+        updateActionState(isEnrolled);
+        gameDetails.style.display = 'block';
+      }
+
+      async function fetchGameDetails() {
+        try {
+          var game = await App.api('GET', '/games/' + encodeURIComponent(gameId));
+          updateGameView(game);
+        } catch (err) {
+          if (err.status === 404) {
+            notFoundMessage.textContent = err.message || 'Гру не знайдено';
+            notFoundBlock.style.display = 'block';
+          } else {
+            App.showError(err, errorContainer);
+          }
+        }
+      }
+
+      enrollBtn.addEventListener('click', async function () {
+        App.showError(null, errorContainer);
+        showStatus(null);
+        enrollBtn.disabled = true;
+
+        try {
+          var res = await App.api('POST', '/games/' + encodeURIComponent(gameId) + '/players');
+          try {
+            sessionStorage.setItem('enrolled_game_' + gameId, 'true');
+            if (res && res.user_id) {
+              sessionStorage.setItem('enrolled_user_' + gameId, res.user_id);
+            }
+          } catch (e) {}
+
+          showStatus('Ви записані на гру');
+          await fetchGameDetails();
+          updateActionState(true);
+        } catch (err) {
+          enrollBtn.disabled = false;
+
+          if (err.status === 409 && err.code === 'ALREADY_ENROLLED') {
+            try {
+              sessionStorage.setItem('enrolled_game_' + gameId, 'true');
+            } catch (e) {}
+            showStatus('Ви вже записані на цю гру');
+            updateActionState(true);
+          } else if (err.status === 409 && err.code === 'GAME_FULL') {
+            App.showError(new Error('Вільних місць немає'), errorContainer);
+            await fetchGameDetails();
+          } else {
+            App.showError(err, errorContainer);
+          }
+        }
+      });
+
+      unenrollBtn.addEventListener('click', async function () {
+        App.showError(null, errorContainer);
+        showStatus(null);
+
+        var userId = null;
+        try {
+          var me = await App.getMe();
+          if (me && me.id) {
+            userId = me.id;
+          }
+        } catch (e) {}
+
+        if (!userId) {
+          try {
+            userId = sessionStorage.getItem('enrolled_user_' + gameId);
+          } catch (e) {}
+        }
+
+        if (!userId) {
+          App.showError(
+            new Error('Не вдалося визначити ваш акаунт. Оновіть сторінку після входу'),
+            errorContainer
+          );
+          return;
+        }
+
+        unenrollBtn.disabled = true;
+
+        try {
+          await App.api(
+            'DELETE',
+            '/games/' + encodeURIComponent(gameId) + '/players/' + encodeURIComponent(userId)
+          );
+          try {
+            sessionStorage.removeItem('enrolled_game_' + gameId);
+            sessionStorage.removeItem('enrolled_user_' + gameId);
+          } catch (e) {}
+
+          showStatus('Запис скасовано');
+          await fetchGameDetails();
+          updateActionState(false);
+        } catch (err) {
+          unenrollBtn.disabled = false;
+          App.showError(err, errorContainer);
+        }
+      });
+
+      await loadRooms();
+      await fetchGameDetails();
+    });
+  </script>
+</body>
+</html>
+

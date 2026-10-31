@@ -119,8 +119,13 @@
 
       function getNextUrl() {
         var next = params.get('next');
-        if (next && /^[a-z0-9-]+\.html$/.test(next)) {
-          return next;
+        if (next) {
+          try {
+            next = decodeURIComponent(next);
+          } catch (e) {}
+          if (/^[a-z0-9-]+\.html(\?id=game_\d+)?$/.test(next)) {
+            return next;
+          }
         }
         return 'index.html';
       }
