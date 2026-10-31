@@ -1,6 +1,6 @@
-from notifications import NOTIFICATIONS
-
 import pytest
+
+from notifications import list_user_notifications
 
 
 @pytest.mark.requirement("FR-005")
@@ -33,7 +33,6 @@ def test_calendar_requires_both_bounds(client):
 
 @pytest.mark.requirement("US-003", "FR-007", "FR-011")
 def test_room_block_cancels_overlapping_games_and_notifies_enrolled_players(client, owner_headers, game_payload):
-    NOTIFICATIONS.clear()
     response = client.post(
         "/api/v1/rooms/room_1/blocks",
         json={"starts_at": "2026-10-10T19:00:00Z", "ends_at": "2026-10-10T22:00:00Z"},
@@ -46,8 +45,8 @@ def test_room_block_cancels_overlapping_games_and_notifies_enrolled_players(clie
     assert block["ends_at"].startswith("2026-10-10T22:00:00")
 
     assert client.get("/api/v1/games/game_1").status_code == 404
-    assert len(NOTIFICATIONS["user_2"]) == 1
-    assert NOTIFICATIONS["user_2"][0].game_id == "game_1"
+    [notification] = list_user_notifications("user_2")
+    assert notification.game_id == "game_1"
 
     game_payload.update(room_id="room_1", starts_at="2026-10-10T20:00:00Z")
     conflict = client.post("/api/v1/games", json=game_payload, headers=owner_headers)

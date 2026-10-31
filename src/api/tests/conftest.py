@@ -1,26 +1,37 @@
+import atexit
 import itertools
+import shutil
+import tempfile
 from datetime import datetime, timezone
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
-import store
-from main import app
 import db
+import store
 from db import Base
+from main import app
+from models import Enrollment, Game, Room, Token, User
 
-TEST_DATABASE_URL = "sqlite:///test.db"
+# Створюємо тимчасову базу для тестів, щоб не залишати test.db у репозиторії
+TEST_DB_DIR = tempfile.mkdtemp(prefix="vibecoders-tests-")
+atexit.register(shutil.rmtree, TEST_DB_DIR, ignore_errors=True)
+TEST_DATABASE_URL = f"sqlite:///{(Path(TEST_DB_DIR) / 'test.db').as_posix()}"
 
-engine = create_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=NullPool,
+engine = db.configure_engine(
+    create_engine(
+        TEST_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=NullPool,
+    )
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Жорстко підміняємо engine та SessionLocal у модулях
+# Підміняємо engine та сесії для тестів
 db.engine = engine
 db.SessionLocal = TestingSessionLocal
 store.SessionLocal = TestingSessionLocal
@@ -28,7 +39,11 @@ store.SessionLocal = TestingSessionLocal
 
 @pytest.fixture(autouse=True)
 def isolated_store():
-    # 1. Очищення кешу проксі та скидання стану пам'яті
+    # Спочатку видаляємо і створюємо таблиці, щоб проксі-об'єкти не падали
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
+    # Очищення кешу проксі та скидання стану пам'яті
     store.ROOMS._cache.clear()
     store.GAMES._cache.clear()
     store.USERS._cache.clear()
@@ -37,14 +52,7 @@ def isolated_store():
     store.LOCKED_UNTIL.clear()
     store._game_sequence = itertools.count(3)
 
-    # ДОДАЄМО ОСЬ ЦЕЙ РЯДОК, щоб гарантовано очистити БД від попередніх тестів:
-    Base.metadata.drop_all(bind=engine)
-
-    # 2. На кожен тест створюємо нову чисту БД і заливаємо демо-дані
-    Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
-    from models import User, Room, Token, Game, Enrollment
-
     try:
         rooms = [
             Room(id="room_1", name="Зала «Дракон»", capacity=8, is_blocked=False),
@@ -90,7 +98,7 @@ def isolated_store():
                 room_id="room_1",
                 title="Прокляття Страда",
                 system="D&D 5e",
-                starts_at=datetime(2026, 10, 10, 18, 0, tzinfo=timezone.utc),
+                starts_at=datetime(2026, 10, 10, 18, 0, tzinfo=timezone.utc).replace(tzinfo=None),
                 duration_minutes=180,
                 max_players=5,
             ),
@@ -100,7 +108,7 @@ def isolated_store():
                 room_id="room_2",
                 title="Поклик Ктулху: Маскарад",
                 system="Call of Cthulhu",
-                starts_at=datetime(2026, 10, 11, 16, 0, tzinfo=timezone.utc),
+                starts_at=datetime(2026, 10, 11, 16, 0, tzinfo=timezone.utc).replace(tzinfo=None),
                 duration_minutes=240,
                 max_players=4,
             ),
@@ -109,19 +117,21 @@ def isolated_store():
 
         enrollments = [
             Enrollment(
-                game_id="game_1", player_id="user_2", enrolled_at=datetime(2026, 10, 1, 9, 30, tzinfo=timezone.utc)
+                game_id="game_1",
+                player_id="user_2",
+                enrolled_at=datetime(2026, 10, 1, 9, 30, tzinfo=timezone.utc).replace(tzinfo=None),
             )
         ]
         session.add_all(enrollments)
 
         session.commit()
+    except Exception:
+        session.rollback()
+        raise
     finally:
         session.close()
 
     yield
-
-    # Видаляємо БД після тесту
-    Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
@@ -147,13 +157,50 @@ def owner_headers():
 @pytest.fixture
 def game_payload():
     return {
-        "title": "Нова кампанія",
-        "system": "Pathfinder",
+        "title": "Тестова гра",
+        "system": "GURPS",
         "room_id": "room_3",
-        "starts_at": "2026-11-01T10:00:00Z",
+        "starts_at": "2026-10-10T14:00:00Z",
         "duration_minutes": 120,
         "max_players": 4,
     }
+
+
+@pytest.fixture
+def stub_now(monkeypatch):
+    def fake_now(tz=None):
+        return datetime(2026, 10, 2, tzinfo=timezone.utc)
+
+    import routes.games
+    import store
+
+    monkeypatch.setattr(
+        store,
+        "datetime",
+        type(
+            "MockDateTime",
+            (),
+            {
+                "now": fake_now,
+                "fromisoformat": datetime.fromisoformat,
+                "strptime": datetime.strptime,
+            },
+        ),
+    )
+    monkeypatch.setattr(
+        routes.games,
+        "datetime",
+        type(
+            "MockDateTime",
+            (),
+            {
+                "now": fake_now,
+                "fromisoformat": datetime.fromisoformat,
+                "strptime": datetime.strptime,
+            },
+        ),
+    )
+    return fake_now
 
 
 @pytest.fixture
