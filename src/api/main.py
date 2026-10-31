@@ -36,7 +36,11 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/api-docs",
     redoc_url="/redoc",
-    servers=[{"url": "http://localhost:3000", "description": "Локальний сервер"}],
+    # Змінено сервери для коректної роботи Swagger на Render
+    servers=[
+        {"url": "https://vibecoders.onrender.com", "description": "Продакшн сервер"},
+        {"url": "http://localhost:3000", "description": "Локальний сервер"},
+    ],
     openapi_tags=[
         {"name": "Auth", "description": "Вхід у систему"},
         {"name": "Games", "description": "Ігрові сесії та запис гравців"},
