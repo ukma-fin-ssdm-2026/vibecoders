@@ -11,12 +11,10 @@
 
 import os
 import sys
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict
 
-# Додаємо src/api до шляху для імпортів
-sys.path.append(str(Path(__file__).resolve().parent.parent / "src" / "api"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src" / "api"))
 
 import db  # noqa: E402
 import store  # noqa: E402
