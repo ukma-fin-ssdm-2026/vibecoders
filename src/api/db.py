@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Iterator, Optional
 
 from sqlalchemy import create_engine, event
-from sqlalchemy.engine import Engine, make_url
+from sqlalchemy.engine import Engine, make_url, URL
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

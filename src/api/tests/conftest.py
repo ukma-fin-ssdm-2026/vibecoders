@@ -29,7 +29,6 @@ engine = db.configure_engine(
         poolclass=NullPool,
     )
 )
-enable_sqlite_foreign_keys(engine)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Підміняємо engine та сесії для тестів
