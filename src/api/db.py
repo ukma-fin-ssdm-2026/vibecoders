@@ -17,6 +17,6 @@ Base = declarative_base()
 
 def init_db():
     """Створює всі таблиці в базі даних."""
-    import models  # Імпортуємо моделі тут, щоб Base дізнався про них
+    import models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
