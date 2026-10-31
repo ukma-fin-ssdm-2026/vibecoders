@@ -1,32 +1,21 @@
 import hashlib
 import hmac
-import itertools
 import os
+import itertools
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
-from schemas import Game, GameBase, Player, Room, User, UserRole
+from schemas import Game, GameBase, Player, Room, User
+from db import SessionLocal
+from models import (
+    User as UserModel,
+    Room as RoomModel,
+    Game as GameModel,
+    Enrollment as EnrollmentModel,
+    Token as TokenModel,
+)
 
-
-class GameRecord(GameBase):
-    id: str
-    master_id: str
-
-
-USERS: Dict[str, User] = {
-    "user_1": User(id="user_1", name="Андрій", role=UserRole.master),
-    "user_2": User(id="user_2", name="Марія", role=UserRole.player),
-    "user_3": User(id="user_3", name="Олена", role=UserRole.owner),
-}
-
-TOKENS: Dict[str, str] = {
-    "master-token": "user_1",
-    "player-token": "user_2",
-    "owner-token": "user_3",
-}
-
-# Replace Inline Code with Function Call:
-# Сіль і токени беруться зі змінних середовища (закриває вразливість із static-analysis.md)
+# Сіль береться зі змінних середовища (закриває вразливість із static-analysis.md)
 PASSWORD_SALT = os.getenv("PASSWORD_SALT", "default-insecure-salt-for-dev").encode("utf-8")
 
 
@@ -38,68 +27,240 @@ def verify_password(password: str, password_hash: str) -> bool:
     return hmac.compare_digest(hash_password(password), password_hash)
 
 
-CREDENTIALS: Dict[str, Dict[str, str]] = {
-    "master@club.test": {
-        "user_id": "user_1",
-        "password_hash": hash_password("master-pass-1"),
-    },
-    "player@club.test": {
-        "user_id": "user_2",
-        "password_hash": hash_password("player-pass-1"),
-    },
-    "owner@club.test": {
-        "user_id": "user_3",
-        "password_hash": hash_password("owner-pass-1"),
-    },
-}
-
-USER_TOKENS: Dict[str, str] = {user_id: token for token, user_id in TOKENS.items()}
-
 MAX_FAILED_LOGINS = 5
 LOGIN_WINDOW = timedelta(minutes=15)
 LOCK_DURATION = timedelta(minutes=15)
 LOGIN_FAILURES: Dict[str, List[datetime]] = {}
 LOCKED_UNTIL: Dict[str, datetime] = {}
 
-ROOMS: Dict[str, Room] = {
-    "room_1": Room(id="room_1", name="Зала «Дракон»", capacity=8, is_blocked=False),
-    "room_2": Room(id="room_2", name="Зала «Лабіринт»", capacity=6, is_blocked=False),
-    "room_3": Room(id="room_3", name="Кімната «Таверна»", capacity=5, is_blocked=False),
-}
 
-GAMES: Dict[str, GameRecord] = {
-    "game_1": GameRecord(
-        id="game_1",
-        title="Прокляття Страда",
-        system="D&D 5e",
-        room_id="room_1",
-        starts_at=datetime(2026, 10, 10, 18, 0, tzinfo=timezone.utc),
-        duration_minutes=180,
-        max_players=5,
-        master_id="user_1",
-    ),
-    "game_2": GameRecord(
-        id="game_2",
-        title="Поклик Ктулху: Маскарад",
-        system="Call of Cthulhu",
-        room_id="room_2",
-        starts_at=datetime(2026, 10, 11, 16, 0, tzinfo=timezone.utc),
-        duration_minutes=240,
-        max_players=4,
-        master_id="user_1",
-    ),
-}
+class GameRecord(GameBase):
+    id: str
+    master_id: str
 
-ENROLLMENTS: Dict[str, List[Player]] = {
-    "game_1": [
-        Player(
-            user_id="user_2",
-            name="Марія",
-            enrolled_at=datetime(2026, 10, 1, 9, 30, tzinfo=timezone.utc),
-        )
-    ],
-    "game_2": [],
-}
+
+class DBProxyDict:
+    """Проксі-клас із внутрішнім кешем для збереження ідентичності об'єктів (оператор is у тестах)."""
+
+    def __init__(self, model_class, schema_class=None, transform_func=None):
+        self.model_class = model_class
+        self.schema_class = schema_class
+        self.transform_func = transform_func
+        self._cache = {}
+
+    def _to_schema(self, db_obj):
+        if db_obj.id in self._cache:
+            return self._cache[db_obj.id]
+        if self.transform_func:
+            res = self.transform_func(db_obj)
+        else:
+            data = {col: getattr(db_obj, col) for col in db_obj.__table__.columns.keys()}
+            res = self.schema_class(**data) if self.schema_class else data
+        self._cache[db_obj.id] = res
+        return res
+
+    def get(self, key, default=None):
+        db = SessionLocal()
+        try:
+            obj = db.query(self.model_class).filter(self.model_class.id == key).first()
+            return self._to_schema(obj) if obj else default
+        finally:
+            db.close()
+
+    def __getitem__(self, key):
+        val = self.get(key)
+        if val is None:
+            raise KeyError(key)
+        return val
+
+    def __setitem__(self, key, value):
+        db = SessionLocal()
+        try:
+            obj = db.query(self.model_class).filter(self.model_class.id == key).first()
+            if not obj:
+                obj = self.model_class(id=key)
+                db.add(obj)
+            data = value.model_dump() if hasattr(value, "model_dump") else value
+            for k, v in data.items():
+                if hasattr(obj, k):
+                    setattr(obj, k, v)
+            db.commit()
+            self._cache[key] = value
+        finally:
+            db.close()
+
+    def __delitem__(self, key):
+        db = SessionLocal()
+        try:
+            obj = db.query(self.model_class).filter(self.model_class.id == key).first()
+            if obj:
+                db.delete(obj)
+                db.commit()
+                self._cache.pop(key, None)
+            else:
+                raise KeyError(key)
+        finally:
+            db.close()
+
+    def values(self):
+        db = SessionLocal()
+        try:
+            objs = db.query(self.model_class).all()
+            return [self._to_schema(obj) for obj in objs]
+        finally:
+            db.close()
+
+    def items(self):
+        db = SessionLocal()
+        try:
+            objs = db.query(self.model_class).all()
+            return [(obj.id, self._to_schema(obj)) for obj in objs]
+        finally:
+            db.close()
+
+    def __contains__(self, key):
+        return self.get(key) is not None
+
+    def __iter__(self):
+        db = SessionLocal()
+        try:
+            return iter([obj.id for obj in db.query(self.model_class).all()])
+        finally:
+            db.close()
+
+    def __len__(self):
+        db = SessionLocal()
+        try:
+            return db.query(self.model_class).count()
+        finally:
+            db.close()
+
+
+class AutoSaveList(list):
+    """Список, який автоматично зберігає себе в БД при виклику append (запобігає втраті даних)."""
+
+    def __init__(self, game_id, proxy, iterable=()):
+        super().__init__(iterable)
+        self.game_id = game_id
+        self.proxy = proxy
+
+    def append(self, item):
+        super().append(item)
+        self.proxy[self.game_id] = self
+
+    def remove(self, item):
+        super().remove(item)
+        self.proxy[self.game_id] = self
+
+
+class EnrollmentsProxy:
+    def get(self, game_id, default=None):
+        db = SessionLocal()
+        try:
+            enrollments = db.query(EnrollmentModel).filter(EnrollmentModel.game_id == game_id).all()
+            if not enrollments and default is not None:
+                return AutoSaveList(game_id, self, default)
+            res = [
+                Player(user_id=e.player_id, name=e.player.name, enrolled_at=e.enrolled_at.replace(tzinfo=timezone.utc))
+                for e in enrollments
+            ]
+            return AutoSaveList(game_id, self, res)
+        finally:
+            db.close()
+
+    def setdefault(self, game_id, default):
+        return self.get(game_id, default)
+
+    def pop(self, game_id, default=None):
+        res = self.get(game_id, default)
+        self.__setitem__(game_id, [])
+        return res
+
+    def __getitem__(self, game_id):
+        return self.get(game_id, [])
+
+    def __setitem__(self, game_id, players_list):
+        db = SessionLocal()
+        try:
+            db.query(EnrollmentModel).filter(EnrollmentModel.game_id == game_id).delete()
+            for player in players_list:
+                db.add(EnrollmentModel(game_id=game_id, player_id=player.user_id, enrolled_at=player.enrolled_at))
+            db.commit()
+        finally:
+            db.close()
+
+    def __contains__(self, game_id):
+        db = SessionLocal()
+        try:
+            return db.query(EnrollmentModel).filter(EnrollmentModel.game_id == game_id).count() > 0
+        finally:
+            db.close()
+
+
+class CredentialsProxy:
+    def get(self, email, default=None):
+        db = SessionLocal()
+        try:
+            user = db.query(UserModel).filter(UserModel.email == email).first()
+            if user:
+                return {"user_id": user.id, "password_hash": user.password_hash}
+            return default
+        finally:
+            db.close()
+
+    def __getitem__(self, email):
+        val = self.get(email)
+        if val is None:
+            raise KeyError(email)
+        return val
+
+    def values(self):
+        db = SessionLocal()
+        try:
+            users = db.query(UserModel).all()
+            return [{"user_id": u.id, "password_hash": u.password_hash} for u in users]
+        finally:
+            db.close()
+
+
+class UserTokensProxy:
+    def __getitem__(self, user_id):
+        db = SessionLocal()
+        try:
+            token = db.query(TokenModel).filter(TokenModel.user_id == user_id).first()
+            if token:
+                return token.id
+            raise KeyError(user_id)
+        finally:
+            db.close()
+
+
+def _game_transform(obj: GameModel) -> GameRecord:
+    starts_at = obj.starts_at.replace(tzinfo=timezone.utc) if obj.starts_at.tzinfo is None else obj.starts_at
+    return GameRecord(
+        id=obj.id,
+        master_id=obj.master_id,
+        room_id=obj.room_id,
+        title=obj.title,
+        system=obj.system,
+        starts_at=starts_at,
+        duration_minutes=obj.duration_minutes,
+        max_players=obj.max_players,
+    )
+
+
+def _token_transform(obj: TokenModel) -> str:
+    return obj.user_id
+
+
+USERS = DBProxyDict(UserModel, User)
+TOKENS = DBProxyDict(TokenModel, transform_func=_token_transform)
+USER_TOKENS = UserTokensProxy()
+CREDENTIALS = CredentialsProxy()
+ROOMS = DBProxyDict(RoomModel, Room)
+GAMES = DBProxyDict(GameModel, transform_func=_game_transform)
+ENROLLMENTS = EnrollmentsProxy()
+
 
 _game_sequence = itertools.count(3)
 
