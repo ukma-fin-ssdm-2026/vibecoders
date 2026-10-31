@@ -5,7 +5,7 @@
 """
 
 from datetime import datetime, timezone
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -14,12 +14,19 @@ from schemas import Player
 
 class Notification(BaseModel):
     user_id: str
-    game_id: str
+    game_id: Optional[str] = None
     message: str
     created_at: datetime
+    id: Optional[int] = None
+    is_read: bool = False
 
 
 NOTIFICATIONS: Dict[str, List[Notification]] = {}
+
+
+def list_user_notifications(user_id: str) -> List[Notification]:
+    """Повертає сповіщення одного користувача від найновішого до найстарішого."""
+    return sorted(NOTIFICATIONS.get(user_id, []), key=lambda notification: notification.created_at, reverse=True)
 
 
 def notify_game_cancelled(game_id: str, game_title: str, players: List[Player]) -> List[Notification]:
