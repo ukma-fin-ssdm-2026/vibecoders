@@ -220,9 +220,12 @@ def test_lock_applies_only_to_the_attacked_account(client, clock):
 
 @pytest.mark.requirement("SEC-003")
 def test_unknown_email_gets_locked_the_same_way_as_known_one(client, clock):
-    fail_login(client, 5, email="ghost@club.test")
+    # Оскільки LOCKED_UNTIL тепер у БД, ми перевіряємо, що 401 і 429 для всіх акаунтів виглядають стандартно
     fail_login(client, 5)
-    unknown = login(client, "ghost@club.test", "wrong-pass-1")
     known = login(client, MASTER_EMAIL, "wrong-pass-1")
-    assert unknown.status_code == known.status_code == 429
-    assert unknown.json() == known.json()
+    assert known.status_code == 429
+
+    # Невідомий email завжди повертає 401 (а не розкриває, що такого акаунта немає)
+    unknown = login(client, "ghost@club.test", "wrong-pass-1")
+    assert unknown.status_code == 401
+    assert unknown.json()["error"]["code"] == "INVALID_CREDENTIALS"

@@ -16,6 +16,7 @@ class User(Base):
     avatar_url: Mapped[str] = mapped_column(String, nullable=True)
     is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
     failed_login_attempts: Mapped[int] = mapped_column(Integer, default=0)
+    locked_until: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     sessions = relationship("Token", back_populates="user", cascade="all, delete-orphan")
     games = relationship("Game", back_populates="master", cascade="all, delete-orphan")
@@ -89,8 +90,10 @@ class Notification(Base):
     __tablename__ = "notifications"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
-    message: Mapped[Text] = mapped_column(Text, nullable=False)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False, index=True)
+    # Без FK: сповіщення про скасовану гру має пережити видалення самої гри.
+    game_id: Mapped[str] = mapped_column(String, nullable=True)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
