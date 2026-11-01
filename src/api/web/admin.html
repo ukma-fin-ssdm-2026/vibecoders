@@ -38,11 +38,6 @@
         <div id="status-message" class="alert alert-success" style="display: none;" role="status"></div>
         <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
 
-        <!--
-          Розділ «Користувачі» прихований: у бекенді немає ендпоінта списку користувачів
-          (є лише GET /users/{id} та PATCH /users/{id}). Щоб увімкнути, додайте GET /api/v1/users
-          з пагінацією {items, pagination}, а потім змініть USERS_LIST_AVAILABLE на true в скрипті.
-        -->
         <section id="users-section" class="card admin-section" hidden>
           <h2>Користувачі</h2>
           <div class="table-responsive">
@@ -100,8 +95,8 @@
     document.addEventListener('DOMContentLoaded', function () {
       App.renderNav();
 
-      // Див. коментар біля розділу «Користувачі»: ендпоінта списку користувачів у бекенді поки немає
-      var USERS_LIST_AVAILABLE = false;
+      // GET /users повертає список користувачів із пагінацією для власника клубу
+      var USERS_LIST_AVAILABLE = true;
       var USERS_PAGE_SIZE = 20;
 
       var guestView = document.getElementById('guest-view');
@@ -312,7 +307,7 @@
         }
       });
 
-      // ----- Користувачі (вимкнено, див. USERS_LIST_AVAILABLE) -----
+      // ----- Користувачі -----
 
       var usersOffset = 0;
       var myId = null;
@@ -335,7 +330,7 @@
 
         var tr = App.el('tr', {}, [
           App.el('td', {}, user.name),
-          App.el('td', {}, user.email),
+          App.el('td', {}, user.email || '—'),
           App.el('td', {}, user.role),
           App.el('td', {}, [statusNode]),
           actionCell
