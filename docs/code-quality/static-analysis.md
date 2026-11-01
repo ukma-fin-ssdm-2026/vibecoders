@@ -38,6 +38,8 @@ E203 виключено навмисно: Black і flake8 розходяться
 
 Команда: `python -m bandit -x src/api/tests -r src/api` (Python 3.9.25, Bandit 1.8.6).
 
+Повний вивід збережено у файлі [bandit-report.txt](./bandit-report.txt).
+
 Вивід:
 
 ```text
