@@ -8,59 +8,170 @@
 
 ## Наша команда
 
-Проєкт виконується командою з 4 осіб. По мірі розвитку системи наші технічні ролі будуть розширюватися, але на етапі ініціалізації та управління репозиторієм ми розподілили відповідальності наступним чином:
+Проєкт виконується командою з 4 осіб. Ролі взято з розділу 2 [Командного статуту](./TeamCharter.md#2-ролі-та-відповідальності).
 
-* **Катерина Спис** (@katespys2006) — *Супроводжувач репозиторію (Repo Maintainer)*
-  Забезпечує структурованість та стабільність репозиторію, відповідає за стратегію гілкування та захист головної гілки.
+| Учасник | GitHub | Ролі за статутом |
+|---|---|---|
+| Катерина Спис | @katespys2006 | Керівник вимог; Керівник архітектури; Супроводжувач репозиторію; Backend Lead; Рецензент коду; Стратег тестування |
+| Захарук Софія | @Sonafi3 | Керівник якості (Quality Lead); Супроводжувач CI; Керівник моделі даних і загроз; Аналітик безпеки; Керівник інтеграції |
+| Голдинська Ірина | @iraholdynska | Керівник трекера завдань; Керівник простежуваності; Керівник інтеграції (Integration Lead) |
+| Хамаза Ігор | @reonor | Керівник документації |
 
-* **Захарук Софія** (@Sonafi3) — *Супроводжувач CI (CI Maintainer)*
-  Налаштовує автоматизовані збірки, тестування (GitHub Actions) та стежить за стабільністю конвеєра CI.
+## Поточний стан реалізації
 
-* **Голдинська Ірина** (@iraholdynska) — *Керівник трекера завдань (Issue Tracker Lead)*
-  Керує завданнями, помилками та загальним робочим процесом розробки у GitHub Issues.
+- **REST API** на FastAPI: 20 операцій під `/api/v1` (вхід і реєстрація, ігри, запис гравців, кімнати, календар і блокування кімнат, керування користувачами). Специфікація: [openapi-generated.yaml](./docs/api/openapi-generated.yaml).
+- **Веб-інтерфейс** на `/app/`: 8 сторінок (головна, вхід, реєстрація, список ігор, сторінка гри, створення гри, календар кімнат, адміністрування). Це статичні HTML і JavaScript, що звертаються до API.
+- **Дані** зберігаються в SQLite (`club.db`, SQLAlchemy). При старті сервер додає демо-кімнати, користувачів і ігри. Рішення задокументовано в [ADR-004](./docs/architecture/decisions/ADR-004.md); перехід на MySQL лишається цільовою архітектурою ([ADR-002](./docs/architecture/decisions/ADR-002.md)).
+- **Тести**: 276 пройшли, 1 xfailed (відомий дефект D-1), покриття 96,32% (поріг у CI 95%).
+- **Не реалізовано**: відправка листів (SMTP), завантаження аватара, окрема міграція на MySQL. Повний перелік обмежень: [progress.md](./docs/code-quality/progress.md), розділ 5.
 
-* **Хамаза Ігор** (@reonor) — *Керівник документації та опису проєкту (Documentation & Project Brief Lead)*
-  Пише та підтримує ключову документацію, веде опис проєкту, узгоджує його межі та загальну архітектуру.
+## Запуск
 
-## Документація
-Детальніше про наш робочий процес, оцінку якості та архітектуру можна дізнатися у відповідних файлах:
-- [Командний статут (TeamCharter.md)](./TeamCharter.md)
-- [Опис проєкту (Project-Description.md)](./Project-Description.md)
-- [Звіт про прогрес (progress.md)](./docs/code-quality/progress.md)
-- [Звіт з якості коду та статичного аналізу (static-analysis.md)](./docs/code-quality/static-analysis.md)
-- [Рецензія на код іншої команди (review-report.md)](./docs/code-quality/review-report.md)
-- [Проєктування API (api-design.md)](./docs/api/api-design.md)
-- [Атрибути якості API (quality-attributes.md)](./docs/api/quality-attributes.md)
+### Вимоги до середовища
 
-## Артефакти вимог
-- [RTM (rtm.md)](./docs/requirements/rtm.md)
-- [Модель загроз (threat-model.md)](./docs/architecture/threat-model.md)
-- [Архітектурне проєктування та UML (Лабораторна 3)](docs/architecture/)
+- **Python 3.9 або новіший.** CI працює на Python 3.9. Мутаційне тестування (`mutmut`) потребує Python 3.10+ і ставиться лише там автоматично. Docker-образ збирається на Python 3.13, публікація документації API на Pages працює на 3.12.
+- Git і доступ до інтернету для `pip install`.
 
-## API (Лабораторна 4)
+### Кроки
 
-Документація API: https://ukma-fin-ssdm-2026.github.io/vibecoders/ (Swagger UI, специфікація автоматично генерується з коду при кожному push у `main` і публікується з гілки `gh-pages`).
+Усі команди виконуються з кореня репозиторію.
 
-### Запуск API
+1. Клонуйте репозиторій і створіть віртуальне середовище:
 
-З кореня репозиторію:
+   ```
+   git clone https://github.com/ukma-fin-ssdm-2026/vibecoders.git
+   cd vibecoders
+   python -m venv .venv
+   ```
 
-```
-pip install -r src/api/requirements.txt
-cd src/api
-python main.py
-```
+2. Активуйте його:
 
-Сервер стартує на `http://127.0.0.1:3000`. Swagger UI: `http://127.0.0.1:3000/api-docs`, ReDoc: `http://127.0.0.1:3000/redoc`. Для захищених операцій у Swagger UI натисніть Authorize і введіть демо-токен: `master-token`, `player-token` або `owner-token`. Щоб слухати не лише localhost, задайте змінну середовища `API_HOST`.
+   ```
+   # Linux або macOS
+   source .venv/bin/activate
 
-За замовчуванням SQLite-файл `club.db` зберігається в корені репозиторію; шлях стає абсолютним під час запуску. Для іншого розташування задайте `DATABASE_URL` (наприклад, `sqlite:////var/data/club.db`) або `DATA_DIR` (каталог для `club.db`). Після створення таблиць сервер автоматично додає відсутні демо-кімнати, користувачів, токени та ігри.
+   # Windows (PowerShell)
+   .venv\Scripts\Activate.ps1
+   ```
+
+3. Встановіть залежності:
+
+   ```
+   python -m pip install --upgrade pip
+   pip install -r src/api/requirements.txt
+   ```
+
+4. Запустіть сервер:
+
+   ```
+   cd src/api
+   python main.py
+   ```
+
+Сервер стартує на `http://127.0.0.1:3000`:
+
+| Що | Адреса |
+|---|---|
+| Веб-інтерфейс | `http://127.0.0.1:3000/app/` |
+| Swagger UI | `http://127.0.0.1:3000/api-docs` |
+| ReDoc | `http://127.0.0.1:3000/redoc` |
+
+У Swagger UI для захищених операцій натисніть Authorize і введіть демо-токен. Щоб слухати не лише localhost, задайте змінну середовища `API_HOST`.
 
 При кожному запуску сервер перезаписує `docs/api/openapi-generated.yaml`. Специфікацію можна згенерувати й окремо: `python generate_openapi.py` (з `src/api`).
 
-### Тести
+### Демо-акаунти
 
-З кореня репозиторію:
+| Роль | Пошта | Пароль | Токен для Swagger UI |
+|---|---|---|---|
+| Майстер | `master@club.test` | `master-pass-1` | `master-token` |
+| Гравець | `player@club.test` | `player-pass-1` | `player-token` |
+| Власник клубу | `owner@club.test` | `owner-pass-1` | `owner-token` |
+
+Це навчальні дані. Нового гравця можна зареєструвати на сторінці `/app/register.html`.
+
+### Змінні середовища
+
+Застосунок сам не читає файл `.env`: [.env.example](./.env.example) лише перелічує змінні, їх треба задати в оточенні.
+
+| Змінна | За замовчуванням | Призначення |
+|---|---|---|
+| `API_HOST` | `127.0.0.1` | Адреса, на якій слухає `python main.py` |
+| `DATABASE_URL` | `sqlite:///club.db` | Адреса бази; файл SQLite лежить у корені репозиторію |
+| `DATA_DIR` | корінь репозиторію | Каталог для `club.db` |
+| `PASSWORD_SALT` | небезпечне dev-значення | Сіль для хешування паролів. Для розгортання задайте власну |
+| `MASTER_TOKEN`, `PLAYER_TOKEN`, `OWNER_TOKEN` | `master-token`, `player-token`, `owner-token` | Демо-токени |
+| `API_CORS_ORIGINS` | `https://ukma-fin-ssdm-2026.github.io` | Дозволені origin для Swagger UI на GitHub Pages, через кому |
+
+### Запуск у Docker
+
+```
+docker build -t vibecoders .
+docker run --rm -p 8000:8000 -e PASSWORD_SALT=change-me vibecoders
+```
+
+Інтерфейс: `http://localhost:8000/app/`. Контейнер слухає порт із змінної `PORT` (за замовчуванням 8000).
+
+### Тести та перевірки якості
 
 ```
 python -m pytest
 ```
+
+Те саме, що виконує CI (з покриттям, порогом 95% та перевірками стилю й безпеки):
+
+```
+python -m black --check src/api
+python -m flake8
+python -m bandit -x src/api/tests -r src/api
+python scripts/check_traceability.py
+python -m pytest src/api/tests --cov=src/api --cov-report=term-missing --cov-fail-under=95
+```
+
+У `requirements.txt` закріплено `pytest<9`: pytest 9.2 несумісний з `pytest-benchmark`, і тест продуктивності PERF-001 падає.
+
+## Розгортання
+
+API і веб-інтерфейс розгортаються на Render з [Dockerfile](./Dockerfile) за конфігурацією [render.yaml](./render.yaml) (безкоштовний тариф).
+
+- **Адреса розгорнутого API:** https://vibecoders.onrender.com (та сама адреса вказана в `servers` у [main.py](./src/api/main.py) і в `openapi-generated.yaml`). Веб-інтерфейс: `/app/`, Swagger UI: `/api-docs`.
+- **Swagger UI на GitHub Pages** ([відкрити](https://ukma-fin-ssdm-2026.github.io/vibecoders/)) виконує запити до цього сервера: адреса береться з `servers`, а API дозволяє origin Pages через CORS.
+- Безкоштовний сервіс Render засинає після 15 хвилин без запитів, перший запит після сну триває близько хвилини.
+- Файл бази лежить на тимчасовому диску, тому після перезапуску чи нового деплою дані повертаються до демо-стану.
+- Демо-токени й демо-паролі публічні, розгортання призначене лише для показу. Ризик прийнято і описано в [static-analysis.md](./docs/code-quality/static-analysis.md), розділ 4.
+
+## Артефакти вимог
+
+- [Опис проєкту, міні-ТЗ (Project-Description.md)](./Project-Description.md)
+- [Користувацькі історії (user-stories.md)](./docs/requirements/user-stories.md)
+- [Функціональні та нефункціональні вимоги (requirements.md)](./docs/requirements/requirements.md)
+- [Матриця простежуваності (rtm.md)](./docs/requirements/rtm.md)
+
+## Дизайн і архітектура
+
+- [High level design](./docs/architecture/high-level-design.md)
+- [Матриця простежуваності дизайну (traceability-matrix.md)](./docs/architecture/traceability-matrix.md)
+- [Модель даних (data-model.md)](./docs/architecture/data-model.md)
+- [Модель загроз STRIDE (threat-model.md)](./docs/architecture/threat-model.md)
+- [UML-діаграми](./docs/architecture/uml/): [компонентів](./docs/architecture/uml/component-diagram.puml), [розгортання](./docs/architecture/uml/deployment-diagram.puml), [послідовності](./docs/architecture/uml/sequence-diagram.puml), [моделі даних](./docs/architecture/uml/data-model.puml) ([PNG](./docs/architecture/uml/data-model.png))
+- Архітектурні рішення: [ADR-001](./docs/architecture/decisions/ADR-001.md), [ADR-002](./docs/architecture/decisions/ADR-002.md), [ADR-003](./docs/architecture/decisions/ADR-003.md), [ADR-004](./docs/architecture/decisions/ADR-004.md)
+- Уся тека: [docs/architecture/](./docs/architecture/)
+
+## Документація за лабораторними
+
+| Лаб | Тема | Файли | Відео Loom |
+|---|---|---|---|
+| 1 | Репозиторій, статут, CI | [TeamCharter.md](./TeamCharter.md), [README.md](./README.md), [Project-Description.md](./Project-Description.md), [ci.yml](./.github/workflows/ci.yml), [deploy-api-docs.yml](./.github/workflows/deploy-api-docs.yml), [.pre-commit-config.yaml](./.pre-commit-config.yaml) | [Labs/Lab01](./Labs/Lab01/) |
+| 2 | Вимоги | [user-stories.md](./docs/requirements/user-stories.md), [requirements.md](./docs/requirements/requirements.md), [rtm.md](./docs/requirements/rtm.md) | [Labs/Lab02](./Labs/Lab02/) |
+| 3 | Архітектура | [high-level-design.md](./docs/architecture/high-level-design.md), [traceability-matrix.md](./docs/architecture/traceability-matrix.md), [data-model.md](./docs/architecture/data-model.md), [threat-model.md](./docs/architecture/threat-model.md), [uml/](./docs/architecture/uml/), [decisions/](./docs/architecture/decisions/) | [Labs/Lab03](./Labs/Lab03/) |
+| 4 | API | [api-design.md](./docs/api/api-design.md), [openapi-generated.yaml](./docs/api/openapi-generated.yaml), [quality-attributes.md](./docs/api/quality-attributes.md), [index.html](./docs/api/index.html), [mocks/users.json](./docs/api/mocks/users.json) | [Labs/Lab04](./Labs/Lab04/) |
+| 5 | Якість коду | [review-report.md](./docs/code-quality/review-report.md), [static-analysis.md](./docs/code-quality/static-analysis.md), [progress.md](./docs/code-quality/progress.md) | [Labs/Lab05](./Labs/Lab05/) |
+| 6 | Тестування й налагодження | [testing-strategy.md](./docs/testing/testing-strategy.md), [debugging-log.md](./docs/testing/debugging-log.md) | [Labs/Lab06](./Labs/Lab06/) |
+| 7 | План тестування й взаємні огляди | [test-plan.md](./docs/validation/test-plan.md), [review-log.md](./docs/validation/review-log.md) | [Labs/Lab07](./Labs/Lab07/) |
+| Рефакторинг | Аналіз SonarCloud | [sonarcloud-report.md](./docs/refactoring/sonarcloud-report.md) | — |
+
+Усі відео лежать у теці [Labs/](./Labs/) за шаблоном `Labs/LabNN/video_<Прізвище>.txt`.
+
+## Використання ШІ
+
+Структуру цього README, таблиці й тексти розділів «Запуск» і «Розгортання» підготовлено за допомогою Claude. Перевірено: усі відносні посилання вказують на наявні файли; команди запуску, тестів і перевірок якості виконано на поточному коді (Python 3.12), сервер стартував за тією самою командою, що й Dockerfile; ролі скопійовано з розділу 2 статуту; адресу розгортання взято з `servers` у `main.py`. Роботу розгорнутого сервера на Render і збірку Docker-образу локально не перевіряли.
