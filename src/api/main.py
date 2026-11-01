@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 
@@ -16,6 +17,12 @@ from routes.users import router as users_router
 from spec import install_openapi, save_openapi_spec
 
 host = os.getenv("API_HOST", "127.0.0.1")
+# Swagger UI на GitHub Pages виконує запити з іншого домену, тому його origin дозволено явно.
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("API_CORS_ORIGINS", "https://ukma-fin-ssdm-2026.github.io").split(",")
+    if origin.strip()
+]
 WEB_DIR = Path(__file__).resolve().parent / "web"
 
 
@@ -58,6 +65,15 @@ app = FastAPI(
 
 register_error_handlers(app)
 install_openapi(app)
+
+# Токен передається в заголовку Authorization, cookie не використовуються, тому credentials вимкнено.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+    expose_headers=["Retry-After", "Location"],
+)
 
 app.include_router(auth_router)
 app.include_router(games_router)

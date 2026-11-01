@@ -12,7 +12,7 @@ REQUIREMENT_ID = re.compile(r"^(US|FR|SEC|PERF|REL|USAB|MAINT)-\d{3}$")
 DEFERRED = {
     "REL-003": "доступність залежить від інфраструктури",
     "USAB-001": "потрібні UI і тестова група",
-    "MAINT-001": "кімнати зафіксовані в store.py",
+    "MAINT-001": "кімнати створює seed.py, API змінює лише is_blocked",
 }
 
 
