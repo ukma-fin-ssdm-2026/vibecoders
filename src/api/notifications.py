@@ -35,6 +35,11 @@ def _to_schema(row: NotificationModel) -> Notification:
     )
 
 
+def list_user_notifications(user_id: str) -> List[Notification]:
+    """Повертає сповіщення одного користувача від найновішого до найстарішого."""
+    return sorted(NOTIFICATIONS.get(user_id, []), key=lambda notification: notification.created_at, reverse=True)
+
+
 def notify_game_cancelled(game_id: str, game_title: str, players: List[Player]) -> List[Notification]:
     """Створює по одному сповіщенню для кожного записаного гравця (в одній транзакції) і повертає їх."""
     if not players:

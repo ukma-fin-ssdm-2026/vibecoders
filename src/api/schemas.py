@@ -306,7 +306,38 @@ class UserDetails(UserStatus):
     game_history: List[UserGameHistory] = Field(default_factory=list)
 
 
+class UserProfilePatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: Optional[str] = Field(None, min_length=1, max_length=100, description="Нове ім'я або нікнейм")
+    contacts: Optional[str] = Field(None, max_length=500, description="Контактна інформація; null очищує поле")
+    avatar_url: Optional[str] = Field(None, max_length=2048, description="URL аватара; null очищує поле")
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        value = value.strip()
+        if not value:
+            raise ValueError("Ім'я не може бути порожнім")
+        return value
+
+
+class UserListResponse(BaseModel):
+    items: List[UserStatus]
+    pagination: Pagination
+
+
 class UserBlockPatch(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     is_blocked: bool = Field(..., description="Заблокувати (true) або розблокувати (false) акаунт")
+
+
+class NotificationResponse(BaseModel):
+    id: Optional[int] = Field(None, description="Ідентифікатор сповіщення, якщо воно збережене в БД")
+    game_id: Optional[str] = Field(None, description="Гра, якої стосується сповіщення")
+    message: str
+    is_read: bool = False
+    created_at: datetime
