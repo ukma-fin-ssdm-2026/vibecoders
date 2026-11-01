@@ -924,6 +924,175 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/notifications:
+    get:
+      tags:
+      - Notifications
+      summary: Отримати власні сповіщення
+      description: Повертає сповіщення поточного користувача від найновішого до найстарішого.
+      operationId: get_notifications
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/NotificationResponse'
+                type: array
+                title: Response Get Notifications
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /api/v1/users:
+    get:
+      tags:
+      - Users
+      summary: Отримати список користувачів
+      description: Повертає список користувачів із пагінацією. Доступно лише власнику
+        клубу.
+      operationId: list_users
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          description: Максимальна кількість користувачів у відповіді
+          default: 20
+          title: Limit
+        description: Максимальна кількість користувачів у відповіді
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          description: Скільки користувачів пропустити
+          default: 0
+          title: Offset
+        description: Скільки користувачів пропустити
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/users/me:
+    get:
+      tags:
+      - Users
+      summary: Отримати власний профіль
+      description: Повертає профіль поточного користувача, включно з контактами, аватаром
+        та історією записів.
+      operationId: get_my_profile
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetails'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+    patch:
+      tags:
+      - Users
+      summary: Оновити власний профіль
+      description: Поточний користувач може змінити ім'я, контакти та URL аватара.
+        Передане null очищує контакти або аватар; ім'я не може бути порожнім.
+      operationId: patch_my_profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfilePatch'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetails'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
   /api/v1/users/{user_id}:
     get:
       tags:
@@ -1476,6 +1645,36 @@ components:
       - email
       - password
       title: LoginRequest
+    NotificationResponse:
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id
+          description: Ідентифікатор сповіщення, якщо воно збережене в БД
+        game_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Game Id
+          description: Гра, якої стосується сповіщення
+        message:
+          type: string
+          title: Message
+        is_read:
+          type: boolean
+          title: Is Read
+          default: false
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - message
+      - created_at
+      title: NotificationResponse
     Pagination:
       properties:
         limit:
@@ -1838,6 +2037,47 @@ components:
       - starts_at
       - enrolled_at
       title: UserGameHistory
+    UserListResponse:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/UserStatus'
+          type: array
+          title: Items
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      type: object
+      required:
+      - items
+      - pagination
+      title: UserListResponse
+    UserProfilePatch:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 100
+            minLength: 1
+          - type: 'null'
+          title: Name
+          description: Нове ім'я або нікнейм
+        contacts:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Contacts
+          description: Контактна інформація; null очищує поле
+        avatar_url:
+          anyOf:
+          - type: string
+            maxLength: 2048
+          - type: 'null'
+          title: Avatar Url
+          description: URL аватара; null очищує поле
+      additionalProperties: false
+      type: object
+      title: UserProfilePatch
     UserRole:
       type: string
       enum:
@@ -1880,3 +2120,5 @@ tags:
   description: Кімнати клубу
 - name: Users
   description: Керування акаунтами користувачів
+- name: Notifications
+  description: Сповіщення поточного користувача
