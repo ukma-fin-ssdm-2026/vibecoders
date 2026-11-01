@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сповіщення — NRI Club</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">NRI Club</a>
+      <nav id="nav-container" aria-label="Головне меню"></nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1>Сповіщення</h1>
+      </div>
+
+      <div id="guest-view" class="card" style="display: none;">
+        <p>
+          Увійдіть, щоб побачити сповіщення.
+          <a href="login.html?next=notifications.html" class="btn btn-primary btn-sm">Увійти</a>
+        </p>
+      </div>
+
+      <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
+      <p id="loading-state" class="empty-state" style="display: none;" role="status">Завантаження…</p>
+      <div id="empty-state" class="card empty-state" style="display: none;">
+        <p>Сповіщень немає</p>
+      </div>
+      <div id="notifications-list"></div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      App.renderNav();
+
+      var session = App.getSession();
+      var guestView = document.getElementById('guest-view');
+      var errorContainer = document.getElementById('error-message');
+      var loadingState = document.getElementById('loading-state');
+      var emptyState = document.getElementById('empty-state');
+      var notificationsList = document.getElementById('notifications-list');
+
+      function renderNotification(notification) {
+        var card = App.el('article', { className: 'card notification-card' });
+        var heading = App.el('div', { className: 'notification-heading' }, [
+          App.el('p', { className: 'notification-message' }, notification.message),
+          notification.is_read ? null : App.el('span', {
+            className: 'notification-new',
+            'aria-label': 'Нове сповіщення'
+          }, 'Нове')
+        ]);
+        card.appendChild(heading);
+        card.appendChild(App.el('p', { className: 'game-meta' }, App.formatDateTime(notification.created_at)));
+
+        if (notification.game_id) {
+          card.appendChild(App.el('a', {
+            href: 'game.html?id=' + encodeURIComponent(notification.game_id),
+            className: 'btn btn-secondary btn-sm'
+          }, 'Відкрити гру'));
+        }
+
+        return card;
+      }
+
+      async function loadNotifications() {
+        loadingState.style.display = 'block';
+        App.showError(null, errorContainer);
+
+        try {
+          var notifications = await App.api('GET', '/notifications');
+          if (!Array.isArray(notifications)) {
+            throw new Error('Не вдалося завантажити сповіщення');
+          }
+
+          loadingState.style.display = 'none';
+          if (notifications.length === 0) {
+            emptyState.style.display = 'block';
+            return;
+          }
+
+          for (var i = 0; i < notifications.length; i++) {
+            notificationsList.appendChild(renderNotification(notifications[i]));
+          }
+        } catch (err) {
+          loadingState.style.display = 'none';
+          App.showError(err, errorContainer);
+        }
+      }
+
+      if (!session || !session.token) {
+        guestView.style.display = 'block';
+        return;
+      }
+
+      loadNotifications();
+    });
+  </script>
+</body>
+</html>
