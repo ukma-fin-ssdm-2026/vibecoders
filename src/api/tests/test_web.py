@@ -85,3 +85,17 @@ def test_web_admin_html_served(client):
     assert '<html lang="uk">' in response.text
     assert "app.js" in response.text
     assert "style.css" in response.text
+
+
+@pytest.mark.technical
+def test_web_notifications_html_served(client):
+    response = client.get("/app/notifications.html")
+    assert response.status_code == 200
+    assert '<html lang="uk">' in response.text
+
+
+@pytest.mark.technical
+def test_web_profile_html_served(client):
+    response = client.get("/app/profile.html")
+    assert response.status_code == 200
+    assert '<html lang="uk">' in response.text

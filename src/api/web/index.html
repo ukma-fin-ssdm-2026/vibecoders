@@ -41,6 +41,7 @@
         <!-- Відображення для залогіненого користувача -->
         <div id="logged-in-view" style="display: none;">
           <p id="user-info-text"></p>
+          <p id="notifications-count" style="display: none;"></p>
           <div class="auth-actions" style="margin-top: 1rem;">
             <button type="button" id="logout-btn" class="btn btn-danger">Вийти</button>
           </div>
@@ -70,7 +71,20 @@
       var loggedInView = document.getElementById('logged-in-view');
       var guestView = document.getElementById('guest-view');
       var userInfoText = document.getElementById('user-info-text');
+      var notificationsCount = document.getElementById('notifications-count');
       var logoutBtn = document.getElementById('logout-btn');
+
+      async function loadUnreadNotificationCount() {
+        try {
+          var notifications = await App.api('GET', '/notifications');
+          if (!Array.isArray(notifications)) return;
+          var unreadCount = notifications.filter(function (notification) {
+            return !notification.is_read;
+          }).length;
+          notificationsCount.textContent = 'Нові сповіщення: ' + unreadCount;
+          notificationsCount.style.display = 'block';
+        } catch (err) {}
+      }
 
       function updateView() {
         var session = App.getSession();
@@ -78,9 +92,11 @@
           guestView.style.display = 'none';
           loggedInView.style.display = 'block';
           userInfoText.textContent = 'Ви увійшли як ' + session.role;
+          loadUnreadNotificationCount();
         } else {
           loggedInView.style.display = 'none';
           guestView.style.display = 'block';
+          notificationsCount.style.display = 'none';
         }
       }
 

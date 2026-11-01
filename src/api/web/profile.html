@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Профіль — NRI Club</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">NRI Club</a>
+      <nav id="nav-container" aria-label="Головне меню"></nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1>Профіль</h1>
+      </div>
+
+      <div id="guest-view" class="card" style="display: none;">
+        <p>
+          Увійдіть, щоб переглянути та редагувати профіль.
+          <a href="login.html?next=profile.html" class="btn btn-primary btn-sm">Увійти</a>
+        </p>
+      </div>
+
+      <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
+      <div id="status-message" class="alert alert-success" style="display: none;" role="status"></div>
+      <p id="loading-state" class="empty-state" style="display: none;" role="status">Завантаження…</p>
+
+      <section id="profile-view" class="card profile-card" style="display: none;" aria-labelledby="profile-title">
+        <h2 id="profile-title">Дані профілю</h2>
+        <dl class="profile-details">
+          <div><dt>Ідентифікатор</dt><dd id="profile-id"></dd></div>
+          <div><dt>Електронна пошта</dt><dd id="profile-email"></dd></div>
+          <div><dt>Роль</dt><dd id="profile-role"></dd></div>
+        </dl>
+
+        <div id="avatar-preview" class="profile-avatar" style="display: none;">
+          <img id="avatar-image" alt="Аватар профілю">
+        </div>
+
+        <form id="profile-form" novalidate>
+          <div class="form-group">
+            <label for="profile-name">Ім'я</label>
+            <input type="text" id="profile-name" required minlength="1" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label for="profile-contacts">Контакти</label>
+            <textarea id="profile-contacts" rows="4" maxlength="500"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="profile-avatar-url">URL аватара</label>
+            <input type="text" id="profile-avatar-url" maxlength="2048" autocomplete="url">
+          </div>
+          <div class="form-actions">
+            <button type="submit" id="save-profile-btn" class="btn btn-primary">Зберегти</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      App.renderNav();
+
+      var session = App.getSession();
+      var guestView = document.getElementById('guest-view');
+      var errorContainer = document.getElementById('error-message');
+      var statusContainer = document.getElementById('status-message');
+      var loadingState = document.getElementById('loading-state');
+      var profileView = document.getElementById('profile-view');
+      var profileId = document.getElementById('profile-id');
+      var profileEmail = document.getElementById('profile-email');
+      var profileRole = document.getElementById('profile-role');
+      var nameInput = document.getElementById('profile-name');
+      var contactsInput = document.getElementById('profile-contacts');
+      var avatarUrlInput = document.getElementById('profile-avatar-url');
+      var avatarPreview = document.getElementById('avatar-preview');
+      var avatarImage = document.getElementById('avatar-image');
+      var form = document.getElementById('profile-form');
+      var saveButton = document.getElementById('save-profile-btn');
+
+      if (!session || !session.token) {
+        guestView.style.display = 'block';
+        return;
+      }
+
+      function roleLabel(role) {
+        var labels = { player: 'Гравець', master: 'Майстер', owner: 'Власник клубу' };
+        return labels[role] || role || '';
+      }
+
+      function updateAvatarPreview(value) {
+        avatarPreview.style.display = 'none';
+        avatarImage.removeAttribute('src');
+        if (!value) return;
+
+        try {
+          var url = new URL(value, window.location.href);
+          if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+          avatarImage.setAttribute('src', url.href);
+          avatarPreview.style.display = 'block';
+        } catch (err) {
+          return;
+        }
+      }
+
+      function showProfile(profile) {
+        profileId.textContent = profile.id || '';
+        profileEmail.textContent = profile.email || '';
+        profileRole.textContent = roleLabel(profile.role);
+        nameInput.value = profile.name || '';
+        contactsInput.value = profile.contacts || '';
+        avatarUrlInput.value = profile.avatar_url || '';
+        updateAvatarPreview(profile.avatar_url);
+        loadingState.style.display = 'none';
+        profileView.style.display = 'flex';
+      }
+
+      async function loadProfile() {
+        loadingState.style.display = 'block';
+        try {
+          var profile = await App.api('GET', '/users/me');
+          showProfile(profile);
+        } catch (err) {
+          loadingState.style.display = 'none';
+          App.showError(err, errorContainer);
+        }
+      }
+
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        App.showError(null, errorContainer);
+        statusContainer.style.display = 'none';
+        statusContainer.textContent = '';
+        nameInput.classList.remove('error');
+        contactsInput.classList.remove('error');
+        avatarUrlInput.classList.remove('error');
+
+        var name = nameInput.value.trim();
+        var contacts = contactsInput.value.trim();
+        var avatarUrl = avatarUrlInput.value.trim();
+
+        if (name.length < 1 || name.length > 100) {
+          nameInput.classList.add('error');
+          App.showError(new Error("Ім'я має містити від 1 до 100 символів"), errorContainer);
+          nameInput.focus();
+          return;
+        }
+        if (contacts.length > 500) {
+          contactsInput.classList.add('error');
+          App.showError(new Error('Контакти мають містити не більше 500 символів'), errorContainer);
+          contactsInput.focus();
+          return;
+        }
+        if (avatarUrl.length > 2048) {
+          avatarUrlInput.classList.add('error');
+          App.showError(new Error('URL аватара має містити не більше 2048 символів'), errorContainer);
+          avatarUrlInput.focus();
+          return;
+        }
+
+        saveButton.disabled = true;
+        try {
+          var updated = await App.api('PATCH', '/users/me', {
+            name: name,
+            contacts: contacts || null,
+            avatar_url: avatarUrl || null
+          });
+          showProfile(updated);
+          statusContainer.textContent = 'Профіль оновлено';
+          statusContainer.style.display = 'block';
+        } catch (err) {
+          App.showError(err, errorContainer);
+        } finally {
+          saveButton.disabled = false;
+        }
+      });
+
+      avatarUrlInput.addEventListener('input', function () {
+        updateAvatarPreview(avatarUrlInput.value.trim());
+      });
+
+      loadProfile();
+    });
+  </script>
+</body>
+</html>
