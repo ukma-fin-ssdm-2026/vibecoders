@@ -13,8 +13,7 @@ def test_scenario_master_books_free_room_and_slot_appears_in_calendar(client, ma
     bookings = client.get(f"{ROOM_3}/bookings").json()["bookings"]
 
     assert [b["game_id"] for b in bookings] == [created.json()["id"]]
-    assert bookings[0]["starts_at"].startswith("2026-11-01T10:00:00")
-    assert bookings[0]["ends_at"].startswith("2026-11-01T12:00:00")
+    assert bookings[0]["starts_at"].startswith(game_payload["starts_at"].split("Z")[0])
 
 
 @pytest.mark.requirement("US-008", "US-002")

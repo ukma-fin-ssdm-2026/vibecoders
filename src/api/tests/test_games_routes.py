@@ -159,6 +159,7 @@ def test_create_game_rejects_unknown_fields(client, master_headers, game_payload
 
 @pytest.mark.requirement("US-002")
 def test_replace_game_by_master_updates_all_fields(client, master_headers, game_payload):
+    game_payload["title"] = "Нова кампанія"
     response = client.put("/api/v1/games/game_1", json=game_payload, headers=master_headers)
     assert response.status_code == 200
     assert response.json()["title"] == "Нова кампанія"
