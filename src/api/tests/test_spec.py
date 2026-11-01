@@ -45,6 +45,7 @@ def test_save_openapi_spec_writes_yaml_to_stubbed_path(tmp_path, monkeypatch, ca
     assert result == target
     loaded = yaml.safe_load(target.read_text(encoding="utf-8"))
     assert loaded["info"]["title"] == "NRI Organizer API"
+    assert loaded["servers"][0]["url"] == "https://vibecoders.onrender.com"  # Оновлено для розгортання
     assert "OpenAPI" in capsys.readouterr().out
 
 

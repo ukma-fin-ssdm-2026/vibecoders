@@ -2,10 +2,12 @@ openapi: 3.1.0
 info:
   title: NRI Organizer API
   description: 'REST API організатора настільних рольових ігор: ігри, гравці та кімнати
-    клубу. Усі відповіді — заглушки в пам''яті процесу. Для захищених операцій натисніть
-    Authorize і введіть демо-токен: master-token, player-token або owner-token.'
+    клубу. Дані зберігаються у SQLite. Для захищених операцій натисніть Authorize
+    і введіть демо-токен: master-token, player-token або owner-token.'
   version: 1.0.0
 servers:
+- url: https://vibecoders.onrender.com
+  description: Продакшн сервер
 - url: http://localhost:3000
   description: Локальний сервер
 paths:
@@ -45,8 +47,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '429':
           description: Акаунт тимчасово заблоковано після невдалих спроб входу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/auth/register:
+    post:
+      tags:
+      - Auth
+      summary: Зареєструвати гравця
+      description: Створює акаунт гравця з хешованим паролем і повертає токен для
+        подальшої роботи. Пошта вже зареєстрованого або заблокованого профілю не може
+        бути використана повторно.
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфлікт зі станом системи
           content:
             application/json:
               schema:
@@ -582,6 +624,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/rooms/calendar:
+    get:
+      tags:
+      - Rooms
+      summary: Отримати календар усіх кімнат
+      description: Повертає бронювання та періоди блокування для всіх кімнат клубу.
+        Параметри starts_at і ends_at задають необов'язковий спільний часовий інтервал.
+      operationId: get_calendar
+      parameters:
+      - name: starts_at
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+          description: Початок інтервалу у форматі ISO 8601
+          title: Starts At
+        description: Початок інтервалу у форматі ISO 8601
+      - name: ends_at
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+          description: Кінець інтервалу у форматі ISO 8601
+          title: Ends At
+        description: Кінець інтервалу у форматі ISO 8601
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarResponse'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/v1/rooms/{room_id}:
     get:
       tags:
@@ -723,6 +805,239 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/rooms/{room_id}/blocks:
+    post:
+      tags:
+      - Rooms
+      summary: Заблокувати кімнату на період
+      description: Доступно лише власнику клубу. Створює період блокування та автоматично
+        скасовує ігри, що перетинаються з ним, зі сповіщеннями записаним гравцям.
+      operationId: create_room_block
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: room_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^room_\d+$
+          description: Ідентифікатор кімнати
+          title: Room Id
+        description: Ідентифікатор кімнати
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomBlockCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomBlockResponse'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфлікт зі станом системи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/rooms/{room_id}/blocks/{block_id}:
+    delete:
+      tags:
+      - Rooms
+      summary: Скасувати блокування кімнати
+      description: Видаляє період блокування. Раніше автоматично скасовані ігри не
+        відновлюються.
+      operationId: delete_room_block
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: room_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^room_\d+$
+          description: Ідентифікатор кімнати
+          title: Room Id
+        description: Ідентифікатор кімнати
+      - name: block_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+          description: Ідентифікатор блокування
+          title: Block Id
+        description: Ідентифікатор блокування
+      responses:
+        '204':
+          description: Successful Response
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/users/{user_id}:
+    get:
+      tags:
+      - Users
+      summary: Отримати профіль користувача
+      description: Профіль із контактами, аватаром та історією записів доступний лише
+        самому користувачу або власнику клубу. Власник може переглядати й заблоковані
+        профілі.
+      operationId: get_user
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^user_\d+$
+          description: Ідентифікатор користувача
+          title: User Id
+        description: Ідентифікатор користувача
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetails'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      tags:
+      - Users
+      summary: Заблокувати або розблокувати акаунт
+      description: Доступно лише власнику клубу. Блокування забороняє вхід і захищені
+        запити, а також анулює активні токени користувача.
+      operationId: patch_user
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^user_\d+$
+          description: Ідентифікатор користувача
+          title: User Id
+        description: Ідентифікатор користувача
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserBlockPatch'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserStatus'
+        '400':
+          description: 'Некоректні вхідні дані: не пройшли валідацію'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Ресурс не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфлікт зі станом системи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     Booking:
@@ -762,6 +1077,56 @@ components:
       - starts_at
       - ends_at
       title: Booking
+    CalendarResponse:
+      properties:
+        rooms:
+          items:
+            $ref: '#/components/schemas/CalendarRoom'
+          type: array
+          title: Rooms
+          description: Календар усіх кімнат клубу
+      type: object
+      required:
+      - rooms
+      title: CalendarResponse
+    CalendarRoom:
+      properties:
+        room_id:
+          type: string
+          title: Room Id
+          examples:
+          - room_1
+        is_blocked:
+          type: boolean
+          title: Is Blocked
+          examples:
+          - false
+        bookings:
+          items:
+            $ref: '#/components/schemas/Booking'
+          type: array
+          title: Bookings
+          description: Заброньовані слоти, відсортовані за часом початку
+        blocks:
+          items:
+            $ref: '#/components/schemas/RoomBlockResponse'
+          type: array
+          title: Blocks
+          description: Періоди блокування кімнати, відсортовані за часом початку
+        name:
+          type: string
+          title: Name
+        capacity:
+          type: integer
+          title: Capacity
+      type: object
+      required:
+      - room_id
+      - is_blocked
+      - bookings
+      - name
+      - capacity
+      title: CalendarRoom
     ErrorBody:
       properties:
         code:
@@ -1211,6 +1576,34 @@ components:
       - max_players
       - players
       title: PlayersResponse
+    RegisterRequest:
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          minLength: 1
+          title: Name
+          description: Ім'я або нікнейм
+        email:
+          type: string
+          maxLength: 100
+          minLength: 5
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+          description: Електронна пошта
+        password:
+          type: string
+          maxLength: 100
+          minLength: 8
+          title: Password
+          description: Пароль
+      additionalProperties: false
+      type: object
+      required:
+      - name
+      - email
+      - password
+      title: RegisterRequest
     Room:
       properties:
         id:
@@ -1250,6 +1643,50 @@ components:
         id: room_1
         is_blocked: false
         name: Зала «Дракон»
+    RoomBlockCreate:
+      properties:
+        starts_at:
+          type: string
+          format: date-time
+          title: Starts At
+          description: Початок блокування (ISO 8601 з часовим поясом)
+        ends_at:
+          type: string
+          format: date-time
+          title: Ends At
+          description: Кінець блокування (ISO 8601 з часовим поясом)
+      additionalProperties: false
+      type: object
+      required:
+      - starts_at
+      - ends_at
+      title: RoomBlockCreate
+    RoomBlockResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Ідентифікатор блокування
+        room_id:
+          type: string
+          title: Room Id
+          examples:
+          - room_1
+        starts_at:
+          type: string
+          format: date-time
+          title: Starts At
+        ends_at:
+          type: string
+          format: date-time
+          title: Ends At
+      type: object
+      required:
+      - id
+      - room_id
+      - starts_at
+      - ends_at
+      title: RoomBlockResponse
     RoomBookingsResponse:
       properties:
         room_id:
@@ -1268,6 +1705,12 @@ components:
           type: array
           title: Bookings
           description: Заброньовані слоти, відсортовані за часом початку
+        blocks:
+          items:
+            $ref: '#/components/schemas/RoomBlockResponse'
+          type: array
+          title: Blocks
+          description: Періоди блокування кімнати, відсортовані за часом початку
       type: object
       required:
       - room_id
@@ -1322,6 +1765,79 @@ components:
       - access_token
       - role
       title: TokenResponse
+    UserBlockPatch:
+      properties:
+        is_blocked:
+          type: boolean
+          title: Is Blocked
+          description: Заблокувати (true) або розблокувати (false) акаунт
+      additionalProperties: false
+      type: object
+      required:
+      - is_blocked
+      title: UserBlockPatch
+    UserDetails:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        role:
+          $ref: '#/components/schemas/UserRole'
+        is_blocked:
+          type: boolean
+          title: Is Blocked
+        email:
+          type: string
+          title: Email
+        contacts:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Contacts
+        avatar_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Avatar Url
+        game_history:
+          items:
+            $ref: '#/components/schemas/UserGameHistory'
+          type: array
+          title: Game History
+      type: object
+      required:
+      - id
+      - name
+      - role
+      - is_blocked
+      - email
+      title: UserDetails
+    UserGameHistory:
+      properties:
+        game_id:
+          type: string
+          title: Game Id
+        title:
+          type: string
+          title: Title
+        starts_at:
+          type: string
+          format: date-time
+          title: Starts At
+        enrolled_at:
+          type: string
+          format: date-time
+          title: Enrolled At
+      type: object
+      required:
+      - game_id
+      - title
+      - starts_at
+      - enrolled_at
+      title: UserGameHistory
     UserRole:
       type: string
       enum:
@@ -1329,6 +1845,26 @@ components:
       - master
       - owner
       title: UserRole
+    UserStatus:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        role:
+          $ref: '#/components/schemas/UserRole'
+        is_blocked:
+          type: boolean
+          title: Is Blocked
+      type: object
+      required:
+      - id
+      - name
+      - role
+      - is_blocked
+      title: UserStatus
   securitySchemes:
     HTTPBearer:
       type: http
@@ -1342,3 +1878,5 @@ tags:
   description: Ігрові сесії та запис гравців
 - name: Rooms
   description: Кімнати клубу
+- name: Users
+  description: Керування акаунтами користувачів

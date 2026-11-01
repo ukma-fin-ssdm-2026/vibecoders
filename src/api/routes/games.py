@@ -24,9 +24,11 @@ from store import (
     ROOMS,
     GameRecord,
     find_busy_game,
+    find_room_block,
     next_game_id,
     sorted_games,
     to_game,
+    db_lock,  # <--- Імпортуємо наш м'ютекс
 )
 
 router = APIRouter(prefix="/api/v1/games", tags=["Games"])
@@ -52,6 +54,8 @@ def ensure_schedule_is_valid(data: GameBase, master_id: str, exclude_game_id: Op
         raise ApiError(404, "ROOM_NOT_FOUND", f"Кімнату {data.room_id} не знайдено")
     if room.is_blocked:
         raise ApiError(409, "ROOM_BLOCKED", "Кімната заблокована власником клубу")
+    if find_room_block(data.room_id, data.starts_at, data.duration_minutes):
+        raise ApiError(409, "ROOM_BLOCKED", "Кімната заблокована на цей час")
     if data.max_players > room.capacity:
         raise ApiError(
             409,
@@ -122,10 +126,14 @@ async def list_games(
 )
 async def create_game(payload: GameCreate, response: Response, user: CurrentUser):
     require_roles(user, UserRole.master, UserRole.owner)
-    ensure_schedule_is_valid(payload, master_id=user.id)
-    record = GameRecord(id=next_game_id(), master_id=user.id, **payload.model_dump())
-    GAMES[record.id] = record
-    ENROLLMENTS[record.id] = []
+
+    # Атомарна перевірка та запис
+    with db_lock:
+        ensure_schedule_is_valid(payload, master_id=user.id)
+        record = GameRecord(id=next_game_id(), master_id=user.id, **payload.model_dump())
+        GAMES[record.id] = record
+        ENROLLMENTS[record.id] = []
+
     response.headers["Location"] = f"/api/v1/games/{record.id}"
     return to_game(record)
 
@@ -151,11 +159,12 @@ async def get_game(game_id: str = GameId):
     responses=error_docs(400, 401, 403, 404, 409),
 )
 async def replace_game(payload: GameUpdate, user: CurrentUser, game_id: str = GameId):
-    record = get_game_or_404(game_id)
-    ensure_can_manage(record, user.id, user.role)
-    ensure_schedule_is_valid(payload, master_id=record.master_id, exclude_game_id=game_id)
-    updated = GameRecord(id=game_id, master_id=record.master_id, **payload.model_dump())
-    GAMES[game_id] = updated
+    with db_lock:
+        record = get_game_or_404(game_id)
+        ensure_can_manage(record, user.id, user.role)
+        ensure_schedule_is_valid(payload, master_id=record.master_id, exclude_game_id=game_id)
+        updated = GameRecord(id=game_id, master_id=record.master_id, **payload.model_dump())
+        GAMES[game_id] = updated
     return to_game(updated)
 
 
@@ -167,16 +176,17 @@ async def replace_game(payload: GameUpdate, user: CurrentUser, game_id: str = Ga
     responses=error_docs(400, 401, 403, 404, 409),
 )
 async def patch_game(payload: GamePatch, user: CurrentUser, game_id: str = GameId):
-    record = get_game_or_404(game_id)
-    ensure_can_manage(record, user.id, user.role)
-    changes = {key: value for key, value in payload.model_dump().items() if value is not None}
-    if not changes:
-        raise ApiError(400, "VALIDATION_ERROR", "Передайте хоча б одне поле для оновлення")
-    base_fields = {key: getattr(record, key) for key in GameBase.model_fields}
-    merged = GameBase(**{**base_fields, **changes})
-    ensure_schedule_is_valid(merged, master_id=record.master_id, exclude_game_id=game_id)
-    updated = GameRecord(id=game_id, master_id=record.master_id, **merged.model_dump())
-    GAMES[game_id] = updated
+    with db_lock:
+        record = get_game_or_404(game_id)
+        ensure_can_manage(record, user.id, user.role)
+        changes = {key: value for key, value in payload.model_dump().items() if value is not None}
+        if not changes:
+            raise ApiError(400, "VALIDATION_ERROR", "Передайте хоча б одне поле для оновлення")
+        base_fields = {key: getattr(record, key) for key in GameBase.model_fields}
+        merged = GameBase(**{**base_fields, **changes})
+        ensure_schedule_is_valid(merged, master_id=record.master_id, exclude_game_id=game_id)
+        updated = GameRecord(id=game_id, master_id=record.master_id, **merged.model_dump())
+        GAMES[game_id] = updated
     return to_game(updated)
 
 
@@ -228,14 +238,16 @@ async def list_players(user: CurrentUser, game_id: str = GameId):
     responses=error_docs(400, 401, 404, 409),
 )
 async def enroll_player(response: Response, user: CurrentUser, game_id: str = GameId):
-    record = get_game_or_404(game_id)
-    players = ENROLLMENTS.setdefault(game_id, [])
-    if any(p.user_id == user.id for p in players):
-        raise ApiError(409, "ALREADY_ENROLLED", "Ви вже записані на цю гру")
-    if len(players) >= record.max_players:
-        raise ApiError(409, "GAME_FULL", "Вільних місць немає")
-    player = Player(user_id=user.id, name=user.name, enrolled_at=datetime.now(timezone.utc))
-    players.append(player)
+    with db_lock:
+        record = get_game_or_404(game_id)
+        players = ENROLLMENTS.setdefault(game_id, [])
+        if any(p.user_id == user.id for p in players):
+            raise ApiError(409, "ALREADY_ENROLLED", "Ви вже записані на цю гру")
+        if len(players) >= record.max_players:
+            raise ApiError(409, "GAME_FULL", "Вільних місць немає")
+        player = Player(user_id=user.id, name=user.name, enrolled_at=datetime.now(timezone.utc))
+        players.append(player)
+
     response.headers["Location"] = f"/api/v1/games/{game_id}/players/{user.id}"
     return player
 

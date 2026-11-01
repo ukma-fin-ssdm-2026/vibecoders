@@ -5,7 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from errors import ApiError
 from schemas import User, UserRole
-from store import TOKENS, USERS
+from store import TOKENS, USERS, is_user_blocked
 
 bearer_scheme = HTTPBearer(
     auto_error=False,
@@ -23,7 +23,10 @@ def get_current_user(
             "Відсутній або недійсний токен доступу",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return USERS[TOKENS[credentials.credentials]]
+    user_id = TOKENS[credentials.credentials]
+    if is_user_blocked(user_id):
+        raise ApiError(403, "USER_BLOCKED", "Акаунт заблоковано власником клубу")
+    return USERS[user_id]
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

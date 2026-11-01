@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Організатор настільних рольових ігор</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">NRI Club</a>
+      <nav id="nav-container" aria-label="Головне меню"></nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <section class="card intro-card">
+        <h1>Клуб настільних рольових ігор</h1>
+        <p class="description">
+          Система для організації ігрових сесій, бронювання клубних кімнат та зручного запису гравців на ігри.
+        </p>
+
+        <h2>Ролі в системі</h2>
+        <ul class="roles-list">
+          <li><strong>Гравець (player):</strong> переглядає доступні партії, записується на сесії та переглядає власний розклад.</li>
+          <li><strong>Майстер (master):</strong> створює та проводить ігри, бронює клубні кімнати та керує учасниками.</li>
+          <li><strong>Власник клубу (owner):</strong> адмініструє клубні кімнати, розклад та користувачів системи.</li>
+        </ul>
+
+        <div style="margin-top: 1.5rem;">
+          <a href="games.html" class="btn btn-primary">Переглянути ігри</a>
+          <a href="calendar.html" class="btn btn-secondary">Календар кімнат</a>
+        </div>
+      </section>
+
+      <section class="card auth-card" id="auth-section">
+        <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
+
+        <!-- Відображення для залогіненого користувача -->
+        <div id="logged-in-view" style="display: none;">
+          <p id="user-info-text"></p>
+          <div class="auth-actions" style="margin-top: 1rem;">
+            <button type="button" id="logout-btn" class="btn btn-danger">Вийти</button>
+          </div>
+        </div>
+
+        <!-- Дії для гостя -->
+        <div id="guest-view" style="display: none;">
+          <h2>Приєднуйтесь до гри</h2>
+          <p class="description">
+            Увійдіть або зареєструйтесь, щоб записуватися на партії або організовувати власні ігри.
+          </p>
+          <div class="auth-buttons">
+            <a href="login.html" class="btn btn-primary">Увійти</a>
+            <a href="register.html" class="btn btn-secondary">Зареєструватися</a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      App.renderNav();
+
+      var errorContainer = document.getElementById('error-message');
+      var loggedInView = document.getElementById('logged-in-view');
+      var guestView = document.getElementById('guest-view');
+      var userInfoText = document.getElementById('user-info-text');
+      var logoutBtn = document.getElementById('logout-btn');
+
+      function updateView() {
+        var session = App.getSession();
+        if (session && session.token) {
+          guestView.style.display = 'none';
+          loggedInView.style.display = 'block';
+          userInfoText.textContent = 'Ви увійшли як ' + session.role;
+        } else {
+          loggedInView.style.display = 'none';
+          guestView.style.display = 'block';
+        }
+      }
+
+      updateView();
+
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+          App.clearSession();
+          App.renderNav();
+          updateView();
+          App.showError(null, errorContainer);
+        });
+      }
+    });
+  </script>
+</body>
+</html>

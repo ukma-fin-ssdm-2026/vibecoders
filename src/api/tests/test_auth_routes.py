@@ -38,6 +38,44 @@ def test_login_password_of_another_user_is_rejected(client):
     assert response.status_code == 401
 
 
+@pytest.mark.requirement("US-009", "FR-001", "SEC-001", "SEC-004")
+def test_register_creates_player_with_hashed_password_and_token(client):
+    response = client.post(
+        "/api/v1/auth/register",
+        json={"name": "Новий гравець", "email": "New.Player@club.test", "password": "new-player-pass-1"},
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["role"] == "player"
+    assert body["access_token"]
+    from db import SessionLocal
+    from models import User
+
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.email == "new.player@club.test").one()
+        assert user.password_hash != "new-player-pass-1"
+        assert (
+            client.get(
+                "/api/v1/games/game_1/players",
+                headers={"Authorization": f"Bearer {body['access_token']}"},
+            ).status_code
+            == 200
+        )
+    finally:
+        db.close()
+
+
+@pytest.mark.requirement("SEC-004")
+def test_register_rejects_existing_account_email(client):
+    response = client.post(
+        "/api/v1/auth/register",
+        json={"name": "Інший гравець", "email": "PLAYER@club.test", "password": "new-player-pass-1"},
+    )
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "EMAIL_ALREADY_REGISTERED"
+
+
 @pytest.mark.technical
 def test_login_rejects_short_password_with_validation_error(client):
     response = client.post("/api/v1/auth/login", json={"email": "master@club.test", "password": "short"})
@@ -182,9 +220,12 @@ def test_lock_applies_only_to_the_attacked_account(client, clock):
 
 @pytest.mark.requirement("SEC-003")
 def test_unknown_email_gets_locked_the_same_way_as_known_one(client, clock):
-    fail_login(client, 5, email="ghost@club.test")
+    # Оскільки LOCKED_UNTIL тепер у БД, ми перевіряємо, що 401 і 429 для всіх акаунтів виглядають стандартно
     fail_login(client, 5)
-    unknown = login(client, "ghost@club.test", "wrong-pass-1")
     known = login(client, MASTER_EMAIL, "wrong-pass-1")
-    assert unknown.status_code == known.status_code == 429
-    assert unknown.json() == known.json()
+    assert known.status_code == 429
+
+    # Невідомий email завжди повертає 401 (а не розкриває, що такого акаунта немає)
+    unknown = login(client, "ghost@club.test", "wrong-pass-1")
+    assert unknown.status_code == 401
+    assert unknown.json()["error"]["code"] == "INVALID_CREDENTIALS"

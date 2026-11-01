@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: vibecoders-api
+    env: docker
+    plan: free
+    # Виправлено нулі та додано $PORT
+    dockerCommand: uvicorn src.api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PASSWORD_SALT
+        generateValue: true

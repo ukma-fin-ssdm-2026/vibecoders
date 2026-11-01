@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Реєстрація — NRI Club</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">NRI Club</a>
+      <nav id="nav-container" aria-label="Головне меню"></nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <section class="card auth-card">
+        <!-- Блок, якщо користувач уже залогінений -->
+        <div id="already-logged-in" style="display: none;">
+          <p id="already-logged-in-text"></p>
+          <div class="auth-actions" style="margin-top: 1rem;">
+            <a href="index.html" class="btn btn-secondary">На головну</a>
+          </div>
+        </div>
+
+        <!-- Форма реєстрації для гостей -->
+        <div id="register-section" style="display: none;">
+          <h1>Реєстрація</h1>
+
+          <!-- Область повідомлень про помилки -->
+          <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
+
+          <form id="register-form" novalidate>
+            <div class="form-group">
+              <label for="reg-name">Ім'я</label>
+              <input type="text" id="reg-name" name="name" required autocomplete="name" placeholder="Олексій">
+              <span id="reg-name-error" class="field-error" style="display: none;"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-email">Електронна пошта</label>
+              <input type="email" id="reg-email" name="email" required autocomplete="email" placeholder="alex@example.com">
+              <span id="reg-email-error" class="field-error" style="display: none;"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-password">Пароль</label>
+              <input type="password" id="reg-password" name="password" required autocomplete="new-password" placeholder="Мінімум 8 символів">
+              <span id="reg-password-error" class="field-error" style="display: none;"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-password-confirm">Повторіть пароль</label>
+              <input type="password" id="reg-password-confirm" name="password_confirm" required autocomplete="new-password" placeholder="Повторіть пароль">
+              <span id="reg-password-confirm-error" class="field-error" style="display: none;"></span>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" id="reg-submit-btn" class="btn btn-primary">Зареєструватися</button>
+            </div>
+          </form>
+
+          <p class="auth-switch">
+            Уже є акаунт? <a href="login.html">Увійти</a>
+          </p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      App.renderNav();
+
+      var session = App.getSession();
+      var alreadyLoggedIn = document.getElementById('already-logged-in');
+      var alreadyLoggedInText = document.getElementById('already-logged-in-text');
+      var registerSection = document.getElementById('register-section');
+
+      if (session && session.token) {
+        alreadyLoggedIn.style.display = 'block';
+        alreadyLoggedInText.textContent = 'Ви вже увійшли як ' + session.role;
+        return;
+      }
+
+      registerSection.style.display = 'block';
+
+      var form = document.getElementById('register-form');
+      var nameInput = document.getElementById('reg-name');
+      var emailInput = document.getElementById('reg-email');
+      var passwordInput = document.getElementById('reg-password');
+      var passwordConfirmInput = document.getElementById('reg-password-confirm');
+      var submitBtn = document.getElementById('reg-submit-btn');
+      var errorContainer = document.getElementById('error-message');
+
+      var nameError = document.getElementById('reg-name-error');
+      var emailError = document.getElementById('reg-email-error');
+      var passwordError = document.getElementById('reg-password-error');
+      var passwordConfirmError = document.getElementById('reg-password-confirm-error');
+
+      function clearValidationErrors() {
+        App.showError(null, errorContainer);
+
+        var inputs = [nameInput, emailInput, passwordInput, passwordConfirmInput];
+        var errorSpans = [nameError, emailError, passwordError, passwordConfirmError];
+
+        for (var i = 0; i < inputs.length; i++) {
+          inputs[i].classList.remove('error');
+          errorSpans[i].textContent = '';
+          errorSpans[i].style.display = 'none';
+        }
+      }
+
+      function showFieldError(input, errorSpan, message) {
+        input.classList.add('error');
+        errorSpan.textContent = message;
+        errorSpan.style.display = 'block';
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearValidationErrors();
+
+        var name = nameInput.value.trim();
+        var email = emailInput.value.trim();
+        var password = passwordInput.value;
+        var passwordConfirm = passwordConfirmInput.value;
+
+        var hasError = false;
+        var firstErrorField = null;
+
+        if (!name) {
+          showFieldError(nameInput, nameError, 'Введіть ім\'я');
+          hasError = true;
+          firstErrorField = firstErrorField || nameInput;
+        }
+
+        if (!email) {
+          showFieldError(emailInput, emailError, 'Введіть електронну пошту');
+          hasError = true;
+          firstErrorField = firstErrorField || emailInput;
+        } else if (email.indexOf('@') === -1 || email.indexOf('.') === -1) {
+          showFieldError(emailInput, emailError, 'Введіть коректну електронну пошту');
+          hasError = true;
+          firstErrorField = firstErrorField || emailInput;
+        }
+
+        if (!password) {
+          showFieldError(passwordInput, passwordError, 'Введіть пароль');
+          hasError = true;
+          firstErrorField = firstErrorField || passwordInput;
+        } else if (password.length < 8) {
+          showFieldError(passwordInput, passwordError, 'Пароль має містити не менше 8 символів');
+          hasError = true;
+          firstErrorField = firstErrorField || passwordInput;
+        }
+
+        if (!passwordConfirm) {
+          showFieldError(passwordConfirmInput, passwordConfirmError, 'Повторіть пароль');
+          hasError = true;
+          firstErrorField = firstErrorField || passwordConfirmInput;
+        } else if (password && password !== passwordConfirm) {
+          showFieldError(passwordConfirmInput, passwordConfirmError, 'Паролі не збігаються');
+          hasError = true;
+          firstErrorField = firstErrorField || passwordConfirmInput;
+        }
+
+        if (hasError) {
+          App.showError(new Error('Будь ласка, виправте помилки у формі'), errorContainer);
+          if (firstErrorField) firstErrorField.focus();
+          return;
+        }
+
+        submitBtn.disabled = true;
+
+        try {
+          var data = await App.api('POST', '/auth/register', {
+            name: name,
+            email: email,
+            password: password
+          });
+
+          if (data && data.access_token && data.role) {
+            App.saveSession(data.access_token, data.role);
+            window.location.href = 'index.html';
+          } else {
+            window.location.href = 'login.html?registered=1';
+          }
+        } catch (err) {
+          submitBtn.disabled = false;
+
+          var displayErr = err;
+          if (err.status === 409) {
+            if (err.code === 'EMAIL_TAKEN') {
+              displayErr = new Error('Ця пошта вже зареєстрована');
+              showFieldError(emailInput, emailError, 'Ця пошта вже зареєстрована');
+            } else if (err.code === 'EMAIL_BLOCKED') {
+              displayErr = new Error('Реєстрація на цю пошту неможлива');
+              showFieldError(emailInput, emailError, 'Реєстрація на цю пошту неможлива');
+            }
+            displayErr.status = 409;
+            displayErr.code = err.code;
+            displayErr.details = err.details;
+          } else if (err.status === 404 || err.status === 405) {
+            displayErr = new Error('Реєстрація тимчасово недоступна');
+            displayErr.status = err.status;
+            displayErr.code = err.code;
+          } else if (err.status === 400 && err.code === 'VALIDATION_ERROR') {
+            displayErr = new Error('Вхідні дані не пройшли валідацію');
+            displayErr.status = 400;
+            displayErr.code = 'VALIDATION_ERROR';
+            displayErr.details = err.details || [];
+          }
+
+          App.showError(displayErr, errorContainer);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+

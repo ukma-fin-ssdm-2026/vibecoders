@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Календар кімнат — NRI Club</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">NRI Club</a>
+      <nav id="nav-container" aria-label="Головне меню"></nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1>Календар кімнат</h1>
+      </div>
+
+      <!-- Керування датою -->
+      <section class="card filter-card" aria-label="Вибір дати">
+        <div class="calendar-controls">
+          <div class="form-group calendar-date-group">
+            <label for="calendar-date">Дата</label>
+            <input type="date" id="calendar-date">
+          </div>
+          <div class="calendar-nav-buttons">
+            <button type="button" id="prev-day-btn" class="btn btn-secondary">Попередній день</button>
+            <button type="button" id="today-btn" class="btn btn-secondary">Сьогодні</button>
+            <button type="button" id="next-day-btn" class="btn btn-secondary">Наступний день</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Область помилок -->
+      <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
+
+      <p id="loading-state" class="empty-state" style="display: none;" role="status">Завантаження…</p>
+
+      <!-- Колонки кімнат -->
+      <div id="calendar-grid" class="calendar-grid"></div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      App.renderNav();
+
+      // Часова шкала: з 08:00 до 24:00 за локальним часом
+      var SCALE_START_HOUR = 8;
+
+      var dateInput = document.getElementById('calendar-date');
+      var prevBtn = document.getElementById('prev-day-btn');
+      var todayBtn = document.getElementById('today-btn');
+      var nextBtn = document.getElementById('next-day-btn');
+      var errorContainer = document.getElementById('error-message');
+      var loadingState = document.getElementById('loading-state');
+      var grid = document.getElementById('calendar-grid');
+
+      var loadSeq = 0;
+      var nowLines = [];
+
+      function pad(n) {
+        return n < 10 ? '0' + n : String(n);
+      }
+
+      function toInputValue(d) {
+        return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+      }
+
+      function parseLocalDate(value) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
+        if (!m) return null;
+        var d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        return isNaN(d.getTime()) ? null : d;
+      }
+
+      function scaleBounds(day) {
+        return {
+          start: new Date(day.getFullYear(), day.getMonth(), day.getDate(), SCALE_START_HOUR),
+          end: new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1)
+        };
+      }
+
+      function fraction(time, bounds) {
+        return (time - bounds.start.getTime()) / (bounds.end.getTime() - bounds.start.getTime());
+      }
+
+      // Повертає позицію у відсотках, обрізану межами шкали, або null, якщо інтервал поза шкалою
+      function place(startIso, endIso, bounds) {
+        var s = new Date(startIso).getTime();
+        var e = new Date(endIso).getTime();
+        if (isNaN(s) || isNaN(e)) return null;
+        var from = Math.max(fraction(s, bounds), 0);
+        var to = Math.min(fraction(e, bounds), 1);
+        if (to <= from) return null;
+        return { top: from * 100, height: (to - from) * 100 };
+      }
+
+      function durationMinutes(startIso, endIso) {
+        return Math.round((new Date(endIso).getTime() - new Date(startIso).getTime()) / 60000);
+      }
+
+      function isSameDay(iso, day) {
+        var d = new Date(iso);
+        return d.getFullYear() === day.getFullYear() && d.getMonth() === day.getMonth() &&
+          d.getDate() === day.getDate();
+      }
+
+      function updateNowLines() {
+        var now = new Date();
+        for (var i = 0; i < nowLines.length; i++) {
+          var item = nowLines[i];
+          var f = fraction(now.getTime(), item.bounds);
+          if (f >= 0 && f <= 1) {
+            item.node.style.top = (f * 100) + '%';
+            item.node.style.display = 'block';
+          } else {
+            item.node.style.display = 'none';
+          }
+        }
+      }
+
+      function buildTimeline(room, day, bounds) {
+        var timeline = App.el('div', { className: 'calendar-timeline', 'aria-hidden': 'true' });
+
+        for (var h = SCALE_START_HOUR; h < 24; h++) {
+          var hourTime = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h);
+          var line = App.el('div', { className: 'calendar-hour' }, [
+            App.el('span', { className: 'calendar-hour-label' }, pad(h) + ':00')
+          ]);
+          line.style.top = (fraction(hourTime.getTime(), bounds) * 100) + '%';
+          timeline.appendChild(line);
+        }
+
+        for (var i = 0; i < room.blocks.length; i++) {
+          var block = room.blocks[i];
+          var blockPos = place(block.starts_at, block.ends_at, bounds);
+          if (!blockPos) continue;
+          var blockNode = App.el('div', { className: 'calendar-block' }, [
+            App.el('span', { className: 'calendar-slot-title' }, 'Блокування')
+          ]);
+          blockNode.style.top = blockPos.top + '%';
+          blockNode.style.height = blockPos.height + '%';
+          timeline.appendChild(blockNode);
+        }
+
+        for (var j = 0; j < room.bookings.length; j++) {
+          var booking = room.bookings[j];
+          var pos = place(booking.starts_at, booking.ends_at, bounds);
+          if (!pos) continue;
+          var timeText = App.formatSlot(booking.starts_at, durationMinutes(booking.starts_at, booking.ends_at));
+          var slot = App.el('a', {
+            className: 'calendar-slot',
+            href: 'game.html?id=' + encodeURIComponent(booking.game_id),
+            tabindex: '-1',
+            title: booking.title + ', ' + timeText
+          }, [
+            App.el('span', { className: 'calendar-slot-title' }, booking.title),
+            App.el('span', { className: 'calendar-slot-time' }, timeText)
+          ]);
+          slot.style.top = pos.top + '%';
+          slot.style.height = pos.height + '%';
+          timeline.appendChild(slot);
+        }
+
+        if (toInputValue(new Date()) === toInputValue(day)) {
+          var nowNode = App.el('div', { className: 'calendar-now' });
+          nowNode.style.display = 'none';
+          timeline.appendChild(nowNode);
+          nowLines.push({ node: nowNode, bounds: bounds });
+        }
+
+        return timeline;
+      }
+
+      // Текстовий список: для читачів екрана та для слотів поза шкалою
+      function buildList(room, day) {
+        var entries = [];
+        var i;
+        for (i = 0; i < room.bookings.length; i++) {
+          entries.push({ kind: 'booking', start: room.bookings[i].starts_at, data: room.bookings[i] });
+        }
+        for (i = 0; i < room.blocks.length; i++) {
+          entries.push({ kind: 'block', start: room.blocks[i].starts_at, data: room.blocks[i] });
+        }
+        entries.sort(function (a, b) {
+          return new Date(a.start).getTime() - new Date(b.start).getTime();
+        });
+
+        if (entries.length === 0) {
+          return App.el('p', { className: 'calendar-empty' }, 'Вільно весь день');
+        }
+
+        var list = App.el('ul', { className: 'calendar-slot-list' });
+        for (i = 0; i < entries.length; i++) {
+          var entry = entries[i];
+          var data = entry.data;
+          var timeText = App.formatSlot(data.starts_at, durationMinutes(data.starts_at, data.ends_at));
+          var extra = isSameDay(data.starts_at, day) ? '' : ' (' + App.formatDateTime(data.starts_at) + ')';
+          var li = App.el('li', {});
+          if (entry.kind === 'booking') {
+            li.appendChild(App.el('a', {
+              href: 'game.html?id=' + encodeURIComponent(data.game_id)
+            }, data.title));
+            li.appendChild(document.createTextNode(': ' + timeText + extra));
+          } else {
+            li.appendChild(document.createTextNode('Блокування: ' + timeText + extra));
+          }
+          list.appendChild(li);
+        }
+        return list;
+      }
+
+      function renderRoom(room, day, bounds) {
+        var header = App.el('div', { className: 'calendar-room-header' }, [
+          App.el('h2', {}, room.name),
+          App.el('p', { className: 'game-meta' }, 'Місткість: ' + room.capacity)
+        ]);
+        if (room.is_blocked) {
+          header.appendChild(App.el('span', { className: 'badge badge-full' }, 'Заблокована'));
+        }
+
+        return App.el('section', { className: 'card calendar-room' }, [
+          header,
+          buildTimeline(room, day, bounds),
+          buildList(room, day)
+        ]);
+      }
+
+      function renderRooms(rooms, day) {
+        while (grid.firstChild) {
+          grid.removeChild(grid.firstChild);
+        }
+        nowLines = [];
+
+        var bounds = scaleBounds(day);
+        grid.style.setProperty('--calendar-cols', String(Math.max(rooms.length, 1)));
+        for (var i = 0; i < rooms.length; i++) {
+          var room = rooms[i];
+          room.bookings = room.bookings || [];
+          room.blocks = room.blocks || [];
+          grid.appendChild(renderRoom(room, day, bounds));
+        }
+        updateNowLines();
+      }
+
+      async function loadCalendar() {
+        var day = parseLocalDate(dateInput.value);
+        if (!day) return;
+
+        var seq = ++loadSeq;
+        App.showError(null, errorContainer);
+        loadingState.style.display = 'block';
+
+        var dayEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1);
+        var path = '/rooms/calendar?starts_at=' + encodeURIComponent(day.toISOString()) +
+          '&ends_at=' + encodeURIComponent(dayEnd.toISOString());
+
+        try {
+          var data = await App.api('GET', path);
+          if (seq !== loadSeq) return;
+          loadingState.style.display = 'none';
+          renderRooms((data && data.rooms) || [], day);
+        } catch (err) {
+          if (seq !== loadSeq) return;
+          loadingState.style.display = 'none';
+          while (grid.firstChild) {
+            grid.removeChild(grid.firstChild);
+          }
+          App.showError(err, errorContainer);
+        }
+      }
+
+      function shiftDay(delta) {
+        var day = parseLocalDate(dateInput.value) || new Date();
+        dateInput.value = toInputValue(new Date(day.getFullYear(), day.getMonth(), day.getDate() + delta));
+        loadCalendar();
+      }
+
+      prevBtn.addEventListener('click', function () { shiftDay(-1); });
+      nextBtn.addEventListener('click', function () { shiftDay(1); });
+      todayBtn.addEventListener('click', function () {
+        dateInput.value = toInputValue(new Date());
+        loadCalendar();
+      });
+      dateInput.addEventListener('change', loadCalendar);
+
+      dateInput.value = toInputValue(new Date());
+      loadCalendar();
+      setInterval(updateNowLines, 60000);
+    });
+  </script>
+</body>
+</html>

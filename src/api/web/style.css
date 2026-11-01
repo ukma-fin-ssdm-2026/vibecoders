@@ -1,0 +1,858 @@
+:root {
+  --color-primary: #1976d2;
+  --color-primary-hover: #1565c0;
+  --color-primary-light: #e3f2fd;
+  --color-danger: #d32f2f;
+  --color-danger-hover: #b71c1c;
+  --color-danger-light: #ffebee;
+  --color-success: #2e7d32;
+  --color-success-hover: #1b5e20;
+  --color-success-light: #e8f5e9;
+  --color-bg: #f5f7fa;
+  --color-card-bg: #ffffff;
+  --color-text: #212529;
+  --color-text-muted: #595959;
+  --color-border: #ced4da;
+  --color-focus-ring: #005fb8;
+  --color-header-bg: #1f2937;
+  --color-header-text: #ffffff;
+  --border-radius: 6px;
+  --transition-speed: 0.2s;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Шапка та навігація */
+.site-header {
+  background-color: var(--color-header-bg);
+  color: var(--color-header-text);
+  padding: 0.75rem 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-header-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.logo:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.nav-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  list-style: none;
+  gap: 0.5rem;
+}
+
+.nav-item {
+  display: inline-block;
+}
+
+.nav-link {
+  display: inline-block;
+  padding: 0.5rem 0.75rem;
+  color: #e5e7eb;
+  text-decoration: none;
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.nav-link.active {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.nav-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.nav-btn-logout {
+  color: #fca5a5;
+  font-family: inherit;
+}
+
+.nav-btn-logout:hover {
+  background-color: rgba(220, 38, 38, 0.2);
+  color: #fecaca;
+}
+
+/* Основний контент і контейнер */
+.main-content {
+  flex: 1;
+  padding: 1.5rem 1rem;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Карточки */
+.card {
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.card h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-text);
+}
+
+.card h2 {
+  font-size: 1.25rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+}
+
+.card p.description {
+  margin-bottom: 1rem;
+  color: var(--color-text-muted);
+}
+
+.roles-list {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Форми */
+.form-group {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--color-text);
+  background-color: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+input[type="text"]:focus-visible,
+input[type="email"]:focus-visible,
+input[type="password"]:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+  border-color: var(--color-focus-ring);
+}
+
+/* Кнопки */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.25rem;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: var(--border-radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background-color: var(--color-danger-hover);
+}
+
+.btn-secondary {
+  background-color: #f3f4f6;
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.btn-secondary:hover {
+  background-color: #e5e7eb;
+}
+
+/* Повідомлення про помилки та успіх */
+.alert {
+  padding: 0.85rem 1rem;
+  border-radius: var(--border-radius);
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.alert-error {
+  background-color: var(--color-danger-light);
+  border: 1px solid var(--color-danger);
+  color: #7f1d1d;
+}
+
+.alert-success {
+  background-color: var(--color-success-light);
+  border: 1px solid var(--color-success);
+  color: #14532d;
+}
+
+.error-details {
+  margin-top: 0.5rem;
+  padding-left: 1.25rem;
+}
+
+/* Таблиці */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+th, td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+tr:hover {
+  background-color: #f1f3f5;
+}
+
+/* Сітка */
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+/* Адаптивність для вузьких екранів (360px і менше) */
+@media (max-width: 600px) {
+  .site-header {
+    padding: 0.5rem;
+  }
+
+  .header-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nav-list {
+    justify-content: flex-start;
+  }
+
+  .main-content {
+    padding: 1rem 0.5rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+}
+
+/* Додаткові стилі для форм автентифікації */
+input.error,
+select.error,
+textarea.error {
+  border-color: var(--color-danger);
+  background-color: #fffbfa;
+}
+
+input.error:focus-visible,
+select.error:focus-visible,
+textarea.error:focus-visible {
+  outline-color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.field-error {
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  line-height: 1.3;
+}
+
+.btn:disabled,
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.auth-actions,
+.auth-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.auth-switch {
+  margin-top: 1.25rem;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+.auth-switch a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.auth-switch a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* Демо-акаунти */
+.demo-accounts {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1rem;
+  background-color: #f9fafb;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+}
+
+.demo-accounts summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-text);
+  padding: 0.25rem 0;
+}
+
+.demo-accounts summary:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.demo-list {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.demo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  background-color: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+
+.demo-info {
+  font-size: 0.85rem;
+  overflow-wrap: break-word;
+}
+
+.demo-info code {
+  background-color: #f3f4f6;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.btn-sm {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+/* Стилі для ігор: списку та деталей */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.game-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+}
+
+.game-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.game-meta {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.game-meta strong {
+  color: var(--color-text);
+}
+
+.game-counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.players-count {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-full {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger-hover);
+  border: 1px solid var(--color-danger);
+}
+
+.game-actions,
+.game-action-block {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.game-action-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.game-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.filter-card {
+  padding: 1rem 1.25rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+}
+
+.nav-back {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.nav-back:hover {
+  text-decoration: underline;
+}
+
+
+
+/* Керування грою та форма створення гри */
+.field-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: 0.2rem;
+}
+
+.manage-card {
+  margin-top: 1.5rem;
+}
+
+.manage-counter {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.manage-players-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.manage-players-table th,
+.manage-players-table td {
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.manage-players-table th {
+  background-color: #f8f9fa;
+  font-size: 0.9rem;
+}
+
+.manage-players-table td {
+  font-size: 0.95rem;
+}
+
+.manage-danger-zone {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Поля дати й часу */
+input[type="date"],
+input[type="datetime-local"] {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--color-text);
+  background-color: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+input[type="date"]:focus-visible,
+input[type="datetime-local"]:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 1px;
+  border-color: var(--color-focus-ring);
+}
+
+input[type="datetime-local"].error {
+  border-color: var(--color-danger);
+  background-color: #fffbfa;
+}
+
+/* Календар кімнат */
+.calendar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.calendar-date-group {
+  margin-bottom: 0;
+  min-width: 11rem;
+}
+
+.calendar-nav-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--calendar-cols, 3), minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.calendar-room {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1rem;
+}
+
+.calendar-room-header h2 {
+  margin-top: 0;
+  word-break: break-word;
+}
+
+.calendar-timeline {
+  position: relative;
+  height: 640px;
+  background-color: #ffffff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.calendar-hour {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.calendar-hour-label {
+  position: absolute;
+  top: 0.1rem;
+  left: 0.25rem;
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.calendar-slot,
+.calendar-block {
+  position: absolute;
+  left: 3rem;
+  right: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0.15rem 0.35rem;
+  overflow: hidden;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  border-radius: 4px;
+}
+
+.calendar-slot {
+  background-color: var(--color-primary-light);
+  border: 1px solid var(--color-primary);
+  color: #0d3c73;
+  text-decoration: none;
+  z-index: 1;
+}
+
+.calendar-slot:hover {
+  background-color: #bbdefb;
+}
+
+.calendar-block {
+  background: repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 6px, #e5e7eb 6px, #e5e7eb 12px);
+  border: 1px solid var(--color-text-muted);
+  color: var(--color-text-muted);
+}
+
+.calendar-slot-title {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-slot-time {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.calendar-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-danger);
+  transform: translateY(-1px);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.calendar-empty {
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.calendar-slot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 1.25rem;
+  font-size: 0.9rem;
+  list-style: disc;
+}
+
+.calendar-slot-list a {
+  color: var(--color-primary);
+}
+
+@media (max-width: 800px) {
+  .calendar-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-timeline {
+    height: 560px;
+  }
+}
+
+/* Адміністрування: кімнати, користувачі, статуси */
+.admin-section {
+  margin-bottom: 1.5rem;
+}
+
+.admin-section h2 {
+  margin-top: 0;
+}
+
+.admin-room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  list-style: none;
+}
+
+.admin-room-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-block-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding-left: 1rem;
+  font-size: 0.9rem;
+  list-style: none;
+}
+
+.admin-block-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.users-table th,
+.users-table td {
+  padding: 0.65rem 0.75rem;
+  font-size: 0.95rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.status-active {
+  background-color: var(--color-success-light);
+  color: #14532d;
+  border: 1px solid var(--color-success);
+}
+
+.status-blocked {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger-hover);
+  border: 1px solid var(--color-danger);
+}
