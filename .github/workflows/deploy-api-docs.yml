@@ -24,7 +24,7 @@ jobs:
       
       - name: Install dependencies
         working-directory: ./src/api
-        run: pip install -r requirements.txt
+        run: "pip install --only-binary :all: -r requirements.txt"
       
       - name: Generate OpenAPI spec from code
         working-directory: ./src/api
