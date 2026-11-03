@@ -7,7 +7,7 @@ cp -r "$ROOT"/src/api/routes "$WORK"/routes
 cp -r "$ROOT"/src/api/tests "$WORK"/tests
 cp "$ROOT"/pytest.ini "$WORK"/pytest.ini
 rm -f "$WORK"/tests/test_api.py "$WORK"/tests/test_traceability_script.py
-if [ -n "$MUTATION_WITHOUT_TEST" ]; then
+if [[ -n "$MUTATION_WITHOUT_TEST" ]]; then
   python - "$WORK/tests/test_store.py" "$MUTATION_WITHOUT_TEST" <<'PY'
 import re
 import sys
