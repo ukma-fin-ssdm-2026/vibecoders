@@ -53,8 +53,6 @@
 
 Рядки `ci.yml`: L24 `pip install --upgrade pip`, L25 `pip install -r src/api/requirements.txt`, L26 `pip install black flake8 bandit pytest pytest-cov`. `deploy-api-docs.yml` L27: `pip install -r requirements.txt`.
 
-**Чому Security C, а не A:** Sonar оцінює за найвищою severity відкритих проблем. High (п. 1) плюс Medium (пп. 2–3) дають C. Щоб піднятися до A, потрібно закрити всі 9. Мінімально для покращення рейтингу: закрити High і Medium повністю.
-
 ### 3.1. Зв'язок знахідок із `static-analysis.md` (Лаб 5) і `threat-model.md` (Лаб 3)
 
 **Зв'язок із `threat-model.md` (STRIDE).** Усі 9 знахідок стосуються ланцюга постачання в CI/CD (GitHub Actions, PyPI). У моделі загроз такого компонента немає: вона описує лише межі TB1 (Інтернет ↔ FastAPI), TB2 (FastAPI ↔ SQLite) і TB3 (FastAPI ↔ SMTP). Тож Sonar виявив прогалину моделі, а не ризик, який там уже враховано.
@@ -88,7 +86,7 @@
 | :--- | :-: | :--- | :--- |
 | `Prefer Number.isNaN over isNaN` (Medium Reliability + Low Maintainability) | 10 | `admin.html` L272, L277; `app.js` L86, L104; `calendar.html` L79, L97 (×2); `create-game.html` L234, L241, L247 | Замінити на `Number.isNaN` |
 | `Prefer Number.parseInt over parseInt` (Medium Reliability + Low Maintainability) | 4 | `app.js` L105, L208; `create-game.html` L189, L190 | Замінити на `Number.parseInt` |
-| `lang` у `<html>` (WCAG A) | 1 | `docs/api/index.html` L2 | Додати `lang="en"`; файл генерується (`generate_openapi.py`), тож правити шаблон генератора |
+| `lang` у `<html>` (WCAG A) | 1 | `docs/api/index.html` L2 | Додати `lang="en"`; файл статичний, не генерується |
 | Порожній заголовок для screen reader | 1 | `game.html` (`<h1 id="game-title">`) | Додати запасний текст у заголовок до завантаження JS |
 | `[` замість `[[` (High Reliability) | 1 | `scripts/run_mutation.sh` L10 | Замінити на `[[ ... ]]` |
 
@@ -115,7 +113,21 @@
 
 ## 7. Рефакторинги, нотатка «Використання ШІ», регресійне тестування, бонуси !!!ЗАПОВНИТИ!!!
 
+## Використання ШІ
 
+**Інструмент:** Claude (Anthropic), чат-асистент. Агент працював із копією репозиторію з архіву й видавав зміни окремими патчами; застосовували, коммітили й ревʼюїли їх учасники команди.
 
-## Використання ШІ 
-- документ сформовано за допомогою Claude, вручну перевірено з інформацією SonarQube; 
+### 1. Документація 
+Структуру та формулювання розділів звіту, зокрема таблиці Security (розділ 3) і зв'язок зі `static-analysis.md` та `threat-model.md` (розділ 3.1), згенеровано за допомогою Claude. Цифри й назви правил команда звіряла з панеллю SonarQube Cloud (список issues, Measures); рядки `ci.yml` і `deploy-api-docs.yml` звірено з файлами репозиторію.
+
+### 2. Рефакторинг, виконаний із ШІ-агентом
+Закрито 8 зауважень Sonar шістьма окремими комітами `[REFACTOR]`:
+
+| № | Зауваження | Файл | Що згенеровано |
+| :-: | :--- | :--- | :--- |
+| 1 | `Use full commit SHA hash` (Security, High) | `deploy-api-docs.yml` | `peaceiris/actions-gh-pages@v4` → повний SHA `84c30a85c19949d7eee79c4ff27748b70285e453 # v4` |
+| 2 | `Omitting "--only-binary :all:"` (Security, Medium) | `deploy-api-docs.yml` | додано `--only-binary :all:` |
+| 3 | те саме правило, 3 місця (Security, Medium) | `ci.yml` | додано `--only-binary :all:`; закріплено `black==25.11.0`, `flake8==7.3.0`, `bandit==1.8.6` |
+| 4 | `Use '[['` (Reliability, High) | `scripts/run_mutation.sh` | `[ -n … ]` → `[[ -n … ]]` |
+| 5 | немає `lang` у `<html>` (Reliability) | `docs/api/index.html` | додано `lang="en"` |
+| 6 | порожній заголовок (Reliability) | `src/api/web/game.html` | у `<h1 id="game-title">` додано «Завантаження…» |
