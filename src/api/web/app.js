@@ -83,7 +83,7 @@
     formatDateTime: function (isoString) {
       if (!isoString) return '';
       var date = new Date(isoString);
-      if (isNaN(date.getTime())) return String(isoString);
+      if (Number.isNaN(date.getTime())) return String(isoString);
       try {
         var formatter = new Intl.DateTimeFormat('uk-UA', {
           day: 'numeric',
@@ -101,8 +101,8 @@
     formatSlot: function (startsAt, durationMinutes) {
       if (!startsAt) return '';
       var start = new Date(startsAt);
-      if (isNaN(start.getTime())) return '';
-      var duration = parseInt(durationMinutes, 10) || 0;
+      if (Number.isNaN(start.getTime())) return '';
+      var duration = Number.parseInt(durationMinutes, 10) || 0;
       var end = new Date(start.getTime() + duration * 60000);
 
       function pad(n) {
@@ -205,7 +205,7 @@
         var errMsg = (data && data.error && data.error.message) || response.statusText || 'Помилка запиту';
         var errDetails = (data && data.error && data.error.details) || [];
         var retryAfterHeader = response.headers.get('Retry-After');
-        var retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : null;
+        var retryAfter = retryAfterHeader ? Number.parseInt(retryAfterHeader, 10) : null;
 
         var err = new Error(errMsg);
         err.status = response.status;
@@ -312,4 +312,3 @@
 
   window.App = App;
 })();
-
