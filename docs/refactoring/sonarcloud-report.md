@@ -185,3 +185,6 @@ PR #196 також закрив частину проблем у GitHub Actions,
 | 4 | `Use '[['` (Reliability, High) | `scripts/run_mutation.sh` | `[ -n … ]` → `[[ -n … ]]` |
 | 5 | немає `lang` у `<html>` (Reliability) | `docs/api/index.html` | додано `lang="en"` |
 | 6 | порожній заголовок (Reliability) | `src/api/web/game.html` | у `<h1 id="game-title">` додано «Завантаження…» |
+
+### 3. Перший рефакторинг. Рефакторинг дублювання коду (PR #165)
+Для усунення запаху дублювання логіки у `store.py` застосовано техніку *Replace Inline Code with Function Call*. За допомогою ШІ-агента було згенеровано оновлений код для функцій `hash_password` та `verify_password`: спільну логіку виділено через `PASSWORD_SALT`, а перевірку пароля спрощено до повторного виклику функції `hash_password()`. Згенерований код верифіковано через ручний перегляд та успішний прогін регресійних тестів у `test_store.py` (зокрема `test_verify_password_accepts_correct_and_rejects_wrong`), які підтвердили абсолютне збереження попередньої поведінки системи.
