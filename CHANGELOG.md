@@ -5,21 +5,24 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2026-11-04
+## [0.1.1] - 2026-11-05
 
 ### Added
 
-- REST API and web interface for organizing tabletop role-playing games, player enrollment, and room bookings.
-- User registration, profile management, user administration, notifications, and room calendar endpoints.
-- Characterization and regression tests for OpenAPI generation and browser-side date, slot, and retry-delay helpers.
+- Add a characterization test for the OpenAPI generator CLI entry point.
 
-### Changed
+### Refactoring
 
-- Make demo database seeding idempotent and resolve the SQLite database path consistently.
-- Use explicit `Number.isNaN` and `Number.parseInt` methods in shared web-client helpers.
-- Improve CI dependency installation and pin the documentation deployment action to a full commit SHA.
+- Replace global `isNaN` and `parseInt` with `Number.isNaN` and `Number.parseInt` in shared web-client helpers (Substitute Algorithm).
+- Pin the GitHub Pages action to a full commit SHA and install CI dependencies from wheels only.
+- Replace `[` with `[[` in the mutation-test script.
+- Add a language attribute to the API documentation page and fallback text to the game-page title.
 
-### Fixed
+## [0.1.0] - 2026-11-04
 
-- Improve screen-reader support for the API documentation and game page.
-- Use the Bash conditional syntax required by the mutation-test script.
+### Baseline
+
+- Mark the project state before the Lab 8 refactoring.
+
+[0.1.1]: https://github.com/ukma-fin-ssdm-2026/vibecoders/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/ukma-fin-ssdm-2026/vibecoders/tree/v0.1.0

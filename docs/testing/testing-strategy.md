@@ -35,24 +35,22 @@
 
 Інструмент: mutmut 3. Він доданий у `src/api/requirements.txt` з умовою `python_version >= "3.10"`, бо CI працює на Python 3.9, а mutmut 3 вимагає 3.10 або новішу. Модуль: `src/api/store.py`. Запуск: `bash scripts/run_mutation.sh`.
 
-Останній прогін: 68 мутантів, 66 вбито, 2 вижили, оцінка мутації 97,1%. Цей прогін зроблено до переходу `store.py` на SQLite; після рефакторингу модуль змінився, тому цифри потребують повторного запуску (`bash scripts/run_mutation.sh`). Раніше тут було 57 мутантів, число змінилося, бо ми запускали заново, тому далі рахуємо за новим прогоном.
+Актуальний прогін після переходу `store.py` на SQLite: 388 мутантів, 322 вбито, 66 вижили; сирий mutation score — 83,0% (`322 / 388`). У попередньому прогоні було 68 мутантів, але він передував змінам у `store.py`, тому його 97,1% не описує теперішній код. 66 мутантів, що вижили в актуальному прогоні, ще не класифіковано як еквівалентні.
 
 **Мутант, що вижив без тесту і загинув з тестом.** У функції `find_busy_game` оператор `continue` (пропуск гри, яку редагують) mutmut замінює на `break`. Це мутант `store.x_find_busy_game__mutmut_4`.
 
-1. Без тесту: `MUTATION_WITHOUT_TEST=test_find_busy_game_skips_excluded_game_and_still_finds_later_conflict bash scripts/run_mutation.sh`. Скрипт копіює проєкт у тимчасову папку і прибирає цей тест тільки там, у репозиторії він лишається. Результат: `store.x_find_busy_game__mutmut_4: survived`, а також два еквівалентні мутанти нижче. Зміну видно командою `python -m mutmut show store.x_find_busy_game__mutmut_4` (у робочій папці, її шлях друкується в кінці): `continue` стало `break`.
-2. З тестом: `bash scripts/run_mutation.sh`. Той самий мутант `store.x_find_busy_game__mutmut_4: killed`, виживають лише два еквівалентні.
+1. Без тесту: `MUTATION_WITHOUT_TEST=test_find_busy_game_skips_excluded_game_and_still_finds_later_conflict bash scripts/run_mutation.sh`. Скрипт копіює проєкт у тимчасову папку і прибирає цей тест тільки там, у репозиторії він лишається. У повному результаті: 388 мутантів, 321 вбито, 67 вижили; `store.x_find_busy_game__mutmut_4: survived`. Зміну видно командою `python -m mutmut show store.x_find_busy_game__mutmut_4` (у робочій папці, її шлях друкується в кінці): `continue` стало `break`.
+2. З тестом: `bash scripts/run_mutation.sh`. Результат: 388 мутантів, 322 вбито, 66 вижили; той самий мутант `store.x_find_busy_game__mutmut_4: killed`.
 
 Чому тест його вбиває: у ньому гра, що редагується, стоїть у списку першою, а справжній конфлікт іде після неї. З `continue` функція пропускає редаговану гру і знаходить конфлікт, з `break` цикл зупиняється одразу і повертає `None`.
 
 Тест `test_find_busy_game_skips_excluded_game_and_still_finds_later_conflict` ми закомітили раніше, ніж налаштували скрипт mutmut, тому в історії комітів порядок зворотний. Щоб показати зв'язок мутанта і тесту, ми додали в скрипт змінну `MUTATION_WITHOUT_TEST`.
 
-Другий приклад: `and` замінено на `or` у перевірці майстра (`same_master`). Додано `test_find_busy_game_ignores_games_of_other_master`.
-
-Два мутанти, що лишилися (`"sha256"` → `"SHA256"` і `"utf-8"` → `"UTF-8"` у `hash_password`), еквівалентні: результат хешування не змінюється, тому вбити їх неможливо.
+Другий приклад: `and` замінено на `or` у перевірці майстра (`same_master`). Додано `test_find_busy_game_ignores_games_of_other_master`. У актуальному прогоні є й інші мутанти, що вижили; їх не слід називати еквівалентними без окремого аналізу.
 
 ### Тести на основі властивостей
 
-Бібліотека: Hypothesis, файл `src/api/tests/test_properties.py`. Приклад: `test_time_overlap_is_symmetric_for_any_slots` перевіряє, що `time_overlap(a, b)` дорівнює `time_overlap(b, a)` для будь-яких двох слотів, бо перетин двох інтервалів не залежить від того, який із них названо першим.
+Бібліотека: Hypothesis, файл `src/api/tests/test_properties.py`. `test_time_overlap_is_symmetric_for_any_slots` генерує дві дати початку й тривалості та перевіряє `time_overlap(a, b) == time_overlap(b, a)`. Це властивість симетрії: перетин інтервалів не залежить від порядку аргументів. Інтервали напіввідкриті `[start, end)`, тому слоти, що лише торкаються межами, не перетинаються.
 
 ## Ручна приймальна перевірка інтерфейсу
 
