@@ -75,8 +75,8 @@
 
 | Показник | До | Після |
 | :--- | :---: | :---: |
-| Security Rating | C | _заповнити_ |
-| Security issues | 9 (1 High, 8 Medium) | _заповнити_ |
+| Security Rating | C | C |
+| Security issues | 9 (1 High, 8 Medium) | 4 (усі Medium) |
 
 ---
 
@@ -99,27 +99,47 @@
 - **Technical Debt 1 д 1 год** (≈ 9 год, 1 день = 8 год) переважно від Security: 8 Medium × 1 год + High 30 хв ≈ 8,5 год. Решта ≈ 30 хв припадає на 15 зауважень Maintainability (≈ 2 хв кожне). 
 - **Виключення звіту покриття** (`htmlcov/`, `coverage/`): перевірено на вкладці Code.
 
-## 6. Метрики «після» !!!ЗАПОВНИТИ!!!
+## 6. Метрики «після»
 
 | Показник | До | Після |
 | :--- | :---: | :---: |
-| Reliability Rating | C | |
-| Code Smells | 15 | |
-| Technical Debt | 1 д 1 год | |
-| **Security Rating** | **C** | |
+| Reliability Rating | C (17 issues) | A (10 issues) |
+| Code Smells | 15 | 10 |
+| Technical Debt | 1 д 1 год | 20 хв |
+| Security Rating | C (9 issues: 1 High, 8 Medium) | C (4 issues, усі Medium) |
+| Duplicated Lines (%) | 0,0% | 0,0% |
 
-Коментар до Security Rating «після»: _заповнити_.
-Скриншоти «після»: _додати_.
+**Інші дані після аналізу:** Maintainability Rating — A (10 issues); Quality Gate — Passed; усього issues — 14. SonarCloud не показував даних про coverage.
 
-## 7. Рефакторинги, нотатка «Використання ШІ», регресійне тестування, бонуси !!!ЗАПОВНИТИ!!!
+Джерело: скриншоти SonarCloud для гілки `main`, надані 04.11.2026. Сторінка Activity показує останню подію о 21:29 — у ту саму хвилину, коли було злито PR #199. SHA проаналізованого commit на скриншоті не видно; числа наведено як метрики показаного стану `main`.
+
+Скриншоти «після» (SonarCloud, гілка `main`, 04.11.2026):
+
+![SonarCloud: Reliability і Maintainability snapshots](./sonarcloud-screenshots/main-reliability-maintainability.png)
+![SonarCloud: загальний Quality Gate і Security snapshot](./sonarcloud-screenshots/main-security-quality-gate.png)
+![SonarCloud: відкриті issues, перша частина](./sonarcloud-screenshots/main-open-issues-1.png)
+![SonarCloud: відкриті issues, друга частина](./sonarcloud-screenshots/main-open-issues-2.png)
+![SonarCloud: Technical Debt 20 хв на main](./sonarcloud-screenshots/main-technical-debt.png)
+![SonarCloud: Activity для main](./sonarcloud-screenshots/main-analysis-activity.png)
+![SonarCloud: розподіл Technical Debt у web](./sonarcloud-screenshots/main-debt-breakdown.png)
+
+## 7. Рефакторинги, регресійне тестування та використання ШІ
 
 ### Characterization-тест перед рефакторингом (бонус)
 
 Для `src/api/generate_openapi.py` додано тест `src/api/tests/test_generate_openapi.py`, який фіксує поточну поведінку CLI: скрипт викликає `save_openapi_spec(app)` під час запуску як `__main__`, але не викликає його під час імпорту. Тест додано до змін у цьому модулі; виробничий код у цьому PR не змінюється.
 
+### Рефакторинг і регресійне тестування
+
+У PR #199 у `src/api/web/app.js` замінено глобальні `isNaN` та `parseInt` на `Number.isNaN` та `Number.parseInt` у перевірках дат, тривалості і заголовка `Retry-After`. Новий тест `src/api/tests/test_web_app_js.py` перевіряє некоректну дату, форматування часового слота та розбір затримки повторного запиту через Node.js. Після змін повний CI-прогін: 294 passed, 1 xfailed, coverage 96.39% (поріг 95%); CI та SonarCloud для PR пройшли.
+
+Після цих змін у SonarCloud залишалися 10 Reliability issues, зокрема рекомендації щодо глобальних `isNaN`/`parseInt` у `admin.html`, `calendar.html` і `create-game.html`, а також 4 Security issues щодо фіксації версій залежностей. Вони не входили до PR #199 і не позначаються тут як виправлені.
+
 ## Використання ШІ
 
 **Інструмент:** Claude (Anthropic), чат-асистент. Агент працював із копією репозиторію з архіву й видавав зміни окремими патчами; застосовували, коммітили й ревʼюїли їх учасники команди.
+
+Для PR #198 та #199 і оновлення цього звіту використовувався GitHub Copilot у VS Code. Учасниця перевіряла зміни, запускала тести та підтверджувала метрики за SonarCloud.
 
 ### 1. Документація 
 Структуру та формулювання розділів звіту, зокрема таблиці Security (розділ 3) і зв'язок зі `static-analysis.md` та `threat-model.md` (розділ 3.1), згенеровано за допомогою Claude. Цифри й назви правил команда звіряла з панеллю SonarQube Cloud (список issues, Measures); рядки `ci.yml` і `deploy-api-docs.yml` звірено з файлами репозиторію.
