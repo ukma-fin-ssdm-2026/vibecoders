@@ -94,11 +94,6 @@
 
 ---
 
-## 5. Примітки до метрик «до»
-
-- **Technical Debt 1 д 1 год** (≈ 9 год, 1 день = 8 год) переважно від Security: 8 Medium × 1 год + High 30 хв ≈ 8,5 год. Решта ≈ 30 хв припадає на 15 зауважень Maintainability (≈ 2 хв кожне). 
-- **Виключення звіту покриття** (`htmlcov/`, `coverage/`): перевірено на вкладці Code.
-
 ## 6. Метрики «після»
 
 | Показник | До | Після |
@@ -177,11 +172,13 @@ PR #196 також закрив частину проблем у GitHub Actions,
 ### 2. Рефакторинг, виконаний із ШІ-агентом
 Закрито 8 зауважень Sonar шістьма окремими комітами `[REFACTOR]`:
 
-| № | Зауваження | Файл | Що згенеровано |
-| :-: | :--- | :--- | :--- |
-| 1 | `Use full commit SHA hash` (Security, High) | `deploy-api-docs.yml` | `peaceiris/actions-gh-pages@v4` → повний SHA `84c30a85c19949d7eee79c4ff27748b70285e453 # v4` |
-| 2 | `Omitting "--only-binary :all:"` (Security, Medium) | `deploy-api-docs.yml` | додано `--only-binary :all:` |
-| 3 | те саме правило, 3 місця (Security, Medium) | `ci.yml` | додано `--only-binary :all:`; закріплено `black==25.11.0`, `flake8==7.3.0`, `bandit==1.8.6` |
-| 4 | `Use '[['` (Reliability, High) | `scripts/run_mutation.sh` | `[ -n … ]` → `[[ -n … ]]` |
-| 5 | немає `lang` у `<html>` (Reliability) | `docs/api/index.html` | додано `lang="en"` |
-| 6 | порожній заголовок (Reliability) | `src/api/web/game.html` | у `<h1 id="game-title">` додано «Завантаження…» |
+| № | Зауваження | Файл | Що згенеровано | Техніка | Що лишається незмінним | Перевірка |
+| :-: | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | `Use full commit SHA hash` (Security, High) | `deploy-api-docs.yml` | `peaceiris/actions-gh-pages@v4` → повний SHA `84c30a85c19949d7eee79c4ff27748b70285e453 # v4` | Pin Dependencies (security refactoring) | Кроки workflow, версія action (`v4`) | Успішні CI і Sonar для PR #196; валідний YAML |
+| 2 | `Omitting "--only-binary :all:"` (Security, Medium) | `deploy-api-docs.yml` | додано `--only-binary :all:` | Pin Dependencies (security refactoring) | Набір пакетів з `requirements.txt`, порядок кроків | Успішні CI і Sonar для PR #196; Dockerfile уже встановлює залежності так само |
+| 3 | те саме правило, 3 місця (Security, Medium) | `ci.yml` | додано `--only-binary :all:`; закріплено `black==25.11.0`, `flake8==7.3.0`, `bandit==1.8.6` | Pin Dependencies (security refactoring) | Кроки CI, мінімальні версії залежностей | `pytest`: 293 → 296 passed, 1 xfailed, coverage 96.39%; CI на PR #196 зелений |
+| 4 | `Use '[['` (Reliability, High) | `scripts/run_mutation.sh` | `[ -n … ]` → `[[ -n … ]]` | Substitute Algorithm | Логіка умови в скрипті | `bash -n scripts/run_mutation.sh`; запуск скрипта |
+| 5 | немає `lang` у `<html>` (Reliability) | `docs/api/index.html` | додано `lang="en"` | Виправлення доступності (не рефакторинг у строгому розумінні) | Зміст сторінки документації API | Зауваження закрито в Sonar; статичний файл без окремого тесту |
+| 6 | порожній заголовок (Reliability) | `src/api/web/game.html` | у `<h1 id="game-title">` додано «Завантаження…» | Виправлення доступності (не рефакторинг у строгому розумінні) | Дані й дії на сторінці; `<h1>` перезаписується `updateGameView()` | `test_web_game_html_served` у `src/api/tests/test_web.py` |
+
+Результат у SonarCloud: Security issues 9 → 4 (High закрито), Reliability issues 17 → 10 разом із R1 (`app.js`).
