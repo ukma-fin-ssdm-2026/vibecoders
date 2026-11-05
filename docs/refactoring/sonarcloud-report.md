@@ -172,13 +172,14 @@ PR #196 також закрив частину проблем у GitHub Actions,
 ### 2. Рефакторинг, виконаний із ШІ-агентом
 Закрито 8 зауважень Sonar шістьма окремими комітами `[REFACTOR]`:
 
-| № | Зауваження | Файл | Що згенеровано | Техніка | Що лишається незмінним | Перевірка |
-| :-: | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | `Use full commit SHA hash` (Security, High) | `deploy-api-docs.yml` | `peaceiris/actions-gh-pages@v4` → повний SHA `84c30a85c19949d7eee79c4ff27748b70285e453 # v4` | Pin Dependencies (security refactoring) | Кроки workflow, версія action (`v4`) | Успішні CI і Sonar для PR #196; валідний YAML |
-| 2 | `Omitting "--only-binary :all:"` (Security, Medium) | `deploy-api-docs.yml` | додано `--only-binary :all:` | Pin Dependencies (security refactoring) | Набір пакетів з `requirements.txt`, порядок кроків | Успішні CI і Sonar для PR #196; Dockerfile уже встановлює залежності так само |
-| 3 | те саме правило, 3 місця (Security, Medium) | `ci.yml` | додано `--only-binary :all:`; закріплено `black==25.11.0`, `flake8==7.3.0`, `bandit==1.8.6` | Pin Dependencies (security refactoring) | Кроки CI, мінімальні версії залежностей | `pytest`: 293 → 296 passed, 1 xfailed, coverage 96.39%; CI на PR #196 зелений |
-| 4 | `Use '[['` (Reliability, High) | `scripts/run_mutation.sh` | `[ -n … ]` → `[[ -n … ]]` | Substitute Algorithm | Логіка умови в скрипті | `bash -n scripts/run_mutation.sh`; запуск скрипта |
-| 5 | немає `lang` у `<html>` (Reliability) | `docs/api/index.html` | додано `lang="en"` | Виправлення доступності (не рефакторинг у строгому розумінні) | Зміст сторінки документації API | Зауваження закрито в Sonar; статичний файл без окремого тесту |
-| 6 | порожній заголовок (Reliability) | `src/api/web/game.html` | у `<h1 id="game-title">` додано «Завантаження…» | Виправлення доступності (не рефакторинг у строгому розумінні) | Дані й дії на сторінці; `<h1>` перезаписується `updateGameView()` | `test_web_game_html_served` у `src/api/tests/test_web.py` |
+| № | Зауваження | Файл | Що згенеровано |
+| :-: | :--- | :--- | :--- |
+| 1 | `Use full commit SHA hash` (Security, High) | `deploy-api-docs.yml` | `peaceiris/actions-gh-pages@v4` → повний SHA `84c30a85c19949d7eee79c4ff27748b70285e453 # v4` |
+| 2 | `Omitting "--only-binary :all:"` (Security, Medium) | `deploy-api-docs.yml` | додано `--only-binary :all:` |
+| 3 | те саме правило, 3 місця (Security, Medium) | `ci.yml` | додано `--only-binary :all:`; закріплено `black==25.11.0`, `flake8==7.3.0`, `bandit==1.8.6` |
+| 4 | `Use '[['` (Reliability, High) | `scripts/run_mutation.sh` | `[ -n … ]` → `[[ -n … ]]` |
+| 5 | немає `lang` у `<html>` (Reliability) | `docs/api/index.html` | додано `lang="en"` |
+| 6 | порожній заголовок (Reliability) | `src/api/web/game.html` | у `<h1 id="game-title">` додано «Завантаження…» |
 
-Результат у SonarCloud: Security issues 9 → 4 (High закрито), Reliability issues 17 → 10 разом із R1 (`app.js`).
+### 3. Перший рефакторинг. Рефакторинг дублювання коду (PR #165)
+Для усунення запаху дублювання логіки у `store.py` застосовано техніку *Replace Inline Code with Function Call*. За допомогою ШІ-агента було згенеровано оновлений код для функцій `hash_password` та `verify_password`: спільну логіку виділено через `PASSWORD_SALT`, а перевірку пароля спрощено до повторного виклику функції `hash_password()`. Згенерований код верифіковано через ручний перегляд та успішний прогін регресійних тестів у `test_store.py` (зокрема `test_verify_password_accepts_correct_and_rejects_wrong`), які підтвердили абсолютне збереження попередньої поведінки системи.
