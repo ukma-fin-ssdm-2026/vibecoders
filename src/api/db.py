@@ -5,6 +5,8 @@
 тому файл БД не залежить від того, з якої папки запущено сервер.
 """
 
+import logging
+import math
 import os
 from contextlib import contextmanager
 from pathlib import Path
@@ -13,6 +15,8 @@ from typing import Iterator, Optional
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine, make_url, URL
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
+
+logger = logging.getLogger("api.db")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = Path(os.getenv("DATA_DIR") or PROJECT_ROOT / "data").expanduser().resolve()
@@ -80,12 +84,30 @@ def enable_sqlite_foreign_keys(engine: Engine) -> None:
         cursor.close()
 
 
+DEFAULT_DB_TIMEOUT_SECONDS = 10.0
+
+
+def read_db_timeout(raw_value: Optional[str] = None) -> float:
+    raw = os.getenv("DB_TIMEOUT_SECONDS") if raw_value is None else raw_value
+    if raw is None or not raw.strip():
+        return DEFAULT_DB_TIMEOUT_SECONDS
+    try:
+        timeout = float(raw)
+    except ValueError:
+        logger.warning("DB_TIMEOUT_SECONDS=%r is not a number, using %s", raw, DEFAULT_DB_TIMEOUT_SECONDS)
+        return DEFAULT_DB_TIMEOUT_SECONDS
+    if not math.isfinite(timeout) or timeout <= 0:
+        logger.warning("DB_TIMEOUT_SECONDS=%r is out of range, using %s", raw, DEFAULT_DB_TIMEOUT_SECONDS)
+        return DEFAULT_DB_TIMEOUT_SECONDS
+    return timeout
+
+
 def create_database_engine(database_url: Optional[str] = None) -> Engine:
     url = resolve_database_url(database_url)
-    engine = create_engine(
-        url,
-        connect_args={"check_same_thread": False} if url.get_backend_name() == "sqlite" else {},
+    connect_args = (
+        {"check_same_thread": False, "timeout": read_db_timeout()} if url.get_backend_name() == "sqlite" else {}
     )
+    engine = create_engine(url, connect_args=connect_args)
     enable_sqlite_foreign_keys(engine)
     return engine
 

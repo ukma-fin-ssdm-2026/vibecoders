@@ -4,7 +4,6 @@ from typing import Optional
 from fastapi import APIRouter, Path, Query, Response
 
 from errors import ApiError, error_docs
-from notifications import notify_game_cancelled
 from schemas import (
     Game,
     GameBase,
@@ -29,6 +28,7 @@ from store import (
     sorted_games,
     to_game,
     db_lock,  # <--- Імпортуємо наш м'ютекс
+    delete_game_with_notifications,
 )
 
 router = APIRouter(prefix="/api/v1/games", tags=["Games"])
@@ -200,11 +200,10 @@ async def patch_game(payload: GamePatch, user: CurrentUser, game_id: str = GameI
     responses=error_docs(400, 401, 403, 404),
 )
 async def delete_game(user: CurrentUser, game_id: str = GameId):
-    record = get_game_or_404(game_id)
-    ensure_can_manage(record, user.id, user.role)
-    notify_game_cancelled(game_id, record.title, ENROLLMENTS.get(game_id, []))
-    del GAMES[game_id]
-    ENROLLMENTS.pop(game_id, None)
+    with db_lock:
+        record = get_game_or_404(game_id)
+        ensure_can_manage(record, user.id, user.role)
+        delete_game_with_notifications(game_id)
     return Response(status_code=204)
 
 
@@ -269,22 +268,23 @@ async def remove_player(
         examples=["user_2"],
     ),
 ):
-    record = get_game_or_404(game_id)
-    is_self = user.id == user_id
-    is_manager = user.role == UserRole.owner or record.master_id == user.id
-    if not (is_self or is_manager):
-        raise ApiError(
-            403,
-            "FORBIDDEN",
-            "Скасувати запис може сам гравець, майстер гри або власник клубу",
-        )
-    players = ENROLLMENTS.get(game_id, [])
-    remaining = [p for p in players if p.user_id != user_id]
-    if len(remaining) == len(players):
-        raise ApiError(
-            404,
-            "ENROLLMENT_NOT_FOUND",
-            f"Гравець {user_id} не записаний на гру {game_id}",
-        )
-    ENROLLMENTS[game_id] = remaining
+    with db_lock:
+        record = get_game_or_404(game_id)
+        is_self = user.id == user_id
+        is_manager = user.role == UserRole.owner or record.master_id == user.id
+        if not (is_self or is_manager):
+            raise ApiError(
+                403,
+                "FORBIDDEN",
+                "Скасувати запис може сам гравець, майстер гри або власник клубу",
+            )
+        players = ENROLLMENTS.get(game_id, [])
+        remaining = [p for p in players if p.user_id != user_id]
+        if len(remaining) == len(players):
+            raise ApiError(
+                404,
+                "ENROLLMENT_NOT_FOUND",
+                f"Гравець {user_id} не записаний на гру {game_id}",
+            )
+        ENROLLMENTS[game_id] = remaining
     return Response(status_code=204)

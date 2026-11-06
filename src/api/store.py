@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 
 from schemas import Game, GameBase, Player, Room, User
 from db import SessionLocal
+from notifications import build_cancellation_rows
 from models import (
     User as UserModel,
     Room as RoomModel,
@@ -391,6 +392,27 @@ def next_game_id() -> str:
         number = first_free
         _game_sequence = itertools.count(first_free + 1)
     return f"game_{number}"
+
+
+def delete_game_with_notifications(game_id: str) -> None:
+    db = SessionLocal()
+    try:
+        game = db.get(GameModel, game_id)
+        if game is None:
+            return
+        player_ids = [
+            player_id
+            for (player_id,) in db.query(EnrollmentModel.player_id).filter(EnrollmentModel.game_id == game_id).all()
+        ]
+        db.add_all(build_cancellation_rows(game_id, game.title, player_ids))
+        db.delete(game)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+    GAMES._cache.pop(game_id, None)
 
 
 def to_game(record: GameRecord) -> Game:

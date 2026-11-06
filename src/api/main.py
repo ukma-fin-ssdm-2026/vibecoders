@@ -1,3 +1,4 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -16,6 +17,8 @@ from routes.rooms import router as rooms_router
 from routes.users import router as users_router
 from spec import install_openapi, save_openapi_spec
 
+logger = logging.getLogger("api.main")
+
 host = os.getenv("API_HOST", "127.0.0.1")
 # Swagger UI на GitHub Pages виконує запити з іншого домену, тому його origin дозволено явно.
 CORS_ORIGINS = [
@@ -33,7 +36,10 @@ def operation_id(route: APIRoute) -> str:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     seed_db()
-    save_openapi_spec(app)
+    try:
+        save_openapi_spec(app)
+    except OSError as exc:
+        logger.warning("OpenAPI specification was not saved, API starts without it: %s", exc)
     yield
 
 
