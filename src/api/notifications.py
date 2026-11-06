@@ -6,7 +6,7 @@
 """
 
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Iterable, List, Optional
 
 from pydantic import BaseModel
 
@@ -35,22 +35,28 @@ def _to_schema(row: NotificationModel) -> Notification:
     )
 
 
+def build_cancellation_rows(
+    game_id: str, game_title: str, user_ids: Iterable[str], created_at: Optional[datetime] = None
+) -> List[NotificationModel]:
+    moment = created_at or datetime.now(timezone.utc).replace(tzinfo=None)
+    return [
+        NotificationModel(
+            user_id=user_id,
+            game_id=game_id,
+            message=f"Гру «{game_title}» скасовано",
+            created_at=moment,
+            is_read=False,
+        )
+        for user_id in user_ids
+    ]
+
+
 def notify_game_cancelled(game_id: str, game_title: str, players: List[Player]) -> List[Notification]:
     """Створює по одному сповіщенню для кожного записаного гравця (в одній транзакції) і повертає їх."""
     if not players:
         return []
-    created_at = datetime.now(timezone.utc).replace(tzinfo=None)
     with db.session_scope() as session:
-        rows = [
-            NotificationModel(
-                user_id=player.user_id,
-                game_id=game_id,
-                message=f"Гру «{game_title}» скасовано",
-                created_at=created_at,
-                is_read=False,
-            )
-            for player in players
-        ]
+        rows = build_cancellation_rows(game_id, game_title, [player.user_id for player in players])
         session.add_all(rows)
         session.flush()
         return [_to_schema(row) for row in rows]

@@ -20,8 +20,7 @@ from schemas import (
 )
 from security import CurrentUser, require_roles
 from models import Enrollment as EnrollmentModel, Game as GameModel, RoomBlock as RoomBlockModel
-from notifications import notify_game_cancelled
-from schemas import Player
+from notifications import build_cancellation_rows
 import store
 from store import GAMES, ROOMS, db_lock, sorted_games
 
@@ -221,7 +220,7 @@ async def create_room_block(
     end = as_utc(payload.ends_at)
     start_db = start.replace(tzinfo=None)
     end_db = end.replace(tzinfo=None)
-    notifications = []
+    cancelled_game_ids = []
 
     with db_lock:
         db = store.SessionLocal()
@@ -246,15 +245,14 @@ async def create_room_block(
                 and start < as_utc(game.starts_at) + timedelta(minutes=game.duration_minutes)
             ]
             for game in overlapping_games:
-                players = [
-                    Player(
-                        user_id=enrollment.player_id,
-                        name=enrollment.player.name,
-                        enrolled_at=as_utc(enrollment.enrolled_at),
-                    )
-                    for enrollment in db.query(EnrollmentModel).filter(EnrollmentModel.game_id == game.id).all()
+                player_ids = [
+                    player_id
+                    for (player_id,) in db.query(EnrollmentModel.player_id)
+                    .filter(EnrollmentModel.game_id == game.id)
+                    .all()
                 ]
-                notifications.append((game.id, game.title, players))
+                db.add_all(build_cancellation_rows(game.id, game.title, player_ids))
+                cancelled_game_ids.append(game.id)
                 db.delete(game)
 
             block = RoomBlockModel(room_id=room_id, starts_at=start_db, ends_at=end_db)
@@ -265,9 +263,8 @@ async def create_room_block(
         finally:
             db.close()
 
-    for game_id, title, players in notifications:
+    for game_id in cancelled_game_ids:
         GAMES._cache.pop(game_id, None)
-        notify_game_cancelled(game_id, title, players)
     response.headers["Location"] = f"/api/v1/rooms/{room_id}/blocks/{result.id}"
     return result
 

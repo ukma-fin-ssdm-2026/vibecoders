@@ -1,11 +1,16 @@
+import logging
 from typing import Dict, List, Optional
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import OperationalError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from schemas import ErrorBody, ErrorDetail, ErrorResponse
+
+logger = logging.getLogger("api.errors")
+RETRY_AFTER_SECONDS = 5
 
 
 class ApiError(Exception):
@@ -71,6 +76,17 @@ def register_error_handlers(app: FastAPI) -> None:
         code = codes.get(exc.status_code, "HTTP_ERROR")
         return error_response(exc.status_code, code, str(exc.detail))
 
+    @app.exception_handler(OperationalError)
+    async def database_unavailable_handler(request: Request, exc: OperationalError):
+        logger.error("Database unavailable during %s %s", request.method, request.url.path, exc_info=exc)
+        return error_response(
+            503,
+            "SERVICE_UNAVAILABLE",
+            "Сервіс тимчасово недоступний, повторіть запит пізніше",
+            headers={"Retry-After": str(RETRY_AFTER_SECONDS)},
+        )
+
     @app.exception_handler(Exception)
     async def unexpected_error_handler(request: Request, exc: Exception):
+        logger.error("Unhandled error during %s %s", request.method, request.url.path, exc_info=exc)
         return error_response(500, "INTERNAL_ERROR", "Внутрішня помилка сервера")
