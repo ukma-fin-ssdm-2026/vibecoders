@@ -40,6 +40,25 @@ class ErrorResponse(BaseModel):
     error: ErrorBody
 
 
+class HealthStatus(str, Enum):
+    healthy = "healthy"
+    unhealthy = "unhealthy"
+
+
+class DependencyStatus(str, Enum):
+    ok = "ok"
+    unavailable = "unavailable"
+
+
+class HealthChecks(BaseModel):
+    database: DependencyStatus = Field(..., description="Стан бази даних", examples=["ok"])
+
+
+class HealthResponse(BaseModel):
+    status: HealthStatus = Field(..., description="Загальний стан сервісу", examples=["healthy"])
+    checks: HealthChecks
+
+
 class Pagination(BaseModel):
     limit: int = Field(..., ge=1, le=100, description="Кількість елементів на сторінці", examples=[20])
     offset: int = Field(..., ge=0, description="Скільки елементів пропущено", examples=[0])

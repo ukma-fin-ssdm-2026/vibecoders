@@ -12,6 +12,7 @@ from seed import seed_db
 from errors import register_error_handlers
 from routes.auth import router as auth_router
 from routes.games import router as games_router
+from routes.health import router as health_router
 from routes.notifications import router as notifications_router
 from routes.rooms import router as rooms_router
 from routes.users import router as users_router
@@ -86,6 +87,7 @@ app.include_router(games_router)
 app.include_router(rooms_router)
 app.include_router(notifications_router)
 app.include_router(users_router)
+app.include_router(health_router)
 
 app.mount("/app", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
 
