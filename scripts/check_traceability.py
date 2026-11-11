@@ -43,7 +43,8 @@ def mark_name(node):
 
 def read_tests(tests_dir):
     tests = {}
-    for path in sorted(Path(tests_dir).glob("test_*.py")):
+    tests_root = Path(tests_dir)
+    for path in sorted(tests_root.rglob("test_*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in tree.body:
             if not isinstance(node, ast.FunctionDef) or not node.name.startswith("test_"):
@@ -56,7 +57,7 @@ def read_tests(tests_dir):
                     requirements.extend(arg.value for arg in decorator.args if isinstance(arg, ast.Constant))
                 elif name == "technical":
                     technical = True
-            tests[f"{path.name}::{node.name}"] = (requirements, technical)
+            tests[f"{path.relative_to(tests_root).as_posix()}::{node.name}"] = (requirements, technical)
     return tests
 
 
