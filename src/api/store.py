@@ -26,6 +26,7 @@ logger = logging.getLogger("api.store")
 
 db_lock = threading.RLock()
 
+
 # Сіль береться зі змінних середовища (закриває вразливість із static-analysis.md)
 def _load_password_salt() -> bytes:
     configured_salt = os.getenv("PASSWORD_SALT")
@@ -306,19 +307,27 @@ def is_user_blocked(user_id: str) -> bool:
         db.close()
 
 
+def _numeric_id_suffix(identifier: str, prefix: str) -> Optional[int]:
+    if not identifier.startswith(prefix):
+        return None
+    suffix = identifier[len(prefix) :]
+    if not suffix.isascii() or not suffix.isdecimal():
+        return None
+    return int(suffix)
+
+
 def create_registered_user(name: str, email: str, password: str):
     db = SessionLocal()
     try:
         if db.query(UserModel).filter(UserModel.email == email).first():
             return None
         existing_ids = db.query(UserModel.id).all()
-        next_id = (
-            max(
-                (int(user_id.removeprefix("user_")) for (user_id,) in existing_ids if user_id.startswith("user_")),
-                default=0,
-            )
-            + 1
-        )
+        numbers = []
+        for (user_id,) in existing_ids:
+            number = _numeric_id_suffix(user_id, "user_")
+            if number is not None:
+                numbers.append(number)
+        next_id = max(numbers, default=0) + 1
         user = UserModel(
             id=f"user_{next_id}",
             email=email,
@@ -393,10 +402,9 @@ def _highest_game_number() -> int:
         db.close()
     numbers = []
     for game_id in game_ids:
-        if game_id.startswith("game_"):
-            suffix = game_id[5:]
-            if suffix.isascii() and suffix.isdecimal():
-                numbers.append(int(suffix))
+        number = _numeric_id_suffix(game_id, "game_")
+        if number is not None:
+            numbers.append(number)
     return max(numbers, default=0)
 
 

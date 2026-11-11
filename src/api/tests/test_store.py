@@ -110,6 +110,30 @@ def test_next_game_id_ignores_non_ascii_numeric_suffix(game_id):
     assert next_game_id() == "game_3"
 
 
+@pytest.mark.parametrize("existing_id", ["user_²", "user_٩"])
+@pytest.mark.requirement("US-009", "SEC-004")
+def test_registration_ignores_non_ascii_numeric_suffix(existing_id):
+    db = store.SessionLocal()
+    try:
+        db.add(
+            store.UserModel(
+                id=existing_id,
+                email="legacy.invalid@club.test",
+                password_hash=hash_password("legacy-password"),
+                name="Legacy user",
+                role="player",
+            )
+        )
+        db.commit()
+    finally:
+        db.close()
+
+    created = store.create_registered_user("New player", "new.player@club.test", "new-password")
+
+    assert created is not None
+    assert created[0] == "user_4"
+
+
 @pytest.mark.requirement("US-006")
 def test_sorted_games_orders_by_start_time_then_id(utc):
     later = GAMES["game_2"].model_copy(update={"id": "game_0", "starts_at": GAMES["game_1"].starts_at})
