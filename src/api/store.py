@@ -8,7 +8,9 @@ import threading
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
+
+from resilience import is_transient_db_error, retry_with_backoff
 
 from schemas import Game, GameBase, Player, Room, User
 from db import SessionLocal
@@ -260,16 +262,42 @@ class EnrollmentsProxy:
             db.close()
 
 
+def _fetch_credentials(email: str):
+    db = SessionLocal()
+    try:
+        user = db.query(UserModel).filter(UserModel.email == email).first()
+        if user:
+            return {"user_id": user.id, "password_hash": user.password_hash}
+        return None
+    finally:
+        db.close()
+
+
 class CredentialsProxy:
+    def __init__(self):
+        self._fetch_with_retry = retry_with_backoff(
+            _fetch_credentials,
+            max_attempts=3,
+            base_delay=0.05,
+            max_delay=0.5,
+            retry_on=(OperationalError,),
+            predicate=is_transient_db_error,
+        )
+
     def get(self, email, default=None):
-        db = SessionLocal()
-        try:
-            user = db.query(UserModel).filter(UserModel.email == email).first()
-            if user:
-                return {"user_id": user.id, "password_hash": user.password_hash}
-            return default
-        finally:
-            db.close()
+        fetcher = getattr(self, "_fetch_with_retry", None)
+        if fetcher is None:
+            fetcher = retry_with_backoff(
+                _fetch_credentials,
+                max_attempts=3,
+                base_delay=0.05,
+                max_delay=0.5,
+                retry_on=(OperationalError,),
+                predicate=is_transient_db_error,
+            )
+            self._fetch_with_retry = fetcher
+        res = fetcher(email)
+        return res if res is not None else default
 
     def __getitem__(self, email):
         val = self.get(email)
