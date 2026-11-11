@@ -19,20 +19,22 @@ from sqlalchemy.orm import Session, declarative_base, sessionmaker
 logger = logging.getLogger("api.db")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = Path(os.getenv("DATA_DIR") or PROJECT_ROOT / "data").expanduser().resolve()
 DEFAULT_DATABASE_URL = "sqlite:///club.db"
 
 
-def resolve_database_url(raw_url: Optional[str] = None) -> str:
-    """Повертає адресу БД, у якій файл SQLite має абсолютний шлях."""
-    url = make_url(raw_url or os.getenv("DATABASE_URL") or DEFAULT_DATABASE_URL)
-    database = url.database
-    if url.get_backend_name() == "sqlite" and database and database != ":memory:" and not database.startswith("file:"):
-        path = Path(database).expanduser()
-        if not path.is_absolute():
-            path = DATA_DIR / path
-        url = url.set(database=str(path))
-    return url.render_as_string(hide_password=False)
+def resolve_database_url(database_url: Optional[str] = None) -> URL:
+    configured_url = database_url or os.getenv("DATABASE_URL")
+    if configured_url is None:
+        data_dir = Path(os.getenv("DATA_DIR", PROJECT_ROOT)).expanduser().resolve()
+        configured_url = f"sqlite:///{data_dir / 'club.db'}"
+
+    url = make_url(configured_url)
+    if url.get_backend_name() == "sqlite" and url.database not in (None, "", ":memory:"):
+        if not url.database.startswith("file:"):
+            database_path = Path(url.database).expanduser().resolve()
+            database_path.parent.mkdir(parents=True, exist_ok=True)
+            url = url.set(database=str(database_path))
+    return url
 
 
 def enable_sqlite_foreign_keys(engine: Engine) -> None:
@@ -50,30 +52,6 @@ def configure_engine(target: Engine) -> Engine:
     """Вмикає перевірку зовнішніх ключів для SQLite. Викликається і для тестового engine."""
     enable_sqlite_foreign_keys(target)
     return target
-
-
-DATABASE_URL = resolve_database_url()
-_is_sqlite = DATABASE_URL.startswith("sqlite")
-
-# check_same_thread потрібен для FastAPI, timeout - щоб паралельні записи чекали, а не падали одразу.
-engine = configure_engine(
-    create_engine(DATABASE_URL, connect_args={"check_same_thread": False, "timeout": 30} if _is_sqlite else {})
-)
-
-
-def resolve_database_url(database_url: Optional[str] = None) -> URL:
-    configured_url = database_url or os.getenv("DATABASE_URL")
-    if configured_url is None:
-        data_dir = Path(os.getenv("DATA_DIR", Path(__file__).resolve().parents[2])).expanduser().resolve()
-        configured_url = f"sqlite:///{data_dir / 'club.db'}"
-
-    url = make_url(configured_url)
-    if url.get_backend_name() == "sqlite" and url.database not in (None, "", ":memory:"):
-        if not url.database.startswith("file:"):
-            database_path = Path(url.database).expanduser().resolve()
-            database_path.parent.mkdir(parents=True, exist_ok=True)
-            url = url.set(database=str(database_path))
-    return url
 
 
 DEFAULT_DB_TIMEOUT_SECONDS = 10.0
