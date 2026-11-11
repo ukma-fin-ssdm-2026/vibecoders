@@ -4,9 +4,9 @@
 
 ---
 
-## 1. Метрики «до» 
+## 1. Метрики «до»
 
-- **Дата аналізу:** 01.11.2026, остання версія гілки `main`
+- **Дата аналізу:** 03.11.2026, commit `bdd8e9f4b9cf09812c03e3e46d3209a4eb1a4aca` (до PR #196)
 - **Обсяг:** ≈ 9,7 тис. рядків коду
 - **Quality Gate:** Passed
 - **Всього зауважень на панелі:** 26
@@ -15,12 +15,14 @@
 | :--- | :---: | :--- |
 | **Security Rating** | **C** | 9 Security issues (≈11% High, ≈89% Medium) |
 | **Reliability Rating** | **C** | 17 Reliability issues (≈6% High, ≈94% Medium) |
-| **Maintainability Rating** | **A** | 15 Maintainability issues (Code Smells) |
-| **Code Smells** | **15** | відповідає Maintainability issues |
-| **Technical Debt** | **1 д 1 год** | - |
+| **Maintainability Rating** | **A** | 16 Maintainability issues (Code Smells) |
+| **Code Smells** | **16** | відповідає Maintainability issues |
+| **Technical Debt** | **35 хв** | Значення з відгуку викладача для baseline commit |
 | **Duplicated Lines (%)** | **0,0%** | - |
 
-> Одне зауваження може впливати на кілька якостей (Security, Reliability, Maintainability), тому 9 + 17 + 15 більше за 26.
+> Одне зауваження може впливати на кілька якостей (Security, Reliability, Maintainability), тому 9 + 17 + 16 більше за 26.
+
+Історичний baseline відповідає коміту `bdd8e9f`, а не гілці `main` після PR #199. Значення 35 хв і 16 Code Smells взяті з відгуку викладача; SonarCloud Web API наразі не повертає збережений аналіз для цього commit.
 
 Скриншоти «до»: 
 <img width="1129" height="260" alt="image" src="https://github.com/user-attachments/assets/4488b8c1-2b50-4119-850e-acaa2ac3ce4c" />
@@ -34,10 +36,14 @@
 
 1. **Reliability Rating (C, 17 issues)**
    * Рейтинг C вказує на проблеми, що впливають на стабільність виконання. 14 з 17 зауважень: глобальні `isNaN()` і `parseInt()` замість `Number.isNaN()` і `Number.parseInt()` у клієнтському JS; ще `lang` у `index.html`, порожній заголовок у `game.html` і `[` у `run_mutation.sh`.
-2. **Code Smells (15 issues, Maintainability A)**
-   * Рейтинг уже A, але 15 зауважень є технічним боргом. Мета: зменшити кількість Code Smells (15 зауважень, ≈ 30 хв боргу, усі в `src/api/web/*`).
-3. **Technical Debt (1 д 1 год)**
+2. **Code Smells (16 issues, Maintainability A)**
+   * Рейтинг уже A, але 16 зауважень є технічним боргом. Мета: зменшити кількість Code Smells (16 зауважень, 35 хв боргу).
+3. **Technical Debt (35 хв)**
    * Мета: зменшити сумарний час усунення зауважень. Нотатка: Maintainability Rating уже A, тому його рівень піднімати нема куди; покращення вимірюємо в хвилинах боргу.
+
+### Проміжний аналіз після PR #196, до рефакторингу `app.js`
+
+SonarCloud Web API містить аналіз commit `47aa3b38cc504b3604ec20e491c6824958f02258` від 04.11.2026 15:39:19 UTC: Technical Debt — 28 хв, Code Smells — 14. Це проміжний стан після PR #196, а не baseline до нього і не фінальний стан після PR #199.
 
 ---
 
@@ -92,6 +98,16 @@
 
 Примітка про `isNaN` і `parseInt`: глобальний `isNaN("abc")` приводить аргумент до числа, а `Number.isNaN` ні. Тож заміна може змінити поведінку, якщо код передає рядки. Перед масовою заміною перевірити виклики на тип аргумента (це важливо для умови «рефакторинг не змінює поведінку»).
 
+## 5. Maintainability і Technical Debt
+
+| Стан | Commit | Code Smells | Technical Debt |
+| :--- | :--- | ---: | ---: |
+| Baseline до PR #196 | `bdd8e9f4b9cf09812c03e3e46d3209a4eb1a4aca` | 16 | 35 хв |
+| Після PR #196, до рефакторингу `app.js` | `47aa3b38cc504b3604ec20e491c6824958f02258` | 14 | 28 хв |
+| Після PR #199 | `d7e8439ed25417d8674e7147442a6fbe5dded127` | 10 | 20 хв |
+
+Це послідовні SonarCloud snapshots, а не окремий причинний вимір внеску кожної зміни. Baseline 35 хв для commit `bdd8e9f` надано у відгуку викладача; значення 28 хв і 14 Code Smells підтверджено Web API для commit `47aa3b`; фінальні 20 хв і 10 Code Smells — для `d7e8439`.
+
 ---
 
 ## 6. Метрики «після»
@@ -99,16 +115,16 @@
 | Показник | До | Після |
 | :--- | :---: | :---: |
 | Reliability Rating | C (17 issues) | A (10 issues) |
-| Code Smells | 15 | 10 |
-| Technical Debt | 1 д 1 год | 20 хв |
+| Code Smells | 16 | 10 |
+| Technical Debt | 35 хв | 20 хв |
 | Security Rating | C (9 issues: 1 High, 8 Medium) | C (4 issues, усі Medium) |
 | Duplicated Lines (%) | 0,0% | 0,0% |
 
 **Інші дані після аналізу:** Maintainability Rating — A (10 issues); Quality Gate — Passed; усього issues — 14. SonarCloud не показував даних про coverage.
 
-Джерело: скриншоти SonarCloud для гілки `main`, надані 04.11.2026. SonarCloud Web API підтверджує, що цей аналіз відповідає commit `eeb1c0365065b460129d65df2559ef3c4d04078f` (merge PR #199), дата аналізу — 04.11.2026 19:29:39 UTC.
+Джерело фінальних метрик: SonarCloud для гілки `main`. Web API підтверджує, що аналіз із Technical Debt 20 хв і 10 Code Smells відповідає commit `d7e8439ed25417d8674e7147442a6fbe5dded127` (merge PR #200), дата аналізу — 05.11.2026 08:11:13 UTC. Цей стан містить зміни PR #199. Попередній аналіз на `eeb1c0365065b460129d65df2559ef3c4d04078f` — це merge PR #199, але в наявній історії SonarCloud для нього немає окремого snapshot.
 
-Скриншоти «після» (SonarCloud, гілка `main`, 04.11.2026):
+Скриншоти «після» (SonarCloud, гілка `main`; знімки надані 04.11.2026, commit аналізу уточнено через Web API вище):
 
 ![SonarCloud: Reliability і Maintainability snapshots](./sonarcloud-screenshots/main-reliability-maintainability.png)
 ![SonarCloud: загальний Quality Gate і Security snapshot](./sonarcloud-screenshots/main-security-quality-gate.png)
@@ -124,6 +140,8 @@
 
 До PR #199 додано тест для `src/api/generate_openapi.py`, який фіксує поведінку CLI: скрипт викликає `save_openapi_spec(app)` під час запуску як `__main__`, але не під час імпорту. Оскільки сам `generate_openapi.py` не рефакторився, цей тест не заявляється як бонус за characterization-тестування рефактореного модуля.
 
+Тест `test_app_date_and_retry_after_helpers_keep_their_behavior` з PR #199 був доданий у тому самому commit `fb437ba`, що й зміна `app.js`, а не окремим попереднім commit. Його поведінкові твердження були перевірені ретроспективно на старому `app.js` із `fb437ba^` через той самий Node.js harness: отримано `not-a-date`, порожній невалідний слот, `10:00–11:30` і `Retry-After` 30. Це підтверджує збереження цих прикладів поведінки, але не перетворює тест на characterization-тест, доданий до рефакторингу; бонус не заявляємо.
+
 ### Рефакторинг і регресійне тестування
 
 У PR #199 у `src/api/web/app.js` застосовано техніку **Substitute Algorithm**: глобальні `isNaN` і `parseInt` замінено на відповідні методи `Number`.
@@ -135,6 +153,8 @@
 ### Регресійний прогін до і після
 
 Обидва прогони виконано локально на Python 3.13.7 з однаковою командою `pytest src/api/tests --cov=src/api --cov-report=term-missing --cov-fail-under=95`. Baseline — гілка `pre-refactor`, commit `47aa3b38cc504b3604ec20e491c6824958f02258`; стан після змін — `main`, commit `d7e8439ed25417d8674e7147442a6fbe5dded127`.
+
+Гілка `pre-refactor` вказує на commit `47aa3b`, який є нащадком merge commit PR #196 (`348af65`). Тому цей baseline є «до рефакторингу `app.js`» з PR #199, але вже містить попередні remediation-зміни PR #196.
 
 | Стан | Commit | Результат | Coverage |
 | :--- | :--- | :--- | :---: |
@@ -162,6 +182,10 @@
 
 PR #196 також закрив частину проблем у GitHub Actions, shell-скрипті та доступності HTML: pinning action SHA і CI-інструментів, wheel-only встановлення, `[[` у Bash, атрибут `lang` і текст заголовка. Це командні remediation-зміни, а не окремі рефакторинги `app.js`; після них їхній результат перевірено успішними CI та SonarCloud.
 
+## 8. Бонуси
+
+Бонуси не заявляємо. Тест поведінки `app.js` додано в одному commit із рефакторингом, а історичного PR із зупиненим Quality Gate і подальшим успішним виправленням немає. Автоматизований release workflow також не налаштовували.
+
 ## Використання ШІ
 
 За наявним командним звітом, Sonar remediation у PR #196 готували з Claude; characterization-тест у PR #198, рефакторинг і поведінковий тест у PR #199, а оновлення розділів про регресійні тести й реліз у цьому звіті виконано з GitHub Copilot у VS Code. Попередні Security-розділи звіту були підготовлені з Claude. Катерина перевірила зміни, виконала тести й звірила Sonar-метрики з аналізом гілки `main`.
@@ -172,14 +196,19 @@ PR #196 також закрив частину проблем у GitHub Actions,
 ### 2. Рефакторинг, виконаний із ШІ-агентом
 Закрито 8 зауважень Sonar шістьма окремими комітами `[REFACTOR]`:
 
-| № | Зауваження | Файл | Що згенеровано |
-| :-: | :--- | :--- | :--- |
-| 1 | `Use full commit SHA hash` (Security, High) | `deploy-api-docs.yml` | `peaceiris/actions-gh-pages@v4` → повний SHA `84c30a85c19949d7eee79c4ff27748b70285e453 # v4` |
-| 2 | `Omitting "--only-binary :all:"` (Security, Medium) | `deploy-api-docs.yml` | додано `--only-binary :all:` |
-| 3 | те саме правило, 3 місця (Security, Medium) | `ci.yml` | додано `--only-binary :all:`; закріплено `black==25.11.0`, `flake8==7.3.0`, `bandit==1.8.6` |
-| 4 | `Use '[['` (Reliability, High) | `scripts/run_mutation.sh` | `[ -n … ]` → `[[ -n … ]]` |
-| 5 | немає `lang` у `<html>` (Reliability) | `docs/api/index.html` | додано `lang="en"` |
-| 6 | порожній заголовок (Reliability) | `src/api/web/game.html` | у `<h1 id="game-title">` додано «Завантаження…» |
+| № | Запах / зміна | Техніка | Інваріант | Як перевірено |
+| :-: | :--- | :--- | :--- | :--- |
+| 1 | GitHub Pages action прив'язаний до рухомого tag | Pin dependency to immutable commit | Залишається action v4 і його deploy API; змінюється лише спосіб фіксації джерела | SHA `84c30a85c19949d7eee79c4ff27748b70285e453` записаний з позначкою `v4`; документація успішно опублікована в [run 42907737494](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/42907737494) |
+| 2 | Встановлення docs-залежностей без обмеження на wheel | Restrict installation to binary wheels | Встановлюється той самий `requirements.txt`; джерельні пакети не збираються під час CI | Успішний docs deployment [run 42907737494](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/42907737494) |
+| 3 | CI не вимагав wheel і не фіксував інструменти | Restrict installation to wheels; pin tool versions | Ті самі перевірки Black, Flake8, Bandit і pytest лишаються в CI | `validate-and-test` успішний у [run 41692394488](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/41692394488) |
+| 4 | Перевірка `MUTATION_WITHOUT_TEST` через `[` | Replace test with Bash `[[ ]]` | Порожнє значення лишається false, непорожнє — true; вибір mutant test не змінюється | `bash -n scripts/run_mutation.sh` проходить; mutation-прогони й поведінка цільового тесту описані вище |
+| 5 | Немає мови сторінки API docs | Add document language metadata | Текст і навігація сторінки не змінюються | Перевірено HTML-атрибут `<html lang="en">`; CI та SonarCloud для [PR #196](https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/196) пройшли |
+| 6 | Порожній `<h1>` до завантаження гри | Add accessible loading fallback | Після завантаження в заголовку відображається назва гри | Перевірено початковий текст і присвоєння `game.title` у `game.html`; окремого UI-тесту для цього placeholder немає |
 
-### 3. Перший рефакторинг. Рефакторинг дублювання коду (PR #165)
-Для усунення запаху дублювання логіки у `store.py` застосовано техніку *Replace Inline Code with Function Call*. За допомогою ШІ-агента було згенеровано оновлений код для функцій `hash_password` та `verify_password`: спільну логіку виділено через `PASSWORD_SALT`, а перевірку пароля спрощено до повторного виклику функції `hash_password()`. Згенерований код верифіковано через ручний перегляд та успішний прогін регресійних тестів у `test_store.py` (зокрема `test_verify_password_accepts_correct_and_rejects_wrong`), які підтвердили абсолютне збереження попередньої поведінки системи.
+### 3. Зміна солі пароля в PR #165
+
+PR #165 не був поведінково еквівалентним рефакторингом. У першому коміті `bee4dd1` статичну сіль замінили випадковою, що створювалася під час хешування; у `fd743e0` її перенесли на рівень модуля, щоб хеш був сталим у межах одного процесу. Саме process-scoped випадкова сіль увійшла до злитого стану PR #165 (`ea3c41e`). Після перезапуску процесу сіль змінювалася, тому вже збережені хеші паролів не можна було перевірити.
+
+Пізніший коміт `134ce91` переніс сіль у змінну середовища `PASSWORD_SALT`, але залишив небезпечне значення за замовчуванням `default-insecure-salt-for-dev`. Для стабільної перевірки збережених хешів production-середовище має задавати й зберігати одне й те саме секретне значення між перезапусками. Наявний `test_verify_password_accepts_correct_and_rejects_wrong` перевіряє лише роботу в одному процесі; він не доводить збереження поведінки після перезапуску.
+
+Отже, зміни PR #165 включали security-поведінкову зміну, а не лише техніку *Replace Inline Code with Function Call*. Попереднє твердження про «абсолютне збереження» поведінки було неправильним.
