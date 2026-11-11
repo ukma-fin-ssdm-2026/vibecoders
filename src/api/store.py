@@ -1,7 +1,8 @@
 import hashlib
 import hmac
-import os
 import itertools
+import logging
+import os
 import secrets
 import threading
 from datetime import datetime, timedelta, timezone
@@ -21,10 +22,22 @@ from models import (
     RoomBlock as RoomBlockModel,
 )
 
+logger = logging.getLogger("api.store")
+
 db_lock = threading.RLock()
 
 # Сіль береться зі змінних середовища (закриває вразливість із static-analysis.md)
-PASSWORD_SALT = os.getenv("PASSWORD_SALT", "default-insecure-salt-for-dev").encode("utf-8")
+def _load_password_salt() -> bytes:
+    configured_salt = os.getenv("PASSWORD_SALT")
+    if configured_salt and configured_salt.strip():
+        return configured_salt.encode("utf-8")
+    if os.getenv("APP_ENV", "development").strip().lower() == "production":
+        raise RuntimeError("PASSWORD_SALT must be configured in production")
+    logger.warning("PASSWORD_SALT is not set; using the insecure development salt")
+    return b"default-insecure-salt-for-dev"
+
+
+PASSWORD_SALT = _load_password_salt()
 
 
 def hash_password(password: str) -> str:
@@ -378,7 +391,12 @@ def _highest_game_number() -> int:
         game_ids = [game_id for (game_id,) in db.query(GameModel.id).all()]
     finally:
         db.close()
-    numbers = [int(game_id[5:]) for game_id in game_ids if game_id.startswith("game_") and game_id[5:].isdigit()]
+    numbers = []
+    for game_id in game_ids:
+        if game_id.startswith("game_"):
+            suffix = game_id[5:]
+            if suffix.isascii() and suffix.isdecimal():
+                numbers.append(int(suffix))
     return max(numbers, default=0)
 
 

@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 import pytest
@@ -84,6 +85,31 @@ def test_find_busy_game_returns_earliest_of_several_conflicts(utc):
     assert first is GAMES["game_1"]
 
 
+@pytest.mark.parametrize("game_id", ["game_²", "game_٩"])
+@pytest.mark.requirement("US-002")
+def test_next_game_id_ignores_non_ascii_numeric_suffix(game_id):
+    db = store.SessionLocal()
+    try:
+        reference = db.get(store.GameModel, "game_1")
+        db.add(
+            store.GameModel(
+                id=game_id,
+                master_id=reference.master_id,
+                room_id=reference.room_id,
+                title=reference.title,
+                system=reference.system,
+                starts_at=reference.starts_at,
+                duration_minutes=reference.duration_minutes,
+                max_players=reference.max_players,
+            )
+        )
+        db.commit()
+    finally:
+        db.close()
+
+    assert next_game_id() == "game_3"
+
+
 @pytest.mark.requirement("US-006")
 def test_sorted_games_orders_by_start_time_then_id(utc):
     later = GAMES["game_2"].model_copy(update={"id": "game_0", "starts_at": GAMES["game_1"].starts_at})
@@ -112,6 +138,35 @@ def test_to_game_counts_enrolled_players():
 def test_to_game_without_enrollment_entry_gives_zero():
     ENROLLMENTS.pop("game_2")
     assert to_game(GAMES["game_2"]).current_players == 0
+
+
+@pytest.mark.requirement("SEC-001")
+def test_missing_password_salt_warns_and_uses_development_default(monkeypatch, caplog):
+    monkeypatch.delenv("PASSWORD_SALT", raising=False)
+    monkeypatch.delenv("APP_ENV", raising=False)
+
+    with caplog.at_level(logging.WARNING, logger="api.store"):
+        salt = store._load_password_salt()
+
+    assert salt == b"default-insecure-salt-for-dev"
+    assert "using the insecure development salt" in caplog.text
+
+
+@pytest.mark.requirement("SEC-001")
+def test_missing_password_salt_fails_in_production(monkeypatch):
+    monkeypatch.delenv("PASSWORD_SALT", raising=False)
+    monkeypatch.setenv("APP_ENV", "production")
+
+    with pytest.raises(RuntimeError, match="PASSWORD_SALT must be configured in production"):
+        store._load_password_salt()
+
+
+@pytest.mark.requirement("SEC-001")
+def test_configured_password_salt_is_used(monkeypatch):
+    monkeypatch.setenv("PASSWORD_SALT", "configured-test-salt")
+    monkeypatch.setenv("APP_ENV", "production")
+
+    assert store._load_password_salt() == b"configured-test-salt"
 
 
 @pytest.mark.requirement("SEC-001")
