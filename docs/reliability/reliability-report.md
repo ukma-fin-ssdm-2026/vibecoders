@@ -247,7 +247,7 @@ def _load_password_salt() -> bytes:
 | Граничні значення | `test_next_game_id_ignores_malformed_id_suffixes` (3 випадки) | `game_abc` та Unicode-суфікси не спричиняють некоректний наступний ID | Е |
 | Конфігурація | `test_missing_password_salt_warns_and_uses_development_default`, `test_missing_password_salt_fails_in_production`, `test_configured_password_salt_is_used` | використання dev fallback записується в лог; production без солі завершується з помилкою; задана сіль використовується | Е |
 
-За старими виразами з `main` до PR #212 кожен із п'яти user ID-параметрів порушує очікування тесту: чотири дають `ValueError`, а `user_٩` помилково породжує `user_10`. Для game ID два Unicode-параметри також порушують очікування (`game_²` дає `ValueError`, `game_٩` породжує `game_10`); `game_abc` і раніше коректно ігнорувався старою перевіркою `isdigit()`, тож це контрольний, а не регресійний випадок.
+Усі вісім параметризованих перевірок із PR #212 виконано проти дофіксового `store.py` з `main`: сім падають очікувано — п'ять user ID-випадків і два Unicode game ID-випадки; `game_abc` проходить як контрольний. Для `user_٩` і `game_٩` старий код хибно породжує ID з номером 10; `user_²`, `user_abc`, `user_`, `user_1a` та `game_²` дають `ValueError`. `game_abc` і раніше коректно ігнорувався старою перевіркою `isdigit()`, тому його тест фіксує очікувану поведінку, а не регресію.
 
 Також є тести на видалення неіснуючої гри (`delete_game_with_notifications` без помилки і без сповіщень), на читання `DB_TIMEOUT_SECONDS` з середовища і на передачу тайм-ауту в `create_engine`.
 
