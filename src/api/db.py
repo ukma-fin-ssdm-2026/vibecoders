@@ -35,17 +35,20 @@ def resolve_database_url(raw_url: Optional[str] = None) -> str:
     return url.render_as_string(hide_password=False)
 
 
-def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record) -> None:
-    """SQLite не перевіряє зовнішні ключі, доки це не ввімкнено на кожному з'єднанні."""
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
+def enable_sqlite_foreign_keys(engine: Engine) -> None:
+    if engine.dialect.name != "sqlite":
+        return
+
+    @event.listens_for(engine, "connect")
+    def set_sqlite_foreign_keys(connection, _record):
+        cursor = connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
 def configure_engine(target: Engine) -> Engine:
     """Вмикає перевірку зовнішніх ключів для SQLite. Викликається і для тестового engine."""
-    if target.dialect.name == "sqlite":
-        event.listen(target, "connect", _enable_sqlite_foreign_keys)
+    enable_sqlite_foreign_keys(target)
     return target
 
 
@@ -71,17 +74,6 @@ def resolve_database_url(database_url: Optional[str] = None) -> URL:
             database_path.parent.mkdir(parents=True, exist_ok=True)
             url = url.set(database=str(database_path))
     return url
-
-
-def enable_sqlite_foreign_keys(engine: Engine) -> None:
-    if engine.dialect.name != "sqlite":
-        return
-
-    @event.listens_for(engine, "connect")
-    def set_sqlite_foreign_keys(connection, _record):
-        cursor = connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.close()
 
 
 DEFAULT_DB_TIMEOUT_SECONDS = 10.0
