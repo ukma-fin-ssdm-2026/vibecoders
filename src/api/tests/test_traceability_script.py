@@ -32,6 +32,18 @@ def test_read_requirements_takes_ids_from_first_column(workspace):
 
 
 @pytest.mark.technical
+def test_read_tests_includes_nested_reliability_tests(workspace):
+    _, tests = workspace
+    reliability = tests / "reliability"
+    reliability.mkdir()
+    write_test(reliability, "test_nested.py", "@pytest.mark.technical\ndef test_nested():\n    pass\n")
+
+    discovered = check_traceability.read_tests(tests)
+
+    assert discovered["reliability/test_nested.py::test_nested"] == ([], True)
+
+
+@pytest.mark.technical
 def test_check_passes_when_every_requirement_has_a_test_and_deferred_is_skipped(workspace):
     rtm, tests = workspace
     write_test(tests, "test_a.py", '@pytest.mark.requirement("US-001")\ndef test_a():\n    pass\n')
