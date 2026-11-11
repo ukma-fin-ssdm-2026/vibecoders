@@ -96,10 +96,11 @@
 
 | Змінна | За замовчуванням | Призначення |
 |---|---|---|
+| `APP_ENV` | `development` | Режим запуску; `production` вимагає заданої змінної `PASSWORD_SALT` |
 | `API_HOST` | `127.0.0.1` | Адреса, на якій слухає `python main.py` |
 | `DATABASE_URL` | `sqlite:///club.db` | Адреса бази; файл SQLite лежить у корені репозиторію |
 | `DATA_DIR` | корінь репозиторію | Каталог для `club.db` |
-| `PASSWORD_SALT` | небезпечне dev-значення | Сіль для хешування паролів. Для розгортання задайте власну |
+| `PASSWORD_SALT` | небезпечне dev-значення | Сіль для хешування паролів. У development відсутність змінної логується; у production без неї застосунок не стартує. Зберігайте одне значення між перезапусками: зміна солі інвалідує наявні хеші |
 | `MASTER_TOKEN`, `PLAYER_TOKEN`, `OWNER_TOKEN` | `master-token`, `player-token`, `owner-token` | Демо-токени |
 | `API_CORS_ORIGINS` | `https://ukma-fin-ssdm-2026.github.io` | Дозволені origin для Swagger UI на GitHub Pages, через кому |
 
