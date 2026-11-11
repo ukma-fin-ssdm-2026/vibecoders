@@ -98,6 +98,16 @@ SonarCloud Web API містить аналіз commit `47aa3b38cc504b3604ec20e49
 
 Примітка про `isNaN` і `parseInt`: глобальний `isNaN("abc")` приводить аргумент до числа, а `Number.isNaN` ні. Тож заміна може змінити поведінку, якщо код передає рядки. Перед масовою заміною перевірити виклики на тип аргумента (це важливо для умови «рефакторинг не змінює поведінку»).
 
+## 5. Maintainability і Technical Debt
+
+| Стан | Commit | Code Smells | Technical Debt |
+| :--- | :--- | ---: | ---: |
+| Baseline до PR #196 | `bdd8e9f4b9cf09812c03e3e46d3209a4eb1a4aca` | 16 | 35 хв |
+| Після PR #196, до рефакторингу `app.js` | `47aa3b38cc504b3604ec20e491c6824958f02258` | 14 | 28 хв |
+| Після PR #199 | `d7e8439ed25417d8674e7147442a6fbe5dded127` | 10 | 20 хв |
+
+Це послідовні SonarCloud snapshots, а не окремий причинний вимір внеску кожної зміни. Baseline 35 хв для commit `bdd8e9f` надано у відгуку викладача; значення 28 хв і 14 Code Smells підтверджено Web API для commit `47aa3b`; фінальні 20 хв і 10 Code Smells — для `d7e8439`.
+
 ---
 
 ## 6. Метрики «після»
@@ -130,6 +140,8 @@ SonarCloud Web API містить аналіз commit `47aa3b38cc504b3604ec20e49
 
 До PR #199 додано тест для `src/api/generate_openapi.py`, який фіксує поведінку CLI: скрипт викликає `save_openapi_spec(app)` під час запуску як `__main__`, але не під час імпорту. Оскільки сам `generate_openapi.py` не рефакторився, цей тест не заявляється як бонус за characterization-тестування рефактореного модуля.
 
+Тест `test_app_date_and_retry_after_helpers_keep_their_behavior` з PR #199 був доданий у тому самому commit `fb437ba`, що й зміна `app.js`, а не окремим попереднім commit. Його поведінкові твердження були перевірені ретроспективно на старому `app.js` із `fb437ba^` через той самий Node.js harness: отримано `not-a-date`, порожній невалідний слот, `10:00–11:30` і `Retry-After` 30. Це підтверджує збереження цих прикладів поведінки, але не перетворює тест на characterization-тест, доданий до рефакторингу; бонус не заявляємо.
+
 ### Рефакторинг і регресійне тестування
 
 У PR #199 у `src/api/web/app.js` застосовано техніку **Substitute Algorithm**: глобальні `isNaN` і `parseInt` замінено на відповідні методи `Number`.
@@ -141,6 +153,8 @@ SonarCloud Web API містить аналіз commit `47aa3b38cc504b3604ec20e49
 ### Регресійний прогін до і після
 
 Обидва прогони виконано локально на Python 3.13.7 з однаковою командою `pytest src/api/tests --cov=src/api --cov-report=term-missing --cov-fail-under=95`. Baseline — гілка `pre-refactor`, commit `47aa3b38cc504b3604ec20e491c6824958f02258`; стан після змін — `main`, commit `d7e8439ed25417d8674e7147442a6fbe5dded127`.
+
+Гілка `pre-refactor` вказує на commit `47aa3b`, який є нащадком merge commit PR #196 (`348af65`). Тому цей baseline є «до рефакторингу `app.js`» з PR #199, але вже містить попередні remediation-зміни PR #196.
 
 | Стан | Commit | Результат | Coverage |
 | :--- | :--- | :--- | :---: |
@@ -168,6 +182,10 @@ SonarCloud Web API містить аналіз commit `47aa3b38cc504b3604ec20e49
 
 PR #196 також закрив частину проблем у GitHub Actions, shell-скрипті та доступності HTML: pinning action SHA і CI-інструментів, wheel-only встановлення, `[[` у Bash, атрибут `lang` і текст заголовка. Це командні remediation-зміни, а не окремі рефакторинги `app.js`; після них їхній результат перевірено успішними CI та SonarCloud.
 
+## 8. Бонуси
+
+Бонуси не заявляємо. Тест поведінки `app.js` додано в одному commit із рефакторингом, а історичного PR із зупиненим Quality Gate і подальшим успішним виправленням немає. Автоматизований release workflow також не налаштовували.
+
 ## Використання ШІ
 
 За наявним командним звітом, Sonar remediation у PR #196 готували з Claude; characterization-тест у PR #198, рефакторинг і поведінковий тест у PR #199, а оновлення розділів про регресійні тести й реліз у цьому звіті виконано з GitHub Copilot у VS Code. Попередні Security-розділи звіту були підготовлені з Claude. Катерина перевірила зміни, виконала тести й звірила Sonar-метрики з аналізом гілки `main`.
@@ -178,14 +196,14 @@ PR #196 також закрив частину проблем у GitHub Actions,
 ### 2. Рефакторинг, виконаний із ШІ-агентом
 Закрито 8 зауважень Sonar шістьма окремими комітами `[REFACTOR]`:
 
-| № | Зауваження | Файл | Що згенеровано |
-| :-: | :--- | :--- | :--- |
-| 1 | `Use full commit SHA hash` (Security, High) | `deploy-api-docs.yml` | `peaceiris/actions-gh-pages@v4` → повний SHA `84c30a85c19949d7eee79c4ff27748b70285e453 # v4` |
-| 2 | `Omitting "--only-binary :all:"` (Security, Medium) | `deploy-api-docs.yml` | додано `--only-binary :all:` |
-| 3 | те саме правило, 3 місця (Security, Medium) | `ci.yml` | додано `--only-binary :all:`; закріплено `black==25.11.0`, `flake8==7.3.0`, `bandit==1.8.6` |
-| 4 | `Use '[['` (Reliability, High) | `scripts/run_mutation.sh` | `[ -n … ]` → `[[ -n … ]]` |
-| 5 | немає `lang` у `<html>` (Reliability) | `docs/api/index.html` | додано `lang="en"` |
-| 6 | порожній заголовок (Reliability) | `src/api/web/game.html` | у `<h1 id="game-title">` додано «Завантаження…» |
+| № | Запах / зміна | Техніка | Інваріант | Як перевірено |
+| :-: | :--- | :--- | :--- | :--- |
+| 1 | GitHub Pages action прив'язаний до рухомого tag | Pin dependency to immutable commit | Залишається action v4 і його deploy API; змінюється лише спосіб фіксації джерела | SHA `84c30a85c19949d7eee79c4ff27748b70285e453` записаний з позначкою `v4`; документація успішно опублікована в [run 42907737494](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/42907737494) |
+| 2 | Встановлення docs-залежностей без обмеження на wheel | Restrict installation to binary wheels | Встановлюється той самий `requirements.txt`; джерельні пакети не збираються під час CI | Успішний docs deployment [run 42907737494](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/42907737494) |
+| 3 | CI не вимагав wheel і не фіксував інструменти | Restrict installation to wheels; pin tool versions | Ті самі перевірки Black, Flake8, Bandit і pytest лишаються в CI | `validate-and-test` успішний у [run 41692394488](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/41692394488) |
+| 4 | Перевірка `MUTATION_WITHOUT_TEST` через `[` | Replace test with Bash `[[ ]]` | Порожнє значення лишається false, непорожнє — true; вибір mutant test не змінюється | `bash -n scripts/run_mutation.sh` проходить; mutation-прогони й поведінка цільового тесту описані вище |
+| 5 | Немає мови сторінки API docs | Add document language metadata | Текст і навігація сторінки не змінюються | Перевірено HTML-атрибут `<html lang="en">`; CI та SonarCloud для [PR #196](https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/196) пройшли |
+| 6 | Порожній `<h1>` до завантаження гри | Add accessible loading fallback | Після завантаження в заголовку відображається назва гри | Перевірено початковий текст і присвоєння `game.title` у `game.html`; окремого UI-тесту для цього placeholder немає |
 
 ### 3. Зміна солі пароля в PR #165
 
