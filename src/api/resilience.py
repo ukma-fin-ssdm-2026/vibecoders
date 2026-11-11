@@ -1,14 +1,3 @@
-"""Модуль надійності: повтори з експоненційним відступом і повним джитером (full jitter).
-
-Композиція з тайм-аутом (§3.5 лекції):
-1. Внутрішній рівень: тайм-аут на кожну спробу (DB_TIMEOUT_SECONDS = 10.0 с у конфігурації SQLite).
-2. Проміжний рівень: обмежені повтори (max_attempts = 3) з експоненційним відступом і full jitter
-   (base_delay = 0.05 с, max_delay = 0.5 с). Загальний бюджет очікування на повтори не перевищує:
-   max_attempts * DB_TIMEOUT_SECONDS + sum(delays) <= 3 * 10.0 + 1.5 = 31.5 с.
-3. Зовнішній рівень: швидка відмова (fast fail). Після вичерпання спроб виняток піднімається вище
-   й обробляється централізованим обробником помилок (HTTP 503 SERVICE_UNAVAILABLE з Retry-After).
-"""
-
 import functools
 import logging
 import random
@@ -20,8 +9,7 @@ from sqlalchemy.exc import OperationalError
 logger = logging.getLogger("api.resilience")
 
 
-def is_transient_db_error(exc: BaseException) -> bool:
-    """Визначає, чи є помилка БД тимчасовим збоєм блокування (locked / busy)."""
+def is_transient_db_error(exc: Exception) -> bool:
     if not isinstance(exc, OperationalError):
         return False
     message = str(exc).lower()
@@ -34,18 +22,11 @@ def retry_with_backoff(
     max_attempts: int = 3,
     base_delay: float = 0.05,
     max_delay: float = 0.5,
-    retry_on: Tuple[Type[BaseException], ...] = (OperationalError,),
-    predicate: Optional[Callable[[BaseException], bool]] = None,
+    retry_on: Tuple[Type[Exception], ...] = (OperationalError,),
+    predicate: Optional[Callable[[Exception], bool]] = None,
     sleep: Optional[Callable[[float], None]] = None,
     rng: Optional[Any] = None,
 ):
-    """Декоратор або функція вищого порядку для повторів з експоненційним відступом і full jitter.
-
-    Формула затримки (Full Jitter):
-        delay = rng.uniform(0.0, min(max_delay, base_delay * (2 ** attempt)))
-    де attempt = 0 для першого повтору, 1 для другого тощо.
-    Перша спроба виконується без жодної затримки.
-    """
     if max_attempts < 1:
         raise ValueError("max_attempts must be at least 1")
     if base_delay < 0:
@@ -61,17 +42,16 @@ def retry_with_backoff(
     def decorator(target: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(target)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            last_exc: Optional[BaseException] = None
+            last_exc: Optional[Exception] = None
             for attempt in range(max_attempts):
                 try:
                     return target(*args, **kwargs)
-                except BaseException as exc:
+                except Exception as exc:
                     last_exc = exc
                     is_match = isinstance(exc, retry_on)
                     if is_match and predicate is not None:
                         is_match = predicate(exc)
 
-                    # Непідтримувані винятки або остання спроба: не повторюємо
                     if not is_match or attempt == max_attempts - 1:
                         if attempt == max_attempts - 1 and is_match:
                             logger.error(
