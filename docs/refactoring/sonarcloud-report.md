@@ -4,9 +4,9 @@
 
 ---
 
-## 1. Метрики «до» 
+## 1. Метрики «до»
 
-- **Дата аналізу:** 01.11.2026, остання версія гілки `main`
+- **Дата аналізу:** 03.11.2026, commit `bdd8e9f4b9cf09812c03e3e46d3209a4eb1a4aca` (до PR #196)
 - **Обсяг:** ≈ 9,7 тис. рядків коду
 - **Quality Gate:** Passed
 - **Всього зауважень на панелі:** 26
@@ -15,12 +15,14 @@
 | :--- | :---: | :--- |
 | **Security Rating** | **C** | 9 Security issues (≈11% High, ≈89% Medium) |
 | **Reliability Rating** | **C** | 17 Reliability issues (≈6% High, ≈94% Medium) |
-| **Maintainability Rating** | **A** | 15 Maintainability issues (Code Smells) |
-| **Code Smells** | **15** | відповідає Maintainability issues |
-| **Technical Debt** | **1 д 1 год** | - |
+| **Maintainability Rating** | **A** | 16 Maintainability issues (Code Smells) |
+| **Code Smells** | **16** | відповідає Maintainability issues |
+| **Technical Debt** | **35 хв** | Значення з відгуку викладача для baseline commit |
 | **Duplicated Lines (%)** | **0,0%** | - |
 
-> Одне зауваження може впливати на кілька якостей (Security, Reliability, Maintainability), тому 9 + 17 + 15 більше за 26.
+> Одне зауваження може впливати на кілька якостей (Security, Reliability, Maintainability), тому 9 + 17 + 16 більше за 26.
+
+Історичний baseline відповідає коміту `bdd8e9f`, а не гілці `main` після PR #199. Значення 35 хв і 16 Code Smells взяті з відгуку викладача; SonarCloud Web API наразі не повертає збережений аналіз для цього commit.
 
 Скриншоти «до»: 
 <img width="1129" height="260" alt="image" src="https://github.com/user-attachments/assets/4488b8c1-2b50-4119-850e-acaa2ac3ce4c" />
@@ -34,10 +36,14 @@
 
 1. **Reliability Rating (C, 17 issues)**
    * Рейтинг C вказує на проблеми, що впливають на стабільність виконання. 14 з 17 зауважень: глобальні `isNaN()` і `parseInt()` замість `Number.isNaN()` і `Number.parseInt()` у клієнтському JS; ще `lang` у `index.html`, порожній заголовок у `game.html` і `[` у `run_mutation.sh`.
-2. **Code Smells (15 issues, Maintainability A)**
-   * Рейтинг уже A, але 15 зауважень є технічним боргом. Мета: зменшити кількість Code Smells (15 зауважень, ≈ 30 хв боргу, усі в `src/api/web/*`).
-3. **Technical Debt (1 д 1 год)**
+2. **Code Smells (16 issues, Maintainability A)**
+   * Рейтинг уже A, але 16 зауважень є технічним боргом. Мета: зменшити кількість Code Smells (16 зауважень, 35 хв боргу).
+3. **Technical Debt (35 хв)**
    * Мета: зменшити сумарний час усунення зауважень. Нотатка: Maintainability Rating уже A, тому його рівень піднімати нема куди; покращення вимірюємо в хвилинах боргу.
+
+### Проміжний аналіз після PR #196, до рефакторингу `app.js`
+
+SonarCloud Web API містить аналіз commit `47aa3b38cc504b3604ec20e491c6824958f02258` від 04.11.2026 15:39:19 UTC: Technical Debt — 28 хв, Code Smells — 14. Це проміжний стан після PR #196, а не baseline до нього і не фінальний стан після PR #199.
 
 ---
 
@@ -99,16 +105,16 @@
 | Показник | До | Після |
 | :--- | :---: | :---: |
 | Reliability Rating | C (17 issues) | A (10 issues) |
-| Code Smells | 15 | 10 |
-| Technical Debt | 1 д 1 год | 20 хв |
+| Code Smells | 16 | 10 |
+| Technical Debt | 35 хв | 20 хв |
 | Security Rating | C (9 issues: 1 High, 8 Medium) | C (4 issues, усі Medium) |
 | Duplicated Lines (%) | 0,0% | 0,0% |
 
 **Інші дані після аналізу:** Maintainability Rating — A (10 issues); Quality Gate — Passed; усього issues — 14. SonarCloud не показував даних про coverage.
 
-Джерело: скриншоти SonarCloud для гілки `main`, надані 04.11.2026. SonarCloud Web API підтверджує, що цей аналіз відповідає commit `eeb1c0365065b460129d65df2559ef3c4d04078f` (merge PR #199), дата аналізу — 04.11.2026 19:29:39 UTC.
+Джерело фінальних метрик: SonarCloud для гілки `main`. Web API підтверджує, що аналіз із Technical Debt 20 хв і 10 Code Smells відповідає commit `d7e8439ed25417d8674e7147442a6fbe5dded127` (merge PR #200), дата аналізу — 05.11.2026 08:11:13 UTC. Цей стан містить зміни PR #199. Попередній аналіз на `eeb1c0365065b460129d65df2559ef3c4d04078f` — це merge PR #199, але в наявній історії SonarCloud для нього немає окремого snapshot.
 
-Скриншоти «після» (SonarCloud, гілка `main`, 04.11.2026):
+Скриншоти «після» (SonarCloud, гілка `main`; знімки надані 04.11.2026, commit аналізу уточнено через Web API вище):
 
 ![SonarCloud: Reliability і Maintainability snapshots](./sonarcloud-screenshots/main-reliability-maintainability.png)
 ![SonarCloud: загальний Quality Gate і Security snapshot](./sonarcloud-screenshots/main-security-quality-gate.png)
@@ -181,5 +187,10 @@ PR #196 також закрив частину проблем у GitHub Actions,
 | 5 | немає `lang` у `<html>` (Reliability) | `docs/api/index.html` | додано `lang="en"` |
 | 6 | порожній заголовок (Reliability) | `src/api/web/game.html` | у `<h1 id="game-title">` додано «Завантаження…» |
 
-### 3. Перший рефакторинг. Рефакторинг дублювання коду (PR #165)
-Для усунення запаху дублювання логіки у `store.py` застосовано техніку *Replace Inline Code with Function Call*. За допомогою ШІ-агента було згенеровано оновлений код для функцій `hash_password` та `verify_password`: спільну логіку виділено через `PASSWORD_SALT`, а перевірку пароля спрощено до повторного виклику функції `hash_password()`. Згенерований код верифіковано через ручний перегляд та успішний прогін регресійних тестів у `test_store.py` (зокрема `test_verify_password_accepts_correct_and_rejects_wrong`), які підтвердили абсолютне збереження попередньої поведінки системи.
+### 3. Зміна солі пароля в PR #165
+
+PR #165 не був поведінково еквівалентним рефакторингом. У першому коміті `bee4dd1` статичну сіль замінили випадковою, що створювалася під час хешування; у `fd743e0` її перенесли на рівень модуля, щоб хеш був сталим у межах одного процесу. Саме process-scoped випадкова сіль увійшла до злитого стану PR #165 (`ea3c41e`). Після перезапуску процесу сіль змінювалася, тому вже збережені хеші паролів не можна було перевірити.
+
+Пізніший коміт `134ce91` переніс сіль у змінну середовища `PASSWORD_SALT`, але залишив небезпечне значення за замовчуванням `default-insecure-salt-for-dev`. Для стабільної перевірки збережених хешів production-середовище має задавати й зберігати одне й те саме секретне значення між перезапусками. Наявний `test_verify_password_accepts_correct_and_rejects_wrong` перевіряє лише роботу в одному процесі; він не доводить збереження поведінки після перезапуску.
+
+Отже, зміни PR #165 включали security-поведінкову зміну, а не лише техніку *Replace Inline Code with Function Call*. Попереднє твердження про «абсолютне збереження» поведінки було неправильним.
