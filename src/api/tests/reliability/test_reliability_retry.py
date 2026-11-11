@@ -292,3 +292,39 @@ def test_invalid_parameters_rejected(attempts, base, max_d, err_msg):
     with pytest.raises(ValueError) as exc:
         retry_with_backoff(lambda: None, max_attempts=attempts, base_delay=base, max_delay=max_d)
     assert err_msg in str(exc.value)
+
+
+@pytest.mark.technical
+def test_total_max_delay_budget_does_not_exceed_threshold():
+    """Тест 7: сумарна затримка між спробами не перевищує 1.5 с при значеннях за замовчуванням.
+
+    Параметри за замовчуванням: max_attempts=3, base_delay=0.05, max_delay=0.5.
+    Максимальні затримки (fraction=1.0 — стеля кожного інтервалу):
+      - між спробами 1→2: min(0.5, 0.05 * 2^0) = 0.05 с
+      - між спробами 2→3: min(0.5, 0.05 * 2^1) = 0.10 с
+      - сума: 0.15 с << 1.5 с (границя з запасом).
+    Тест підтверджує, що навіть у найгіршому випадку блокування event loop є мінімальним.
+    """
+    delays: List[float] = []
+    max_rng = DeterministicRNG(fraction=1.0)
+
+    def always_failing():
+        raise OperationalError("SELECT 1", {}, Exception(LOCKED_DETAIL))
+
+    decorated = retry_with_backoff(
+        always_failing,
+        max_attempts=3,
+        base_delay=0.05,
+        max_delay=0.5,
+        predicate=is_transient_db_error,
+        sleep=delays.append,
+        rng=max_rng,
+    )
+
+    with pytest.raises(OperationalError):
+        decorated()
+
+    # Два інтервали між трьома спробами
+    assert len(delays) == 2
+    total_delay = sum(delays)
+    assert total_delay <= 1.5, f"Сума затримок {total_delay:.4f} с перевищує бюджет 1.5 с"
