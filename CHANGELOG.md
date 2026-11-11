@@ -14,9 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Refactoring
 
 - Replace global `isNaN` and `parseInt` with `Number.isNaN` and `Number.parseInt` in shared web-client helpers (Substitute Algorithm).
-- Pin the GitHub Pages action to a full commit SHA and install CI dependencies from wheels only.
-- Replace `[` with `[[` in the mutation-test script.
-- Add a language attribute to the API documentation page and fallback text to the game-page title.
+- Pin the GitHub Pages action to a full commit SHA and install CI dependencies from wheels only (CI supply-chain hardening, not a Fowler refactoring).
+- Replace `[` with `[[` in the mutation-test script (Bash correctness fix, not a Fowler refactoring).
+- Add a language attribute to the API documentation page and fallback text to the game-page title (accessibility/usability improvement, not a Fowler refactoring).
 
 ## [0.1.0] - 2026-11-04
 
