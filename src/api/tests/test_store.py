@@ -1,4 +1,3 @@
-import logging
 from datetime import timedelta
 
 import pytest
@@ -113,35 +112,6 @@ def test_to_game_counts_enrolled_players():
 def test_to_game_without_enrollment_entry_gives_zero():
     ENROLLMENTS.pop("game_2")
     assert to_game(GAMES["game_2"]).current_players == 0
-
-
-@pytest.mark.requirement("SEC-001")
-def test_missing_password_salt_warns_and_uses_development_default(monkeypatch, caplog):
-    monkeypatch.delenv("PASSWORD_SALT", raising=False)
-    monkeypatch.delenv("APP_ENV", raising=False)
-
-    with caplog.at_level(logging.WARNING, logger="api.store"):
-        salt = store._load_password_salt()
-
-    assert salt == b"default-insecure-salt-for-dev"
-    assert "using the insecure development salt" in caplog.text
-
-
-@pytest.mark.requirement("SEC-001")
-def test_missing_password_salt_fails_in_production(monkeypatch):
-    monkeypatch.delenv("PASSWORD_SALT", raising=False)
-    monkeypatch.setenv("APP_ENV", "production")
-
-    with pytest.raises(RuntimeError, match="PASSWORD_SALT must be configured in production"):
-        store._load_password_salt()
-
-
-@pytest.mark.requirement("SEC-001")
-def test_configured_password_salt_is_used(monkeypatch):
-    monkeypatch.setenv("PASSWORD_SALT", "configured-test-salt")
-    monkeypatch.setenv("APP_ENV", "production")
-
-    assert store._load_password_salt() == b"configured-test-salt"
 
 
 @pytest.mark.requirement("SEC-001")

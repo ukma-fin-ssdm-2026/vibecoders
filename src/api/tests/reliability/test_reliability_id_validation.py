@@ -1,10 +1,40 @@
+import logging
+
 import pytest
 
 import store
 from store import hash_password, next_game_id
 
 
-@pytest.mark.technical
+@pytest.mark.requirement("SEC-001")
+def test_missing_password_salt_warns_and_uses_development_default(monkeypatch, caplog):
+    monkeypatch.delenv("PASSWORD_SALT", raising=False)
+    monkeypatch.delenv("APP_ENV", raising=False)
+
+    with caplog.at_level(logging.WARNING, logger="api.store"):
+        salt = store._load_password_salt()
+
+    assert salt == b"default-insecure-salt-for-dev"
+    assert "using the insecure development salt" in caplog.text
+
+
+@pytest.mark.requirement("SEC-001")
+def test_missing_password_salt_fails_in_production(monkeypatch):
+    monkeypatch.delenv("PASSWORD_SALT", raising=False)
+    monkeypatch.setenv("APP_ENV", "production")
+
+    with pytest.raises(RuntimeError, match="PASSWORD_SALT must be configured in production"):
+        store._load_password_salt()
+
+
+@pytest.mark.requirement("SEC-001")
+def test_configured_password_salt_is_used(monkeypatch):
+    monkeypatch.setenv("PASSWORD_SALT", "configured-test-salt")
+    monkeypatch.setenv("APP_ENV", "production")
+
+    assert store._load_password_salt() == b"configured-test-salt"
+
+
 @pytest.mark.parametrize("existing_id", ["user_²", "user_٩", "user_abc", "user_", "user_1a"])
 @pytest.mark.requirement("US-009", "SEC-004")
 def test_registration_ignores_malformed_id_suffixes(existing_id):
@@ -29,7 +59,6 @@ def test_registration_ignores_malformed_id_suffixes(existing_id):
     assert created[0] == "user_4"
 
 
-@pytest.mark.technical
 @pytest.mark.parametrize("game_id", ["game_²", "game_٩", "game_abc"])
 @pytest.mark.requirement("US-002")
 def test_next_game_id_ignores_malformed_id_suffixes(game_id):
