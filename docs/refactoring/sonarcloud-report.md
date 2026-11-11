@@ -68,7 +68,7 @@
 **Зв'язок зі `static-analysis.md`.**
 - Bandit (розділ 2.3) повідомляє 0 зауважень, і це не суперечить Sonar: Bandit сканує лише Python у `src/api` (2020 рядків, 17 файлів), а 9 Security-знахідок Sonar лежать у `.github/workflows/*.yml`, які Bandit не перевіряє. Два інструменти доповнюють один одного.
 - Знахідку Sonar про передбачувану сіль у `store.py`, зафіксовану в попередньому аналізі, закрито ще в Лаб 5: `PASSWORD_SALT` тепер береться зі змінної середовища (розділ 4 і розділ 6 `static-analysis.md`, хук `detect-secrets`). У поточних 26 issues її немає.
-- Ризики, які `static-analysis.md` (розділ 4) прийняв свідомо, Sonar зараз не показує: демо-токени (`master-token` та ін.) і демо-паролі в `seed.py` і `web/login.html`, а також значення солі за замовчуванням `default-insecure-salt-for-dev` у `store.py`. Вони не впливають на Security Rating, але лишаються відкритими для реального розгортання.
+- Ризики, які `static-analysis.md` (розділ 4) прийняв свідомо, Sonar зараз не показує: демо-токени (`master-token` та ін.) і демо-паролі в `seed.py` і `web/login.html`, а також development fallback солі `default-insecure-salt-for-dev` у `store.py`. За PR #212 production без `PASSWORD_SALT` завершує запуск помилкою; реальне середовище все одно має задавати сильну стабільну сіль.
 - `static-analysis.md` розділ 2.3 згадує, що Docker-образ запускається з `--host 0.0.0.0`; Dockerfile Bandit не сканує, тож це теж варто мати на увазі як окрему поверхню.
 
 **Security Rating до/після рефакторингу.**
