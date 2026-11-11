@@ -46,3 +46,31 @@ jobs:
       with:
         name: htmlcov
         path: htmlcov/
+
+  reliability-tests:
+    runs-on: [self-hosted, linux]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+
+    - name: Install reliability-test dependencies
+      run: |
+        python -m pip install --only-binary :all: \
+          fastapi==0.115.12 \
+          "uvicorn[standard]==0.34.2" \
+          pyyaml==6.0.2 \
+          httpx==0.28.1 \
+          sqlalchemy==2.0.43 \
+          pytest==8.4.2 \
+          pytest-cov==6.2.1 \
+          hypothesis==6.140.2 \
+          pytest-benchmark==5.1.0
+
+    - name: Run reliability tests
+      run: python -m pytest src/api/tests/reliability -v
