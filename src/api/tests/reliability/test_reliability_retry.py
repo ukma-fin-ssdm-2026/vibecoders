@@ -19,8 +19,6 @@ def tolerant_client():
 
 
 class DeterministicRNG:
-    """Детермінований генератор для перевірки діапазонів і формули full jitter."""
-
     def __init__(self, fraction: float = 0.5):
         self.fraction = fraction
         self.requested_ranges: List[tuple] = []
@@ -32,7 +30,6 @@ class DeterministicRNG:
 
 @pytest.mark.technical
 def test_retry_succeeds_on_transient_failure_after_n_attempts():
-    """Тест 1: успіх з другої чи третьої спроби після N тимчасових збоїв."""
     call_count = 0
     delays: List[float] = []
 
@@ -59,13 +56,11 @@ def test_retry_succeeds_on_transient_failure_after_n_attempts():
     assert result == "success_payload"
     assert call_count == 3
     assert len(delays) == 2
-    # Перша спроба без затримки; 2 повтори мали затримки
     assert all(d >= 0.0 for d in delays)
 
 
 @pytest.mark.technical
 def test_retry_attempts_are_bounded_to_max_attempts():
-    """Тест 2: кількість спроб суворо обмежена max_attempts і не зростає нескінченно."""
     call_count = 0
     delays: List[float] = []
 
@@ -95,10 +90,6 @@ def test_retry_attempts_are_bounded_to_max_attempts():
 
 @pytest.mark.technical
 def test_reaction_after_exhausted_retries_raises_and_http_returns_503(tolerant_client, monkeypatch, caplog):
-    """Тест 3: після останньої спроби спрацьовує швидка відмова — виняток піднімається,
-
-    а через HTTP це 503 з Retry-After, без витоку деталей; збій залоговано.
-    """
     call_attempts = 0
 
     def locked_fetch(email: str):
@@ -132,14 +123,12 @@ def test_reaction_after_exhausted_retries_raises_and_http_returns_503(tolerant_c
     assert LOCKED_DETAIL not in response.text
     assert call_attempts == 3
 
-    # Перевіряємо логування останньої невдачі
     error_logs = [r for r in caplog.records if r.levelno == logging.ERROR]
     assert any("All 3 retry attempts failed" in r.getMessage() for r in error_logs)
 
 
 @pytest.mark.technical
 def test_transient_retry_recovers_http_login(tolerant_client, monkeypatch):
-    """Тест 3б: при перехідному збої (1 раз locked, далі успіх) HTTP login успішно повертає 200."""
     call_attempts = 0
     real_fetch = store._fetch_credentials
 
@@ -175,7 +164,6 @@ def test_transient_retry_recovers_http_login(tolerant_client, monkeypatch):
 
 @pytest.mark.technical
 def test_non_retryable_exceptions_fail_fast_without_retries():
-    """Тест 4: невідновні винятки не повторюються — рівно 1 виклик."""
     calls_runtime = 0
     calls_non_transient = 0
     delays: List[float] = []
@@ -211,13 +199,31 @@ def test_non_retryable_exceptions_fail_fast_without_retries():
         decorated_db()
     assert calls_non_transient == 1
 
-    # Жодних затримок не було
     assert len(delays) == 0
 
 
 @pytest.mark.technical
+@pytest.mark.parametrize("exception_type", [KeyboardInterrupt, SystemExit])
+def test_process_control_exceptions_are_not_retried(exception_type):
+    calls = 0
+    delays = []
+
+    def interrupt():
+        nonlocal calls
+        calls += 1
+        raise exception_type()
+
+    decorated = retry_with_backoff(interrupt, sleep=delays.append)
+
+    with pytest.raises(exception_type):
+        decorated()
+
+    assert calls == 1
+    assert delays == []
+
+
+@pytest.mark.technical
 def test_resilience_helper_coverage_edges():
-    """Перевірка допоміжних гілок: пряме декорування без аргументів та is_transient_db_error."""
     assert is_transient_db_error(ValueError("not a db error")) is False
 
     @retry_with_backoff
@@ -229,10 +235,6 @@ def test_resilience_helper_coverage_edges():
 
 @pytest.mark.technical
 def test_delay_bounds_and_full_jitter_distribution():
-    """Тест 5: затримки не перевищують max_delay, лежать у діапазоні [0, min(cap, base*2**n)],
-
-    а при фіксованому rng дають точні очікувані значення; перша спроба без затримки.
-    """
     delays: List[float] = []
     base_delay = 0.1
     max_delay = 0.5
@@ -243,7 +245,6 @@ def test_delay_bounds_and_full_jitter_distribution():
         attempts += 1
         raise OperationalError("SELECT 1", {}, Exception(BUSY_DETAIL))
 
-    # RNG з фіксованою часткою 1.0 повертає точно максимальну стелю кожного інтервалу
     max_rng = DeterministicRNG(fraction=1.0)
     decorated = retry_with_backoff(
         fail_always,
@@ -260,17 +261,11 @@ def test_delay_bounds_and_full_jitter_distribution():
 
     assert attempts == 5
     assert len(delays) == 4
-    # Очікувані максимальні межі для attempt = 0, 1, 2, 3:
-    # 0: min(0.5, 0.1 * 1) = 0.1
-    # 1: min(0.5, 0.1 * 2) = 0.2
-    # 2: min(0.5, 0.1 * 4) = 0.4
-    # 3: min(0.5, 0.1 * 8) = 0.5 (cap!)
     expected_caps = [0.1, 0.2, 0.4, 0.5]
     for d, exp in zip(delays, expected_caps):
         assert d == pytest.approx(exp, abs=1e-6)
         assert d <= max_delay
 
-    # Перевіряємо запитані діапазони uniform(0, cap)
     for requested, exp in zip(max_rng.requested_ranges, expected_caps):
         assert requested[0] == 0.0
         assert requested[1] == pytest.approx(exp, abs=1e-6)
@@ -288,7 +283,6 @@ def test_delay_bounds_and_full_jitter_distribution():
     ],
 )
 def test_invalid_parameters_rejected(attempts, base, max_d, err_msg):
-    """Тест 6: граничний тест — відхилення некоректних параметрів явною помилкою."""
     with pytest.raises(ValueError) as exc:
         retry_with_backoff(lambda: None, max_attempts=attempts, base_delay=base, max_delay=max_d)
     assert err_msg in str(exc.value)

@@ -2,7 +2,7 @@
 
 **Команда:** vibecoders (NRI Organizer API)
 **Документи:** повний опис знахідок з ланцюгом «несправність → помилка → відмова» у [scavenger-hunt.md](./scavenger-hunt.md).
-**Тести:** `src/api/tests/reliability/` (65 тестів у 7 файлах; запускаються окремим job і разом з рештою через `pytest src/api/tests`).
+**Тести:** `src/api/tests/reliability/` (68 тестів у 7 файлах; запускаються окремим job і разом з рештою через `pytest src/api/tests`).
 
 ## 1. Усі знайдені проблеми
 
@@ -12,7 +12,7 @@
 | R-02 | Сповіщення про скасування пишуться після коміту, поза транзакцією (блокування кімнати) | D | Висока | виправлено (А) |
 | R-03 | Видалення гри: три окремі транзакції, без `db_lock`, сповіщення до видалення | D, E | Висока | виправлено (Б) |
 | R-04 | `remove_player`: читання-зміна-запис без блокування, втрата чужого запису | E | Середня | виправлено (В) |
-| R-05 | З'єднання SQLite без явного тайм-ауту, дубльовані визначення в `db.py` | B | Середня | виправлено (Д, PR гілки `fix/db-duplicate-definitions`) |
+| R-05 | З'єднання SQLite без явного тайм-ауту, дубльовані визначення в `db.py` | B | Середня | виправлено (Д, PR #216) |
 | R-06 | `OperationalError` потрапляє в загальний 500 без `Retry-After` | A, B | Середня | виправлено (Д) |
 | R-07 | Збій запису OpenAPI-файлу при старті валить увесь сервіс | B | Середня | виправлено (Г) |
 | R-08 | Блокувальний ввід-вивід і pbkdf2 в `async def` | E | Середня | відкрито |
@@ -24,7 +24,7 @@
 | R-14 | Повне сканування ігор під `db_lock` | E | Низька | відкрито |
 | R-15 | Кеш проксі без меж і з ручною інвалідацією | D | Низька | відкрито |
 
-Для зручності виправлення позначені літерами А, Б, В, Г, Д. Виправлення Д повністю закриває R-01 і R-06 та адресує R-05 у частині налаштування тайм-ауту. Дубльовані визначення в `db.py` (повторні визначення `resolve_database_url`, `enable_sqlite_foreign_keys`, `DATABASE_URL` та першого engine) остаточно усунуто в окремій гілці `fix/db-duplicate-definitions`, що повністю закриває R-05.
+Для зручності виправлення позначені літерами А, Б, В, Г, Д. Виправлення Д повністю закриває R-01 і R-06 та адресує R-05 у частині налаштування тайм-ауту. Дубльовані визначення в `db.py` (повторні визначення `resolve_database_url`, `enable_sqlite_foreign_keys`, `DATABASE_URL` та першого engine) остаточно усунуто в PR #216, що повністю закриває R-05.
 
 ## 2. Виправлення: до і після
 
@@ -227,7 +227,7 @@ def _load_password_salt() -> bytes:
 
 ## 5. Тести надійності
 
-Розташування: `src/api/tests/reliability/`. Усього 65 тестів у 7 файлах (включно з 11 тестами повторів з відступом і джитером у `test_reliability_retry.py`). Усі перевірки R-10 і R-11 розташовані у `test_reliability_id_validation.py`. `check_traceability.py` рекурсивно знаходить також вкладені reliability-тести; `test_read_tests_includes_nested_reliability_tests` захищає це від регресії.
+Розташування: `src/api/tests/reliability/`. Усього 68 тестів у 7 файлах (включно з 14 тестами повторів з відступом і джитером у `test_reliability_retry.py`). Усі перевірки R-10 і R-11 розташовані у `test_reliability_id_validation.py`. `check_traceability.py` рекурсивно знаходить також вкладені reliability-тести; `test_read_tests_includes_nested_reliability_tests` захищає це від регресії.
 
 | Тип | Тест | Що перевіряє | Виправлення |
 |-----|------|--------------|-------------|
@@ -274,7 +274,7 @@ def _load_password_salt() -> bytes:
 | R-14 | Не критично за поточного обсягу даних | Фільтрувати ігри запитом у БД по кімнаті та інтервалу |
 | R-15 | Низький ризик | Прибрати ручну інвалідацію або обмежити розмір кешу |
 
-Проблему R-05 (дубльовані визначення `resolve_database_url`, `enable_sqlite_foreign_keys`, `DATABASE_URL` та engine) вирішено в гілці `fix/db-duplicate-definitions`.
+Проблему R-05 (дубльовані визначення `resolve_database_url`, `enable_sqlite_foreign_keys`, `DATABASE_URL` та engine) вирішено в PR #216.
 
 ## 7. Бонуси
 
@@ -328,7 +328,7 @@ $$delay = rng.uniform(0.0, \min(max\_delay, base\_delay \cdot 2^{attempt}))$$
    $$T_{budget} \le max\_attempts \cdot DB\_TIMEOUT\_SECONDS + \sum delays \le 3 \cdot 10.0 + 0.15 = 30.15\text{ с}.$$
 4. Зовнішній шар (реакція після останньої спроби): **швидка відмова (fast fail)**. Після вичерпання $max\_attempts$ виняток `OperationalError` піднімається вище, записується в лог на рівні `logger.error` і перехоплюється централізованим обробником `database_unavailable_handler` (`errors.py`), який повертає клієнту відповідь HTTP 503 `SERVICE_UNAVAILABLE` із заголовком `Retry-After: 5` без витоку технічних подробиць. Жодного прихованого або мовчазного значення за замовчуванням не підставляється.
 
-**Тести** (`src/api/tests/reliability/test_reliability_retry.py`, 11 тестів):
+**Тести** (`src/api/tests/reliability/test_reliability_retry.py`, 14 тестів):
 1. `test_retry_succeeds_on_transient_failure_after_n_attempts`: перевіряє успіх операції після 2 тимчасових збоїв, кількість викликів і затримок.
 2. `test_retry_attempts_are_bounded_to_max_attempts`: доводить, що кількість спроб суворо обмежена `max_attempts = 3` при неперервному збої.
 3. `test_reaction_after_exhausted_retries_raises_and_http_returns_503`: доводить реакцію швидкої відмови — підняття винятку, HTTP 503 з `Retry-After`, відсутність витоку деталей і запис помилки в лог.
@@ -336,7 +336,8 @@ $$delay = rng.uniform(0.0, \min(max\_delay, base\_delay \cdot 2^{attempt}))$$
 5. `test_non_retryable_exceptions_fail_fast_without_retries`: перевіряє, що невідновні помилки виконуються рівно 1 раз без затримок.
 6. `test_delay_bounds_and_full_jitter_distribution`: перевіряє формулу Full Jitter, обмеження стелею `max_delay`, очікувані значення за фіксованого RNG і нульову затримку першої спроби.
 7. `test_invalid_parameters_rejected` (5 параметризованих тестів): граничні перевірки на відхилення некоректних параметрів (`max_attempts < 1`, `base_delay < 0`, `max_delay < 0`, `max_delay < base_delay`).
-8. `test_resilience_helper_coverage_edges`: перевіряє пряме декорування без дужок та предикат для не-OperationalError винятків.
+8. `test_process_control_exceptions_are_not_retried` (2 параметризовані тести): підтверджує, що `KeyboardInterrupt` і `SystemExit` не перехоплюються та не повторюються.
+9. `test_resilience_helper_coverage_edges`: перевіряє пряме декорування без дужок та предикат для не-OperationalError винятків.
 
 **Пояснення у відео:** бонус зараховується за умови, якщо хоча б один учасник команди пояснить його роботу у своєму Loom-відео (формула full jitter, ідемпотентність виклику, композиція з тайм-аутом і швидка відмова).
 

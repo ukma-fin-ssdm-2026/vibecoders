@@ -285,18 +285,7 @@ class CredentialsProxy:
         )
 
     def get(self, email, default=None):
-        fetcher = getattr(self, "_fetch_with_retry", None)
-        if fetcher is None:
-            fetcher = retry_with_backoff(
-                _fetch_credentials,
-                max_attempts=3,
-                base_delay=0.05,
-                max_delay=0.5,
-                retry_on=(OperationalError,),
-                predicate=is_transient_db_error,
-            )
-            self._fetch_with_retry = fetcher
-        res = fetcher(email)
+        res = self._fetch_with_retry(email)
         return res if res is not None else default
 
     def __getitem__(self, email):
