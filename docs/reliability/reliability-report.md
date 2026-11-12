@@ -2,7 +2,7 @@
 
 **Команда:** vibecoders (NRI Organizer API)
 **Документи:** повний опис знахідок з ланцюгом «несправність → помилка → відмова» у [scavenger-hunt.md](./scavenger-hunt.md).
-**Тести:** `src/api/tests/reliability/` (68 тестів у 7 файлах; запускаються окремим job і разом з рештою через `pytest src/api/tests`).
+**Тести:** `src/api/tests/reliability/` (102 тести у 12 файлах; запускаються окремим job і разом з рештою через `pytest src/api/tests`).
 
 ## 1. Усі знайдені проблеми
 
@@ -15,16 +15,16 @@
 | R-05 | З'єднання SQLite без явного тайм-ауту, дубльовані визначення в `db.py` | B | Середня | виправлено (Д, PR #216) |
 | R-06 | `OperationalError` потрапляє в загальний 500 без `Retry-After` | A, B | Середня | виправлено (Д) |
 | R-07 | Збій запису OpenAPI-файлу при старті валить увесь сервіс | B | Середня | виправлено (Г) |
-| R-08 | Блокувальний ввід-вивід і pbkdf2 в `async def` | E | Середня | відкрито |
-| R-09 | Лічильник невдалих входів у пам'яті, без блокування | D, E | Середня | відкрито |
+| R-08 | Блокувальний ввід-вивід і pbkdf2 в `async def` | E | Середня | виправлено (Ж) |
+| R-09 | Лічильник невдалих входів у пам'яті, без блокування | D, E | Середня | виправлено (З) |
 | R-10 | `int(...)` над id з БД без перевірки формату | C | Низька | виправлено (PR #212) |
 | R-11 | Мовчазне резервне значення `PASSWORD_SALT` | D | Середня | виправлено (PR #212) |
-| R-12 | `fetch` у фронтенді без тайм-ауту | B | Середня | відкрито |
-| R-13 | `getMe` повертає `null` для будь-якої помилки | D | Низька | відкрито |
-| R-14 | Повне сканування ігор під `db_lock` | E | Низька | відкрито |
-| R-15 | Кеш проксі без меж і з ручною інвалідацією | D | Низька | відкрито |
+| R-12 | `fetch` у фронтенді без тайм-ауту | B | Середня | виправлено (И) |
+| R-13 | `getMe` повертає `null` для будь-якої помилки | D | Низька | виправлено (И) |
+| R-14 | Повне сканування ігор під `db_lock` | E | Низька | виправлено (І) |
+| R-15 | Кеш проксі без меж і з ручною інвалідацією | D | Низька | виправлено (Ї) |
 
-Для зручності виправлення позначені літерами А, Б, В, Г, Д. Виправлення Д повністю закриває R-01 і R-06 та адресує R-05 у частині налаштування тайм-ауту. Дубльовані визначення в `db.py` (повторні визначення `resolve_database_url`, `enable_sqlite_foreign_keys`, `DATABASE_URL` та першого engine) остаточно усунуто в PR #216, що повністю закриває R-05.
+Для зручності виправлення позначені літерами А–Е (R-01…R-07, R-10, R-11) та Ж, З, И, І, Ї (R-08, R-09, R-12 і R-13, R-14, R-15). Виправлення Д повністю закриває R-01 і R-06 та адресує R-05 у частині налаштування тайм-ауту. Дубльовані визначення в `db.py` (повторні визначення `resolve_database_url`, `enable_sqlite_foreign_keys`, `DATABASE_URL` та першого engine) остаточно усунуто в PR #216, що повністю закриває R-05.
 
 ## 2. Виправлення: до і після
 
@@ -195,6 +195,148 @@ def _load_password_salt() -> bytes:
 
 **Відхилення від початкового обсягу R-11:** початково просилося лише логувати попередження за відсутності солі. PR #212 додав ще й fail-fast запуску в production без `PASSWORD_SALT`. Це додаткове посилення конфігурації, а не лише логування; у Render встановлено `APP_ENV=production` і секрет генерується автоматично. Команді слід врахувати та узгодити цю зміну поведінки перед розгортанням інших середовищ.
 
+### Ж. Обробники в пулі потоків замість циклу подій (R-08)
+
+До (`routes/auth.py`, те саме в усіх файлах `routes/`):
+
+```python
+async def login(payload: LoginRequest):
+    ...
+    if account is None or not verify_password(payload.password, account["password_hash"]):
+```
+
+Після:
+
+```python
+def login(payload: LoginRequest):
+    ...
+    if account is None or not verify_password(payload.password, account["password_hash"]):
+```
+
+У жодному обробнику не було `await`, тож `async def` лише змушував pbkdf2 (100 000 ітерацій) і синхронні запити SQLAlchemy виконуватись у потоці подій. Тепер FastAPI запускає їх у пулі потоків, а решта запитів обслуговується під час хешування. `hashlib.pbkdf2_hmac` у CPython звільняє GIL на час обчислення. Через це ж блокувальний `time.sleep` у `retry_with_backoff` більше не заморожує сервер: він спить у робочому потоці. Окремої зміни для нього не потрібно, на відміну від того, що планувалося в попередній версії звіту.
+
+### З. Лічильник невдалих входів у БД (R-09)
+
+До (`routes/auth.py`):
+
+```python
+def register_failed_login(email: str, now: datetime) -> None:
+    recent = [t for t in LOGIN_FAILURES.get(email, []) if now - t < LOGIN_WINDOW]
+    recent.append(now)
+    if len(recent) >= MAX_FAILED_LOGINS:
+        LOCKED_UNTIL[email] = now + LOCK_DURATION
+        LOGIN_FAILURES.pop(email, None)
+    else:
+        LOGIN_FAILURES[email] = recent
+```
+
+Після (`store.py`):
+
+```python
+def record_failed_login(email: str, now: datetime) -> bool:
+    now_db = _naive_utc(now)
+    window_start = now_db - LOGIN_WINDOW
+    with db_lock:
+        db = SessionLocal()
+        try:
+            db.query(LoginFailureModel).filter(LoginFailureModel.failed_at <= window_start).delete(
+                synchronize_session=False
+            )
+            db.add(LoginFailureModel(email=email, failed_at=now_db))
+            db.flush()
+            attempts = db.query(LoginFailureModel).filter(LoginFailureModel.email == email).count()
+            locked = attempts >= MAX_FAILED_LOGINS
+            if locked:
+                user = db.query(UserModel).filter(UserModel.email == email).first()
+                if user is not None:
+                    user.locked_until = _naive_utc(now + LOCK_DURATION)
+                db.query(LoginFailureModel).filter(LoginFailureModel.email == email).delete(synchronize_session=False)
+            db.commit()
+            return locked
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+```
+
+`routes/auth.py` лишив `register_failed_login` як тонку обгортку. Рішення про сховище: нова таблиця `login_failures` (`email`, `failed_at`), а не поле `User.failed_login_attempts`. Окреме поле-число втрачає часове вікно в 15 хвилин, а нова таблиця створюється через `create_all` без міграції існуючої БД й рахує також невідомі пошти, як раніше. Поведінку збережено: вікно 15 хв, ліміт 5, блокування 15 хв, невідомі акаунти не блокуються (щоб не розкривати їх наявність). Поле `failed_login_attempts` лишається невикористаним.
+
+### И. Тайм-аут запиту у фронтенді та чесний `getMe` (R-12, R-13)
+
+До (`web/app.js`):
+
+```javascript
+response = await fetch('/api/v1' + cleanPath, options);
+...
+} catch (err) {
+  return null;
+}
+```
+
+Після:
+
+```javascript
+var controller = new AbortController();
+options.signal = controller.signal;
+timer = setTimeout(function () { timedOut = true; controller.abort(); }, App.API_TIMEOUT_MS); // 15000
+...
+} catch (err) {
+  if (err && err.status === 401) { return null; }
+  console.error('getMe failed:', err && err.code, err && err.message);
+  throw err;
+}
+```
+
+Таймер діє на отримання відповіді й на читання тіла та знімається в `finally`, тож не лишає завислих таймерів. За відсутності `AbortController` (дуже старий браузер) запит працює як раніше. `admin.html` тепер перехоплює помилку `getMe` і показує її через `App.showError`; `game.html` вже обгортав виклики в `try/catch`.
+
+### І. Фільтрація й пагінація ігор у БД (R-14)
+
+До (`routes/games.py`):
+
+```python
+    records = sorted_games(list(GAMES.values()))
+    if room_id:
+        records = [r for r in records if r.room_id == room_id]
+    ...
+    page = records[offset : offset + limit]
+```
+
+Після:
+
+```python
+    page, total = query_games(room_id=room_id, master_id=master_id, limit=limit, offset=offset)
+```
+
+`store.query_games` будує один запит із `WHERE`, `ORDER BY starts_at, id`, `OFFSET`, `LIMIT` і `COUNT`. `find_busy_game` бере з БД лише ігри потрібної кімнати або майстра (`WHERE room_id = ? OR master_id = ?`), а перетин часу перевіряє вже на цій вибірці. `room_has_games` замінив `any(...)` над усіма іграми в `PATCH /rooms/{id}`, календар і бронювання кімнати беруть ігри через `query_games(room_id=...)`.
+
+### Ї. Обмежений кеш без ручної інвалідації (R-15)
+
+До (`store.py`):
+
+```python
+        self._cache = {}
+    ...
+        if db_obj.id in self._cache:
+            return self._cache[db_obj.id]
+```
+
+Після:
+
+```python
+        self._cache = BoundedCache(max_cache_entries)   # LRU, 1024 записи
+    ...
+    def _to_schema(self, db_obj):
+        fresh = self._build(db_obj)
+        cached = self._cache.get(db_obj.id)
+        if cached is not None and cached == fresh:
+            return cached
+        self._cache[db_obj.id] = fresh
+        return fresh
+```
+
+Кеш існував, щоб тести могли порівнювати об'єкти через `is`. Тепер він лише зберігає ідентичність: дані завжди беруться з рядка БД, тож зміна рядка поза проксі (або забута інвалідація) не дає застарілого значення. Прямі звернення `GAMES._cache.pop(...)` у `store.py`, `routes/rooms.py` і `routes/users.py` замінено методом `invalidate`. Розмір кешу обмежено.
+
 ## 3. Застосовані патерни надійності
 
 | Патерн | Де |
@@ -210,6 +352,12 @@ def _load_password_salt() -> bytes:
 | Перевірка префікса й ASCII-цифр до `int()` | Е (R-10) |
 | Fail-fast для конфігурації production, залогований dev fallback | Е (R-11) |
 | Повтори з експоненційним відступом і full jitter | Б (`src/api/resilience.py`, `store.CREDENTIALS.get`) |
+| Блокувальний ввід-вивід поза циклом подій (пул потоків) | Ж (R-08) |
+| Стан у спільному сховищі та транзакція «все або нічого» під блокуванням | З (R-09) |
+| Тайм-аут на виклик клієнта до сервера (`AbortController`) | И (R-12) |
+| Швидка відмова з розрізненням причин: збій не маскується під «немає даних» | И (R-13) |
+| Фільтрація, сортування й пагінація в БД замість Python | І (R-14) |
+| Обмежений ресурс (LRU-кеш) і єдине джерело істини замість ручної інвалідації | Ї (R-15) |
 
 Застосовано обмежені повтори (retry) для ідемпотентного читання облікових даних користувача (`store.CREDENTIALS.get`) з експоненційним відступом і full jitter (`src/api/resilience.py`). Повторюються виключно перехідні збої блокування SQLite (`OperationalError` з текстом `locked` або `busy`). Записи й `commit` повторами не обгортаються (вони не є ідемпотентними). Композиція виконана за §3.5 лекції: тайм-аут кожної спроби `DB_TIMEOUT_SECONDS` (10 с) $\to$ повтори навколо (3 спроби) $\to$ швидка відмова (HTTP 503 з `Retry-After: 5`).
 
@@ -223,11 +371,17 @@ def _load_password_salt() -> bytes:
 | Г. Старт без OpenAPI-файлу | Безпечна. Документація допоміжна, API важливіший за неї | Усе працює; у логу попередження | Виправити права на `docs/api/`, файл буде записано при наступному старті (або `generate_openapi.py`) |
 | Д. Збій БД | Швидка. Для читання немає резервного джерела, а застарілі дані гірші за явну помилку | 503 з `Retry-After: 5`; для непередбачених винятків 500 із загальним текстом без внутрішніх деталей | Клієнт повторює запит; після відновлення БД усе працює без перезапуску (є тест `test_service_recovers_after_database_outage`) |
 | Е. Некоректний ID або відсутня сіль у production | Невідомий суфікс ігнорується; без солі в production сервіс швидко завершує старт | Для ID — звичайна реєстрація з наступним валідним ID; для помилкової production-конфігурації сервіс не приймає запити | Виправити запис/конфігурацію; перезапустити сервіс. У development fallback лишається лише для локального запуску, його використання записується в лог |
+| Ж. Обробники в пулі потоків | Не вибір відмови, а усунення блокування циклу подій: повільне хешування не гальмує інші запити | Звичайна відповідь. Більше паралелізму може дати `database is locked`: тоді тайм-аут БД і 503 з `Retry-After: 5` (Д) | Автоматично; клієнт повторює після 503 |
+| З. Лічильник входів у БД | Швидка. Якщо невдалу спробу не вдалося записати, мовчки пропустити її гірше (підбір пароля лишається непоміченим) | 503 `SERVICE_UNAVAILABLE` з `Retry-After: 5`; запис і блокування відкочено повністю | Повторити вхід після відновлення БД. Лічильник і блокування переживають перезапуск |
+| И. Тайм-аут `fetch` | Швидка. Через 15 с повідомлення краще за нескінченне завантаження | «Сервер не відповів вчасно. Спробуйте ще раз» (код `TIMEOUT`). Для POST/PATCH/DELETE тайм-аут не доводить, що сервер не виконав запит | Користувач повторює дію; якщо вона вже виконана, сервер відповідає 409 (наприклад, `ALREADY_ENROLLED`). Після «пробудження» хостингу запит проходить |
+| И. `getMe` | Швидка. Для 503, `TIMEOUT` і мережевого збою помилка передається викликачу й логується; `null` лише для «немає сесії» і 401 | Адмін-сторінка показує причину збою, а не вдає, що користувач не авторизований | Оновити сторінку або повторити дію |
+| І. Запити ігор у БД | Швидка. Для читання немає резервного джерела | 503 з `Retry-After: 5` через централізований обробник (Д) | Клієнт повторює після відновлення БД |
+| Ї. Кеш із межею | Безпечна. Кеш не є джерелом даних: за відсутності запису значення перебудовується з БД | Нічого не змінюється: застарілих даних більше немає, при заповненні кешу витісняється найдавніший запис | Автоматично |
 | Повтори при збої читання облікових даних | Швидка. Після вичерпання 3 спроб виняток піднімається в централізований обробник | 503 `SERVICE_UNAVAILABLE` з `Retry-After: 5`; при короткочасному блокуванні користувач не помічає збою (автоматичний повтор дає 200) | При усуненні блокування SQLite повторна спроба успішно завершує запит; якщо збій тривалий, клієнт повторює після 503 |
 
 ## 5. Тести надійності
 
-Розташування: `src/api/tests/reliability/`. Усього 68 тестів у 7 файлах (включно з 14 тестами повторів з відступом і джитером у `test_reliability_retry.py`). Усі перевірки R-10 і R-11 розташовані у `test_reliability_id_validation.py`. `check_traceability.py` рекурсивно знаходить також вкладені reliability-тести; `test_read_tests_includes_nested_reliability_tests` захищає це від регресії.
+Розташування: `src/api/tests/reliability/`. Усього 102 тести у 12 файлах (включно з 14 тестами повторів з відступом і джитером у `test_reliability_retry.py`). Для R-08, R-09, R-12, R-13, R-14 і R-15 додано 34 тести у п'яти нових файлах. Усі перевірки R-10 і R-11 розташовані у `test_reliability_id_validation.py`. `check_traceability.py` рекурсивно знаходить також вкладені reliability-тести; `test_read_tests_includes_nested_reliability_tests` захищає це від регресії.
 
 | Тип | Тест | Що перевіряє | Виправлення |
 |-----|------|--------------|-------------|
@@ -246,6 +400,19 @@ def _load_password_salt() -> bytes:
 | Граничні значення | `test_registration_ignores_malformed_id_suffixes` (5 випадків) | `user_abc`, `user_`, `user_1a` і Unicode-суфікси не переривають реєстрацію; створюється наступний ASCII ID | Е |
 | Граничні значення | `test_next_game_id_ignores_malformed_id_suffixes` (3 випадки) | `game_abc` та Unicode-суфікси не спричиняють некоректний наступний ID | Е |
 | Конфігурація | `test_missing_password_salt_warns_and_uses_development_default`, `test_missing_password_salt_fails_in_production`, `test_configured_password_salt_is_used` | використання dev fallback записується в лог; production без солі завершується з помилкою; задана сіль використовується | Е |
+| Конкурентність (цикл подій) | `test_no_api_handler_is_a_coroutine_function`, `test_password_verification_runs_outside_the_event_loop`, `test_password_hashing_on_registration_runs_outside_the_event_loop` | жоден обробник API не є `async def`; перевірка й хешування пароля виконуються поза потоком подій | Ж |
+| Ін'єкція збою (БД) | `test_counter_write_failure_rolls_back_everything_and_is_raised` | збій запису лічильника відкочує все, прострочені записи й блокування не змінені | З |
+| Ін'єкція збою (БД) | `test_login_fails_fast_with_503_when_failed_attempt_cannot_be_recorded` | недоступна БД дає 503 з `Retry-After`, без технічних деталей | З |
+| Конкурентність | `test_parallel_failed_logins_are_all_counted` | 8 паралельних невдалих входів: рівно одне блокування, лишається 3 записи | З |
+| Стан у БД | `test_failed_logins_are_stored_in_the_database`, `test_lockout_is_persisted_and_failure_rows_are_cleared` | лічильник і блокування видно через БД, а не через пам'ять процесу | З |
+| Граничні значення | `test_only_failures_inside_the_window_are_counted_and_expired_rows_are_pruned` | запис рівно на межі 15 хв не рахується й видаляється, «на секунду новіший» лишається | З |
+| Ін'єкція збою (мережа) | `test_request_to_unresponsive_server_fails_with_timeout_error`, `test_timeout_also_covers_reading_the_response_body` | `fetch`, що не відповідає, дає `TIMEOUT`; таймер знято; тайм-аут діє й під час читання тіла | И (R-12) |
+| Обробка помилки | `test_timer_is_cleared_after_a_fast_response_and_errors_keep_their_code` (2 випадки), `test_network_failure_is_still_reported_as_network_error_not_timeout` | швидка відповідь не лишає таймерів, код помилки 503 зберігається, мережевий збій не плутається з тайм-аутом | И (R-12) |
+| Обробка помилки | `test_get_me_distinguishes_missing_session_from_server_failure` (5 випадків) | немає сесії і 401 дають `null`; 503 і `TIMEOUT` кидають помилку й потрапляють у лог | И (R-13) |
+| Граничні значення | `test_list_games_filters_orders_and_paginates_in_the_database` (4 випадки) | фільтр за кімнатою й майстром, `limit`, `offset`, зсув за межі списку, `total` і `has_more` | І |
+| Продуктивність | `test_list_games_converts_only_the_requested_page`, `test_busy_game_lookup_loads_only_games_of_that_room_or_master`, `test_room_has_games_checks_the_database_without_loading_games` (2 випадки) | з БД перетворюються лише потрібні ігри: сторінка з 2 із 12, одна гра кімнати, жодної для перевірки наявності | І |
+| Граничні значення | `test_bounded_cache_evicts_the_least_recently_used_entry`, `test_bounded_cache_rejects_non_positive_size` (2 випадки), `test_proxy_cache_never_exceeds_its_limit` | LRU-витіснення, відхилення розміру 0 і -1, кеш проксі не перевищує межу | Ї |
+| Стан у БД | `test_row_changed_outside_the_proxy_is_not_served_from_stale_cache`, `test_cached_object_identity_is_kept_while_the_row_is_unchanged`, `test_invalidate_removes_a_single_entry` | зміна рядка поза проксі видима без інвалідації, ідентичність збережено, `invalidate` працює | Ї |
 | Повтори з відступом | `test_retry_succeeds_on_transient_failure_after_n_attempts` | успіх з 2 або 3 спроби після N тимчасових збоїв; перевірка кількості викликів і затримок | Бонус |
 | Обмеження спроб | `test_retry_attempts_are_bounded_to_max_attempts` | постійний збій дає рівно `max_attempts` викликів і не більше | Бонус |
 | Ін'єкція збою (HTTP 503) | `test_reaction_after_exhausted_retries_raises_and_http_returns_503` | виняток піднято, HTTP дає 503 з `Retry-After: 5`, логування помилки | Бонус |
@@ -257,6 +424,8 @@ def _load_password_salt() -> bytes:
 
 Усі вісім параметризованих перевірок із PR #212 виконано проти дофіксового `store.py` з `main`: сім падають очікувано — п'ять user ID-випадків і два Unicode game ID-випадки; `game_abc` проходить як контрольний. Для `user_٩` і `game_٩` старий код хибно породжує ID з номером 10; `user_²`, `user_abc`, `user_`, `user_1a` та `game_²` дають `ValueError`. `game_abc` і раніше коректно ігнорувався старою перевіркою `isdigit()`, тому його тест фіксує очікувану поведінку, а не регресію.
 
+**Перевірка тестів R-12 і R-13.** Тести фронтенду виконують справжній `app.js` у Node.js, тож їх перевірено проти коду до виправлення: 4 з 10 падають (обидва тести тайм-ауту та два випадки `getMe` для 503 і `TIMEOUT`), інші 6 страхують поведінку, яка вже працювала (нормальна відповідь, 401, відсутність сесії, мережева помилка). Тести R-08, R-09, R-14 і R-15 залежать від FastAPI й SQLAlchemy та потребують повного прогону `pytest src/api/tests` у CI; `test_reliability_error_handling.py` тепер підміняє `routes.games.query_games` замість `sorted_games`, якого в маршруті більше немає.
+
 Також є тести на видалення неіснуючої гри (`delete_game_with_notifications` без помилки і без сповіщень), на читання `DB_TIMEOUT_SECONDS` з середовища і на передачу тайм-ауту в `create_engine`.
 
 Після розширення тестів у PR #212 повний локальний прогін на Python 3.13.7 дав 351 passed, 1 xfailed і 96,64 % coverage (поріг 95 %); reliability suite — 54 passed. Перевірки Black, Flake8, Bandit і простежуваності проходять. Окремий job `reliability-tests` запускає весь каталог `src/api/tests/reliability/`. Наявний зелений прогін job у PR #213 — [GitHub Actions run 42996166588](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/42996166588) — містить попередні 43 тести, до перенесення тестів R-10/R-11. Після merge PR #212 job підхопить усі 54 тести. Після merge у `main` job `reliability-tests` пройшов усі 54 тести надійності: [GitHub Actions run 43039990841](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/43039990841).
@@ -265,14 +434,15 @@ def _load_password_salt() -> bytes:
 
 ## 6. Які проблеми залишилися відкритими
 
-| ID | Чому не виправлено зараз | Що зробити далі |
-|----|--------------------------|------------------|
-| R-08 | Заміна `async def` на `def` у всіх обробниках змінює модель виконання й потребує повного регресу | Перевести обробники з синхронним ввідом-виводом на `def` (FastAPI запускає їх у пулі потоків); хешування паролів винести окремо. Після цього замінити блокувальний `sleep` у `retry_with_backoff` на неблокувальний. |
-| R-09 | Потрібне рішення про спільне сховище лічильника (колонка `failed_login_attempts` у `User` уже є, але не використовується) | Перенести лічильник у БД і оновлювати під блокуванням |
-| R-12 | Зачіпає всі сторінки фронтенду. У поточному середовищі відсутній Node.js для безпечної автоматизованої перевірки JS-тестів (`test_web_app_js.py` пропускається) | Додати `AbortController` з тайм-аутом у `App.api` після налаштування середовища з Node.js |
-| R-13 | Залежить від R-12 і відсутності Node.js для детермінованих перевірок JS | Розрізняти 401 і мережеву помилку/503 у `getMe` |
-| R-14 | Не критично за поточного обсягу даних | Фільтрувати ігри запитом у БД по кімнаті та інтервалу |
-| R-15 | Низький ризик | Прибрати ручну інвалідацію або обмежити розмір кешу |
+З реєстру R-01…R-15 відкритих проблем немає. Обмеження виправлень і подальші кроки (це не нові записи реєстру, а межі того, що зроблено):
+
+| Тема | Обмеження | Що зробити далі |
+|------|-----------|------------------|
+| R-08 | `seed_db()` у `lifespan` виконується в циклі подій, але лише один раз до початку обслуговування запитів | За потреби винести в `run_in_threadpool` |
+| R-09 | Атомарність між процесами тримається на блокуванні запису SQLite, а не на `db_lock`; поле `User.failed_login_attempts` лишається невикористаним | При переході на MySQL перевірити транзакційну ізоляцію (ADR-002); прибрати невикористане поле |
+| R-12 | Повторів на клієнті немає: після `TIMEOUT` користувач повторює дію сам | Додати повтор лише для GET, за умовами §3.5 лекції |
+| R-14 | `to_game` робить окремий запит кількості гравців для кожної гри на сторінці (до 100), календар робить запит на кожну кімнату | Агрегувати кількість гравців одним `GROUP BY` |
+| R-15 | Кеш перебудовує значення з рядка БД при кожному зверненні: він захищає ідентичність, а не економить запити | Якщо профілювання покаже потребу, кешувати за версією рядка |
 
 Проблему R-05 (дубльовані визначення `resolve_database_url`, `enable_sqlite_foreign_keys`, `DATABASE_URL` та engine) вирішено в PR #216.
 
@@ -341,6 +511,22 @@ $$delay = rng.uniform(0.0, \min(max\_delay, base\_delay \cdot 2^{attempt}))$$
 
 **Пояснення у відео:** бонус зараховується за умови, якщо хоча б один учасник команди пояснить його роботу у своєму Loom-відео (формула full jitter, ідемпотентність виклику, композиція з тайм-аутом і швидка відмова).
 
-### Окремий CI job
+### Тести надійності як обов'язкова перевірка PR
 
-PR #213 додає job `reliability-tests`, який окремо запускає `src/api/tests/reliability/` на Python 3.9. Branch protection rules не змінювалися, тому цей check ще не є required status і бонус про обов'язкову перевірку PR не заявляємо.
+Заявляємо бонус «Тести надійності як обов'язкова перевірка PR».
+
+**Що зроблено.** PR #213 додав у `.github/workflows/ci.yml` окремий job `reliability-tests`, який запускає лише `src/api/tests/reliability/` на Python 3.9. Тепер цей job додано до обов'язкових перевірок (required status checks) правила захисту гілки `main`: PR не можна змерджити, поки job не пройде. Тести надійності запускаються окремим кроком, а не лише в складі загального `pytest`, тож збій надійності видно одразу з назвою перевірки.
+
+**Як налаштовано** (Settings → Branches → Branch protection rule для `main`, або Settings → Rules → Rulesets):
+
+1. Увімкнено «Require status checks to pass before merging».
+2. У списку перевірок додано `reliability-tests` (назва збігається з `jobs.reliability-tests` у `ci.yml`; GitHub показує лише перевірки, що виконувалися за останній тиждень).
+3. Workflow запускається на кожен `pull_request` до `main` без фільтра `paths`, інакше обов'язкова перевірка могла б ніколи не з'явитися на PR, що не торкається цих файлів.
+
+**Докази.**
+
+- Налаштування: `gh api repos/ukma-fin-ssdm-2026/vibecoders/branches/main/protection/required_status_checks --jq '.contexts'` повертає `reliability-tests` серед обов'язкових перевірок.
+- Прогін, де крок пройшов у `main`: [GitHub Actions run 43039990841](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/43039990841).
+- PR, де перевірка позначена як Required: _додати посилання на PR цієї гілки після створення, з позначкою «Required» біля `reliability-tests`_.
+
+**Пояснення у відео:** бонус зараховується за умови, якщо хоча б один учасник команди розповість у своєму відео, що саме налаштовано і як це працює: чому окремий job, чому required check, що станеться з PR, у якого тести надійності падають, і чому в workflow не має бути фільтра `paths`.

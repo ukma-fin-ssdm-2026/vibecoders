@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Remove duplicate definitions and redundant initial engine in `db.py` (R-05).
+- Run route handlers in the thread pool instead of the event loop: `async def` without `await` replaced with `def` (R-08).
+- Store failed-login counters in the database (`login_failures` table) and record them atomically under `db_lock`, so the lockout survives restarts and parallel attempts (R-09).
+- Add a 15 s request timeout (`AbortController`) to `App.api` in the web client; the error code is `TIMEOUT` (R-12).
+- `App.getMe` returns `null` only without a session or on 401; server and network failures are logged and rethrown (R-13).
+- Filter, order and paginate games in SQL (`store.query_games`, `find_busy_game`, `room_has_games`) instead of scanning all games in Python (R-14).
+- Bound the proxy cache (LRU, 1024 entries) and rebuild cached values from the database row, which removes manual invalidation and stale reads (R-15).
+
+### Tests
+
+- Reliability tests for R-08, R-09, R-12, R-13, R-14 and R-15: `test_reliability_sync_handlers.py`, `test_reliability_login_lockout.py`, `test_reliability_frontend.py`, `test_reliability_game_queries.py`, `test_reliability_cache.py`.
 
 ## [0.1.1] - 2026-11-05
 
