@@ -373,8 +373,14 @@
       }
 
       async function initUsers() {
-        var me = await App.getMe();
-        myId = me && me.id ? me.id : null;
+        try {
+          var me = await App.getMe();
+          myId = me && me.id ? me.id : null;
+        } catch (err) {
+          // Збій сервера не вдаємо за «немає користувача»: показуємо причину (R-13)
+          App.showError(err, errorContainer);
+          return;
+        }
         usersSection.hidden = false;
         usersMoreBtn.addEventListener('click', function () {
           loadUsers(false);

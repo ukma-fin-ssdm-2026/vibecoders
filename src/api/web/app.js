@@ -4,6 +4,8 @@
   var fallbackStorage = {};
 
   var App = {
+    API_TIMEOUT_MS: 15000,
+
     NAV: [
       { label: 'Ігри', href: 'games.html', roles: [] },
       { label: 'Календар', href: 'calendar.html', roles: ['player', 'master', 'owner'] },
@@ -76,7 +78,16 @@
         }
         return null;
       } catch (err) {
-        return null;
+        if (err && err.status === 401) {
+          // Сесія недійсна: api() уже очистив її, для виклику це «користувача немає».
+          return null;
+        }
+        // 503, тайм-аут, мережевий збій: це не «немає користувача». Логуємо й віддаємо помилку
+        // викликачеві, щоб він показав збій, а не вдавав, що сесія закінчилась (R-13).
+        if (typeof console !== 'undefined' && console.error) {
+          console.error('getMe failed:', err && err.code, err && err.message);
+        }
+        throw err;
       }
     },
 
@@ -164,35 +175,72 @@
       }
 
       var cleanPath = path.charAt(0) === '/' ? path : '/' + path;
+
+      // Тайм-аут (R-12): без нього запит до «сплячого» сервера висить безкінечно.
+      // Таймер діє і на читання тіла відповіді та знімається в finally.
+      var timedOut = false;
+      var timer = null;
+      if (typeof AbortController === 'function' && typeof setTimeout === 'function') {
+        var controller = new AbortController();
+        options.signal = controller.signal;
+        timer = setTimeout(function () {
+          timedOut = true;
+          controller.abort();
+        }, App.API_TIMEOUT_MS);
+      }
+
+      function timeoutError() {
+        var toError = new Error('Сервер не відповів вчасно. Спробуйте ще раз');
+        toError.status = 0;
+        toError.code = 'TIMEOUT';
+        return toError;
+      }
+
       var response;
+      var data = null;
       try {
-        response = await fetch('/api/v1' + cleanPath, options);
-      } catch (networkErr) {
-        var netError = new Error('Помилка мережі: ' + networkErr.message);
-        netError.status = 0;
-        netError.code = 'NETWORK_ERROR';
-        throw netError;
+        try {
+          response = await fetch('/api/v1' + cleanPath, options);
+        } catch (networkErr) {
+          if (timedOut) {
+            throw timeoutError();
+          }
+          var netError = new Error('Помилка мережі: ' + networkErr.message);
+          netError.status = 0;
+          netError.code = 'NETWORK_ERROR';
+          throw netError;
+        }
+
+        if (response.status !== 204) {
+          var contentType = response.headers.get('content-type');
+          if (contentType && contentType.indexOf('application/json') !== -1) {
+            try {
+              data = await response.json();
+            } catch (e) {
+              data = null;
+            }
+          } else {
+            try {
+              var text = await response.text();
+              if (text) data = JSON.parse(text);
+            } catch (e) {
+              data = null;
+            }
+          }
+        }
+      } finally {
+        if (timer !== null) {
+          clearTimeout(timer);
+        }
+      }
+
+      if (timedOut) {
+        // Таймер спрацював під час читання тіла: часткова відповідь не є результатом.
+        throw timeoutError();
       }
 
       if (response.status === 204) {
         return null;
-      }
-
-      var data = null;
-      var contentType = response.headers.get('content-type');
-      if (contentType && contentType.indexOf('application/json') !== -1) {
-        try {
-          data = await response.json();
-        } catch (e) {
-          data = null;
-        }
-      } else {
-        try {
-          var text = await response.text();
-          if (text) data = JSON.parse(text);
-        } catch (e) {
-          data = null;
-        }
       }
 
       if (!response.ok) {

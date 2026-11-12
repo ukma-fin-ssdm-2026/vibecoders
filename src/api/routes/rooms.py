@@ -22,7 +22,7 @@ from security import CurrentUser, require_roles
 from models import Enrollment as EnrollmentModel, Game as GameModel, RoomBlock as RoomBlockModel
 from notifications import build_cancellation_rows
 import store
-from store import GAMES, ROOMS, db_lock, sorted_games
+from store import GAMES, ROOMS, db_lock, query_games, room_has_games
 
 router = APIRouter(prefix="/api/v1/rooms", tags=["Rooms"])
 
@@ -70,7 +70,7 @@ def room_blocks(room_id: str) -> List[RoomBlockResponse]:
     description="Повертає кімнати клубу з пагінацією. Кімнати відсортовані за id.",
     responses=error_docs(400),
 )
-async def list_rooms(
+def list_rooms(
     limit: int = Query(20, ge=1, le=100, description="Максимальна кількість кімнат у відповіді"),
     offset: int = Query(0, ge=0, description="Скільки кімнат пропустити"),
 ):
@@ -96,7 +96,7 @@ async def list_rooms(
     ),
     responses=error_docs(400),
 )
-async def get_calendar(
+def get_calendar(
     starts_at: AwareDatetime = Query(None, description="Початок інтервалу у форматі ISO 8601"),
     ends_at: AwareDatetime = Query(None, description="Кінець інтервалу у форматі ISO 8601"),
 ):
@@ -118,9 +118,8 @@ async def get_calendar(
                 starts_at=game.starts_at,
                 ends_at=game.starts_at + timedelta(minutes=game.duration_minutes),
             )
-            for game in sorted_games(list(GAMES.values()))
-            if game.room_id == room.id
-            and (
+            for game in query_games(room_id=room.id)[0]
+            if (
                 starts_at is None
                 or game.starts_at < ends_at
                 and game.starts_at + timedelta(minutes=game.duration_minutes) > starts_at
@@ -151,7 +150,7 @@ async def get_calendar(
     description="Повертає одну кімнату клубу з її місткістю та статусом блокування.",
     responses=error_docs(400, 404),
 )
-async def get_room(
+def get_room(
     room_id: str = Path(
         ...,
         pattern=r"^room_\d+$",
@@ -169,7 +168,7 @@ async def get_room(
     description="Повертає слоти, у які кімната зайнята іграми, відсортовані за часом початку.",
     responses=error_docs(400, 404),
 )
-async def list_room_bookings(
+def list_room_bookings(
     room_id: str = Path(
         ...,
         pattern=r"^room_\d+$",
@@ -186,8 +185,7 @@ async def list_room_bookings(
             starts_at=g.starts_at,
             ends_at=g.starts_at + timedelta(minutes=g.duration_minutes),
         )
-        for g in sorted_games(list(GAMES.values()))
-        if g.room_id == room_id
+        for g in query_games(room_id=room_id)[0]
     ]
     return RoomBookingsResponse(
         room_id=room_id,
@@ -208,7 +206,7 @@ async def list_room_bookings(
     ),
     responses=error_docs(400, 401, 403, 404, 409),
 )
-async def create_room_block(
+def create_room_block(
     payload: RoomBlockCreate,
     response: Response,
     user: CurrentUser,
@@ -264,7 +262,7 @@ async def create_room_block(
             db.close()
 
     for game_id in cancelled_game_ids:
-        GAMES._cache.pop(game_id, None)
+        GAMES.invalidate(game_id)
     response.headers["Location"] = f"/api/v1/rooms/{room_id}/blocks/{result.id}"
     return result
 
@@ -276,7 +274,7 @@ async def create_room_block(
     description="Видаляє період блокування. Раніше автоматично скасовані ігри не відновлюються.",
     responses=error_docs(400, 401, 403, 404),
 )
-async def delete_room_block(
+def delete_room_block(
     user: CurrentUser,
     room_id: str = Path(..., pattern=r"^room_\d+$", description="Ідентифікатор кімнати"),
     block_id: int = Path(..., ge=1, description="Ідентифікатор блокування"),
@@ -310,7 +308,7 @@ async def delete_room_block(
     ),
     responses=error_docs(400, 401, 403, 404, 409),
 )
-async def patch_room(
+def patch_room(
     payload: RoomPatch,
     user: CurrentUser,
     room_id: str = Path(
@@ -322,7 +320,7 @@ async def patch_room(
 ):
     require_roles(user, UserRole.owner)
     room = get_room_or_404(room_id)
-    if payload.is_blocked and any(g.room_id == room_id for g in GAMES.values()):
+    if payload.is_blocked and room_has_games(room_id):
         raise ApiError(409, "ROOM_HAS_GAMES", "У кімнаті є заплановані ігри, спочатку видаліть їх")
     updated = room.model_copy(update={"is_blocked": payload.is_blocked})
     ROOMS[room_id] = updated
