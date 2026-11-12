@@ -22,10 +22,10 @@ def tolerant_client():
 
 @pytest.mark.technical
 def test_unexpected_exception_gives_generic_500_and_is_logged(tolerant_client, monkeypatch, caplog):
-    def broken_sort(records):
+    def broken_query(*args, **kwargs):
         raise RuntimeError(INTERNAL_DETAIL)
 
-    monkeypatch.setattr("routes.games.sorted_games", broken_sort)
+    monkeypatch.setattr("routes.games.query_games", broken_query)
 
     with caplog.at_level(logging.ERROR, logger="api.errors"):
         response = tolerant_client.get("/api/v1/games")
