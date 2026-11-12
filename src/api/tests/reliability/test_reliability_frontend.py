@@ -4,6 +4,7 @@
 тож тести є ін'єкцією збою на мережевому рівні. Без Node.js вони пропускаються
 """
 
+# fmt: off
 import json
 import shutil
 import subprocess
