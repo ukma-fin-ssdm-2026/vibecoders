@@ -25,7 +25,7 @@ from store import (
     find_busy_game,
     find_room_block,
     next_game_id,
-    sorted_games,
+    query_games,
     to_game,
     db_lock,  # <--- Імпортуємо наш м'ютекс
     delete_game_with_notifications,
@@ -93,25 +93,21 @@ def ensure_schedule_is_valid(data: GameBase, master_id: str, exclude_game_id: Op
     description=("Повертає ігри з пагінацією та фільтрами. " "Порядок гарантований: за часом початку, потім за id."),
     responses=error_docs(400),
 )
-async def list_games(
+def list_games(
     limit: int = Query(20, ge=1, le=100, description="Максимальна кількість ігор у відповіді"),
     offset: int = Query(0, ge=0, description="Скільки ігор пропустити"),
     room_id: Optional[str] = Query(None, pattern=r"^room_\d+$", description="Показати лише ігри в цій кімнаті"),
     master_id: Optional[str] = Query(None, pattern=r"^user_\d+$", description="Показати лише ігри цього майстра"),
 ):
-    records = sorted_games(list(GAMES.values()))
-    if room_id:
-        records = [r for r in records if r.room_id == room_id]
-    if master_id:
-        records = [r for r in records if r.master_id == master_id]
-    page = records[offset : offset + limit]
+    # R-14: фільтр, сортування й зріз виконує БД; у пам'ять потрапляє лише запитана сторінка.
+    page, total = query_games(room_id=room_id, master_id=master_id, limit=limit, offset=offset)
     return GameListResponse(
         items=[to_game(r) for r in page],
         pagination=Pagination(
             limit=limit,
             offset=offset,
-            total=len(records),
-            has_more=offset + limit < len(records),
+            total=total,
+            has_more=offset + limit < total,
         ),
     )
 
@@ -124,7 +120,7 @@ async def list_games(
     description=("Створює гру. Майстром стає автор запиту. " "Доступно ролям master та owner."),
     responses=error_docs(400, 401, 403, 404, 409),
 )
-async def create_game(payload: GameCreate, response: Response, user: CurrentUser):
+def create_game(payload: GameCreate, response: Response, user: CurrentUser):
     require_roles(user, UserRole.master, UserRole.owner)
 
     # Атомарна перевірка та запис
@@ -145,7 +141,7 @@ async def create_game(payload: GameCreate, response: Response, user: CurrentUser
     description="Повертає деталі однієї гри разом із кількістю записаних гравців.",
     responses=error_docs(400, 404),
 )
-async def get_game(game_id: str = GameId):
+def get_game(game_id: str = GameId):
     return to_game(get_game_or_404(game_id))
 
 
@@ -158,7 +154,7 @@ async def get_game(game_id: str = GameId):
     ),
     responses=error_docs(400, 401, 403, 404, 409),
 )
-async def replace_game(payload: GameUpdate, user: CurrentUser, game_id: str = GameId):
+def replace_game(payload: GameUpdate, user: CurrentUser, game_id: str = GameId):
     with db_lock:
         record = get_game_or_404(game_id)
         ensure_can_manage(record, user.id, user.role)
@@ -175,7 +171,7 @@ async def replace_game(payload: GameUpdate, user: CurrentUser, game_id: str = Ga
     description=("Змінює лише передані поля. " "Порожнє тіло запиту — помилка валідації."),
     responses=error_docs(400, 401, 403, 404, 409),
 )
-async def patch_game(payload: GamePatch, user: CurrentUser, game_id: str = GameId):
+def patch_game(payload: GamePatch, user: CurrentUser, game_id: str = GameId):
     with db_lock:
         record = get_game_or_404(game_id)
         ensure_can_manage(record, user.id, user.role)
@@ -199,7 +195,7 @@ async def patch_game(payload: GamePatch, user: CurrentUser, game_id: str = GameI
     ),
     responses=error_docs(400, 401, 403, 404),
 )
-async def delete_game(user: CurrentUser, game_id: str = GameId):
+def delete_game(user: CurrentUser, game_id: str = GameId):
     with db_lock:
         record = get_game_or_404(game_id)
         ensure_can_manage(record, user.id, user.role)
@@ -214,7 +210,7 @@ async def delete_game(user: CurrentUser, game_id: str = GameId):
     description=("Повертає записаних гравців та лічильник заповненості. " "Потрібна автентифікація."),
     responses=error_docs(400, 401, 404),
 )
-async def list_players(user: CurrentUser, game_id: str = GameId):
+def list_players(user: CurrentUser, game_id: str = GameId):
     record = get_game_or_404(game_id)
     players = ENROLLMENTS.get(game_id, [])
     return PlayersResponse(
@@ -236,7 +232,7 @@ async def list_players(user: CurrentUser, game_id: str = GameId):
     ),
     responses=error_docs(400, 401, 404, 409),
 )
-async def enroll_player(response: Response, user: CurrentUser, game_id: str = GameId):
+def enroll_player(response: Response, user: CurrentUser, game_id: str = GameId):
     with db_lock:
         record = get_game_or_404(game_id)
         players = ENROLLMENTS.setdefault(game_id, [])
@@ -258,7 +254,7 @@ async def enroll_player(response: Response, user: CurrentUser, game_id: str = Ga
     description=("Скасовує запис гравця. " "Доступно самому гравцеві, майстру гри та власнику клубу."),
     responses=error_docs(400, 401, 403, 404),
 )
-async def remove_player(
+def remove_player(
     user: CurrentUser,
     game_id: str = GameId,
     user_id: str = Path(

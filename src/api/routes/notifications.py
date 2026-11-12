@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/v1/notifications", tags=["Notifications"])
     description="Повертає сповіщення поточного користувача від найновішого до найстарішого.",
     responses=error_docs(401, 403),
 )
-async def get_notifications(user: CurrentUser):
+def get_notifications(user: CurrentUser):
     return [
         NotificationResponse(
             id=notification.id,

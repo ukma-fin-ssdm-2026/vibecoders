@@ -98,3 +98,14 @@ class Notification(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
     user = relationship("User", back_populates="notifications")
+
+
+class LoginFailure(Base):
+    """Невдала спроба входу. Зберігається в БД (R-09), щоб лічильник пережив перезапуск і діяв між воркерами.
+    Без FK: невдалі входи за невідомою поштою теж рахуються."""
+
+    __tablename__ = "login_failures"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    failed_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)

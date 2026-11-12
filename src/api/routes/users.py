@@ -60,7 +60,7 @@ def user_details(db, target: UserModel) -> UserDetails:
     description="Повертає список користувачів із пагінацією. Доступно лише власнику клубу.",
     responses=error_docs(400, 401, 403),
 )
-async def list_users(
+def list_users(
     user: CurrentUser,
     limit: int = Query(20, ge=1, le=100, description="Максимальна кількість користувачів у відповіді"),
     offset: int = Query(0, ge=0, description="Скільки користувачів пропустити"),
@@ -93,7 +93,7 @@ async def list_users(
     description="Повертає профіль поточного користувача, включно з контактами, аватаром та історією записів.",
     responses=error_docs(401, 403, 404),
 )
-async def get_my_profile(user: CurrentUser):
+def get_my_profile(user: CurrentUser):
     db = store.SessionLocal()
     try:
         target = db.query(UserModel).filter(UserModel.id == user.id).first()
@@ -114,7 +114,7 @@ async def get_my_profile(user: CurrentUser):
     ),
     responses=error_docs(400, 401, 403, 404),
 )
-async def patch_my_profile(payload: UserProfilePatch, user: CurrentUser):
+def patch_my_profile(payload: UserProfilePatch, user: CurrentUser):
     changes = payload.model_dump(exclude_unset=True)
     if not changes:
         raise ApiError(400, "VALIDATION_ERROR", "Передайте хоча б одне поле для оновлення")
@@ -130,7 +130,7 @@ async def patch_my_profile(payload: UserProfilePatch, user: CurrentUser):
             setattr(target, field, value)
         db.commit()
         db.refresh(target)
-        store.USERS._cache.pop(user.id, None)
+        store.USERS.invalidate(user.id)
         return user_details(db, target)
     finally:
         db.close()
@@ -146,7 +146,7 @@ async def patch_my_profile(payload: UserProfilePatch, user: CurrentUser):
     ),
     responses=error_docs(400, 401, 403, 404),
 )
-async def get_user(
+def get_user(
     user: CurrentUser,
     user_id: str = Path(..., pattern=r"^user_\d+$", description="Ідентифікатор користувача"),
 ):
@@ -173,7 +173,7 @@ async def get_user(
     ),
     responses=error_docs(400, 401, 403, 404, 409),
 )
-async def patch_user(
+def patch_user(
     payload: UserBlockPatch,
     user: CurrentUser,
     user_id: str = Path(..., pattern=r"^user_\d+$", description="Ідентифікатор користувача"),

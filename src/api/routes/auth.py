@@ -7,16 +7,14 @@ from errors import ApiError, error_docs
 from schemas import LoginRequest, RegisterRequest, TokenResponse, UserRole
 from store import (
     CREDENTIALS,
-    LOCK_DURATION,
     LOCKED_UNTIL,
     LOGIN_FAILURES,
-    LOGIN_WINDOW,
-    MAX_FAILED_LOGINS,
     USER_TOKENS,
     USERS,
     create_registered_user,
     db_lock,
     is_user_blocked,
+    record_failed_login,
     verify_password,
 )
 
@@ -35,7 +33,7 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
     ),
     responses=error_docs(400, 401, 403, 429),
 )
-async def login(payload: LoginRequest):
+def login(payload: LoginRequest):
     now = datetime.now(timezone.utc)
     email = payload.email.strip().lower()
     ensure_not_locked(email, now)
@@ -66,7 +64,7 @@ async def login(payload: LoginRequest):
     ),
     responses=error_docs(400, 409),
 )
-async def register(payload: RegisterRequest):
+def register(payload: RegisterRequest):
     with db_lock:
         created = create_registered_user(
             name=payload.name.strip(),
@@ -96,10 +94,5 @@ def ensure_not_locked(email: str, now: datetime) -> None:
 
 
 def register_failed_login(email: str, now: datetime) -> None:
-    recent = [t for t in LOGIN_FAILURES.get(email, []) if now - t < LOGIN_WINDOW]
-    recent.append(now)
-    if len(recent) >= MAX_FAILED_LOGINS:
-        LOCKED_UNTIL[email] = now + LOCK_DURATION
-        LOGIN_FAILURES.pop(email, None)
-    else:
-        LOGIN_FAILURES[email] = recent
+    # Лічильник живе в БД й оновлюється атомарно під db_lock (R-09), див. store.record_failed_login.
+    record_failed_login(email, now)

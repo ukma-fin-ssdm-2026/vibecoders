@@ -5,9 +5,11 @@ import logging
 import os
 import secrets
 import threading
+from collections import OrderedDict
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional
+from typing import Any, List, Optional, Tuple
 
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError, OperationalError
 
 from resilience import is_transient_db_error, retry_with_backoff
@@ -22,6 +24,7 @@ from models import (
     Enrollment as EnrollmentModel,
     Token as TokenModel,
     RoomBlock as RoomBlockModel,
+    LoginFailure as LoginFailureModel,
 )
 
 logger = logging.getLogger("api.store")
@@ -54,7 +57,59 @@ def verify_password(password: str, password_hash: str) -> bool:
 MAX_FAILED_LOGINS = 5
 LOGIN_WINDOW = timedelta(minutes=15)
 LOCK_DURATION = timedelta(minutes=15)
-LOGIN_FAILURES: Dict[str, List[datetime]] = {}
+
+
+def _naive_utc(value: datetime) -> datetime:
+    """У БД час зберігається як наївний UTC."""
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+class LoginFailuresProxy:
+    """Невдалі входи за останні LOGIN_WINDOW. Стан у БД (R-09): переживає перезапуск і спільний для воркерів."""
+
+    def get(self, email: str, default=None):
+        db = SessionLocal()
+        try:
+            rows = (
+                db.query(LoginFailureModel.failed_at)
+                .filter(LoginFailureModel.email == email)
+                .order_by(LoginFailureModel.failed_at, LoginFailureModel.id)
+                .all()
+            )
+            return [failed_at.replace(tzinfo=timezone.utc) for (failed_at,) in rows] if rows else default
+        finally:
+            db.close()
+
+    def pop(self, email: str, default=None):
+        with db_lock:
+            val = self.get(email)
+            if val is None:
+                return default  # нічого видаляти: успішний вхід без невдач не пише в БД
+            db = SessionLocal()
+            try:
+                db.query(LoginFailureModel).filter(LoginFailureModel.email == email).delete(synchronize_session=False)
+                db.commit()
+            except Exception:
+                db.rollback()
+                raise
+            finally:
+                db.close()
+            return val
+
+    def clear(self):
+        with db_lock:
+            db = SessionLocal()
+            try:
+                db.query(LoginFailureModel).delete(synchronize_session=False)
+                db.commit()
+            except Exception:
+                db.rollback()
+                raise
+            finally:
+                db.close()
+
+
+LOGIN_FAILURES = LoginFailuresProxy()
 
 
 class LockedUntilProxy:
@@ -99,30 +154,117 @@ class LockedUntilProxy:
 LOCKED_UNTIL = LockedUntilProxy()
 
 
+def record_failed_login(email: str, now: datetime) -> bool:
+    """Атомарно записує невдалий вхід і за досягнення MAX_FAILED_LOGINS блокує акаунт (R-09).
+
+    Усе виконується під db_lock в одній транзакції: паралельні спроби не губляться, а збій БД відкочує запис
+    і піднімається вище (швидка відмова: 503, а не мовчазно пропущена спроба). Повертає True, якщо акаунт заблоковано.
+    """
+    now_db = _naive_utc(now)
+    window_start = now_db - LOGIN_WINDOW
+    with db_lock:
+        db = SessionLocal()
+        try:
+            # Прострочені спроби неважливі нікому, тож чистимо їх разом (таблиця не росте без меж).
+            db.query(LoginFailureModel).filter(LoginFailureModel.failed_at <= window_start).delete(
+                synchronize_session=False
+            )
+            db.add(LoginFailureModel(email=email, failed_at=now_db))
+            db.flush()
+            attempts = db.query(LoginFailureModel).filter(LoginFailureModel.email == email).count()
+            locked = attempts >= MAX_FAILED_LOGINS
+            if locked:
+                user = db.query(UserModel).filter(UserModel.email == email).first()
+                if user is not None:
+                    user.locked_until = _naive_utc(now + LOCK_DURATION)
+                db.query(LoginFailureModel).filter(LoginFailureModel.email == email).delete(synchronize_session=False)
+                logger.warning("Login lockout triggered after %d failed attempts", attempts)
+            db.commit()
+            return locked
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+
 class GameRecord(GameBase):
     id: str
     master_id: str
 
 
-class DBProxyDict:
-    """Проксі-клас із внутрішнім кешем для збереження ідентичності об'єктів (оператор is у тестах)."""
+CACHE_MAX_ENTRIES = 1024
 
-    def __init__(self, model_class, schema_class=None, transform_func=None):
+
+class BoundedCache:
+    """Потокобезпечний LRU-кеш з жорсткою межею розміру (R-15): найдавніший запис витісняється першим."""
+
+    def __init__(self, max_entries: int = CACHE_MAX_ENTRIES):
+        if max_entries < 1:
+            raise ValueError("max_entries must be at least 1")
+        self.max_entries = max_entries
+        self._data: "OrderedDict[Any, Any]" = OrderedDict()
+        self._lock = threading.Lock()
+
+    def get(self, key, default=None):
+        with self._lock:
+            if key not in self._data:
+                return default
+            self._data.move_to_end(key)
+            return self._data[key]
+
+    def __setitem__(self, key, value):
+        with self._lock:
+            self._data[key] = value
+            self._data.move_to_end(key)
+            while len(self._data) > self.max_entries:
+                self._data.popitem(last=False)
+
+    def pop(self, key, default=None):
+        with self._lock:
+            return self._data.pop(key, default)
+
+    def clear(self):
+        with self._lock:
+            self._data.clear()
+
+    def __contains__(self, key):
+        with self._lock:
+            return key in self._data
+
+    def __len__(self):
+        with self._lock:
+            return len(self._data)
+
+
+class DBProxyDict:
+    """Проксі над таблицею БД. Кеш лише зберігає ідентичність об'єктів (оператор is у тестах), а не дані (R-15):
+    значення завжди перебудовується з рядка БД, і закешований об'єкт повертається, лише якщо він йому дорівнює.
+    Тому застарілий запис неможливий і ручна інвалідація не потрібна; розмір кешу обмежено."""
+
+    def __init__(self, model_class, schema_class=None, transform_func=None, max_cache_entries=CACHE_MAX_ENTRIES):
         self.model_class = model_class
         self.schema_class = schema_class
         self.transform_func = transform_func
-        self._cache = {}
+        self._cache = BoundedCache(max_cache_entries)
+
+    def _build(self, db_obj):
+        if self.transform_func:
+            return self.transform_func(db_obj)
+        data = {col: getattr(db_obj, col) for col in db_obj.__table__.columns.keys()}
+        return self.schema_class(**data) if self.schema_class else data
 
     def _to_schema(self, db_obj):
-        if db_obj.id in self._cache:
-            return self._cache[db_obj.id]
-        if self.transform_func:
-            res = self.transform_func(db_obj)
-        else:
-            data = {col: getattr(db_obj, col) for col in db_obj.__table__.columns.keys()}
-            res = self.schema_class(**data) if self.schema_class else data
-        self._cache[db_obj.id] = res
-        return res
+        fresh = self._build(db_obj)
+        cached = self._cache.get(db_obj.id)
+        if cached is not None and cached == fresh:
+            return cached
+        self._cache[db_obj.id] = fresh
+        return fresh
+
+    def invalidate(self, key):
+        """Явно прибирає запис із кешу (єдина точка замість прямих звернень до _cache)."""
+        self._cache.pop(key, None)
 
     def get(self, key, default=None):
         db = SessionLocal()
@@ -161,7 +303,7 @@ class DBProxyDict:
             if obj:
                 db.delete(obj)
                 db.commit()
-                self._cache.pop(key, None)
+                self.invalidate(key)
             else:
                 raise KeyError(key)
         finally:
@@ -455,7 +597,7 @@ def delete_game_with_notifications(game_id: str) -> None:
         raise
     finally:
         db.close()
-    GAMES._cache.pop(game_id, None)
+    GAMES.invalidate(game_id)
 
 
 def to_game(record: GameRecord) -> Game:
@@ -464,6 +606,37 @@ def to_game(record: GameRecord) -> Game:
 
 def sorted_games(records: List[GameRecord]) -> List[GameRecord]:
     return sorted(records, key=lambda r: (r.starts_at, r.id))
+
+
+def query_games(
+    room_id: Optional[str] = None,
+    master_id: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: int = 0,
+) -> Tuple[List[GameRecord], int]:
+    """Сторінка ігор і загальна кількість; фільтр, порядок (starts_at, id) і зріз виконує БД (R-14)."""
+    db = SessionLocal()
+    try:
+        query = db.query(GameModel)
+        if room_id:
+            query = query.filter(GameModel.room_id == room_id)
+        if master_id:
+            query = query.filter(GameModel.master_id == master_id)
+        total = query.count()
+        page = query.order_by(GameModel.starts_at, GameModel.id).offset(offset)
+        if limit is not None:
+            page = page.limit(limit)
+        return [GAMES._to_schema(obj) for obj in page.all()], total
+    finally:
+        db.close()
+
+
+def room_has_games(room_id: str) -> bool:
+    db = SessionLocal()
+    try:
+        return db.query(GameModel.id).filter(GameModel.room_id == room_id).first() is not None
+    finally:
+        db.close()
 
 
 def time_overlap(start_a: datetime, minutes_a: int, start_b: datetime, minutes_b: int) -> bool:
@@ -477,17 +650,27 @@ def find_busy_game(
     master_id: Optional[str] = None,
     exclude_game_id: Optional[str] = None,
 ) -> Optional[GameRecord]:
-    with db_lock:
-        for record in sorted_games(list(GAMES.values())):
-            if record.id == exclude_game_id:
-                continue
-            same_room = room_id is not None and record.room_id == room_id
-            same_master = master_id is not None and record.master_id == master_id
-            if (same_room or same_master) and time_overlap(
-                starts_at, duration_minutes, record.starts_at, record.duration_minutes
-            ):
-                return record
+    conditions = []
+    if room_id is not None:
+        conditions.append(GameModel.room_id == room_id)
+    if master_id is not None:
+        conditions.append(GameModel.master_id == master_id)
+    if not conditions:
         return None
+    with db_lock:
+        db = SessionLocal()
+        try:
+            # R-14: з БД беремо лише ігри цієї кімнати або цього майстра, а не всю таблицю.
+            query = db.query(GameModel).filter(or_(*conditions))
+            if exclude_game_id is not None:
+                query = query.filter(GameModel.id != exclude_game_id)
+            for obj in query.order_by(GameModel.starts_at, GameModel.id).all():
+                record = GAMES._to_schema(obj)
+                if time_overlap(starts_at, duration_minutes, record.starts_at, record.duration_minutes):
+                    return record
+            return None
+        finally:
+            db.close()
 
 
 def game_end(record: GameRecord) -> datetime:
