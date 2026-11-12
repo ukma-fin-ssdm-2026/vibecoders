@@ -7,9 +7,10 @@ import asyncio
 import inspect
 
 import pytest
-from fastapi.routing import APIRoute
 
-from main import app
+from routes import auth, games, health, notifications, rooms, users
+
+ROUTE_MODULES = [auth, games, health, notifications, rooms, users]
 
 
 def running_on_event_loop() -> bool:
@@ -21,14 +22,20 @@ def running_on_event_loop() -> bool:
 
 
 @pytest.mark.technical
-def test_no_api_handler_is_a_coroutine_function():
-    routes = [route for route in app.routes if isinstance(route, APIRoute) and route.path.startswith("/api/v1")]
+def test_no_route_module_defines_a_coroutine_function():
+    # Перевірка за модулями, а не за app.routes: вона не залежить від того, як версія FastAPI зберігає маршрути.
+    defined_functions = 0
+    coroutines = []
+    for module in ROUTE_MODULES:
+        for name, function in inspect.getmembers(module, inspect.isfunction):
+            if function.__module__ != module.__name__:
+                continue
+            defined_functions += 1
+            if inspect.iscoroutinefunction(function):
+                coroutines.append(f"{module.__name__}.{name}")
 
-    assert len(routes) >= 20
-    coroutine_handlers = [
-        f"{sorted(route.methods)} {route.path}" for route in routes if inspect.iscoroutinefunction(route.endpoint)
-    ]
-    assert coroutine_handlers == []
+    assert defined_functions >= 20
+    assert coroutines == []
 
 
 @pytest.mark.technical

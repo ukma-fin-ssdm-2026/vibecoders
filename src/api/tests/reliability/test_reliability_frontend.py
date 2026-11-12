@@ -88,8 +88,7 @@ needs_node = pytest.mark.skipif(NODE is None, reason="Node.js is required to exe
 @pytest.mark.technical
 @needs_node
 def test_request_to_unresponsive_server_fails_with_timeout_error():
-    result = run_node(
-        """
+    result = run_node("""
 (async () => {
   const { app } = load({ fetch: (url, opts) => abortable(opts) });
   app.API_TIMEOUT_MS = 30;
@@ -97,8 +96,7 @@ def test_request_to_unresponsive_server_fails_with_timeout_error():
   const result = await outcome(app.api('GET', '/games'));
   console.log(JSON.stringify({ result, elapsed: Date.now() - started, timers: activeTimers.size }));
 })();
-"""
-    )
+""")
 
     assert result["result"]["error"]["code"] == "TIMEOUT"
     assert result["result"]["error"]["status"] == 0
@@ -109,8 +107,7 @@ def test_request_to_unresponsive_server_fails_with_timeout_error():
 @pytest.mark.technical
 @needs_node
 def test_timeout_also_covers_reading_the_response_body():
-    result = run_node(
-        """
+    result = run_node("""
 (async () => {
   const fetchStub = (url, opts) => Promise.resolve({
     ok: true,
@@ -123,8 +120,7 @@ def test_timeout_also_covers_reading_the_response_body():
   const result = await outcome(app.api('GET', '/games'));
   console.log(JSON.stringify({ result, timers: activeTimers.size }));
 })();
-"""
-    )
+""")
 
     assert result["result"]["error"]["code"] == "TIMEOUT"
     assert result["timers"] == 0
@@ -159,15 +155,13 @@ def test_timer_is_cleared_after_a_fast_response_and_errors_keep_their_code(statu
 @pytest.mark.technical
 @needs_node
 def test_network_failure_is_still_reported_as_network_error_not_timeout():
-    result = run_node(
-        """
+    result = run_node("""
 (async () => {
   const { app } = load({ fetch: async () => { throw new Error('connection reset'); } });
   const result = await outcome(app.api('GET', '/games'));
   console.log(JSON.stringify({ result }));
 })();
-"""
-    )
+""")
 
     assert result["result"]["error"]["code"] == "NETWORK_ERROR"
     assert "connection reset" in result["result"]["error"]["message"]
