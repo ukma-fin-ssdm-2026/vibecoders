@@ -10,8 +10,80 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import timedelta, timezone, tzinfo
+from datetime import datetime, timedelta, timezone, tzinfo
 from typing import Any, Dict, List, Optional
+
+
+def parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
+    """Безпечно розбирає рядок ISO-8601 у datetime з часовим поясом UTC."""
+    if not value or not isinstance(value, str):
+        return None
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+    if cleaned.endswith("Z"):
+        cleaned = cleaned[:-1] + "+00:00"
+    try:
+        dt = datetime.fromisoformat(cleaned)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+    except (ValueError, TypeError):
+        return None
+
+
+def calculate_job_timings(run_created_at_str: str, jobs: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Обчислює чергу і виконання на основі завдань запуску.
+
+    - Черга: мінімум started_at завдань мінус created_at запуску.
+    - Виконання: максимум completed_at завдань мінус мінімум started_at завдань.
+    """
+    run_created = parse_iso_datetime(run_created_at_str)
+    started_times: List[datetime] = []
+    completed_times: List[datetime] = []
+
+    for job in jobs:
+        st = parse_iso_datetime(job.get("started_at"))
+        ct = parse_iso_datetime(job.get("completed_at"))
+        if st:
+            started_times.append(st)
+        if ct:
+            completed_times.append(ct)
+
+    min_started = min(started_times) if started_times else None
+    max_completed = max(completed_times) if completed_times else None
+
+    queue_sec: Optional[float] = None
+    exec_sec: Optional[float] = None
+
+    if min_started and run_created:
+        queue_sec = max(0.0, (min_started - run_created).total_seconds())
+
+    if min_started and max_completed:
+        exec_sec = max(0.0, (max_completed - min_started).total_seconds())
+
+    return {
+        "min_started_at": min_started.isoformat() if min_started else None,
+        "max_completed_at": max_completed.isoformat() if max_completed else None,
+        "queue_seconds": queue_sec,
+        "execution_seconds": exec_sec,
+        "queue_minutes": round(queue_sec / 60.0, 1) if queue_sec is not None else None,
+        "execution_minutes": round(exec_sec / 60.0, 1) if exec_sec is not None else None,
+    }
+
+
+def classify_run_status(conclusion: Optional[str]) -> str:
+    """Класифікує результат запуску: green (успіх), red (збій), cancelled або skipped."""
+    c = (conclusion or "").lower().strip()
+    if c == "success":
+        return "green"
+    if c in ("failure", "timed_out"):
+        return "red"
+    if c == "cancelled":
+        return "cancelled"
+    if c == "skipped":
+        return "skipped"
+    return c or "unknown"
 
 
 def run_gh_cmd(args: List[str]) -> str:
