@@ -196,6 +196,143 @@ def resolve_commit_pr_info(repo: str, sha: str, completion_dt: Optional[datetime
     }
 
 
+def calculate_mean(values: List[float]) -> Optional[float]:
+    """Обчислює середнє арифметичне списку чисел."""
+    if not values:
+        return None
+    return sum(values) / len(values)
+
+
+def calculate_median(values: List[float]) -> Optional[float]:
+    """Обчислює медіану списку чисел."""
+    if not values:
+        return None
+    s = sorted(values)
+    n = len(s)
+    mid = n // 2
+    if n % 2 == 1:
+        return float(s[mid])
+    return (s[mid - 1] + s[mid]) / 2.0
+
+
+def calculate_deployment_frequency(
+    green_runs: List[Dict[str, Any]],
+    since_dt: datetime,
+    until_dt: datetime,
+    tz: tzinfo,
+) -> Dict[str, Any]:
+    """Обчислює частоту розгортань: зелені запуски на тиждень і на активний день."""
+    total_green = len(green_runs)
+    period_seconds = max(86400.0, (until_dt - since_dt).total_seconds())
+    weeks = period_seconds / (7.0 * 86400.0)
+
+    active_days = set()
+    for r in green_runs:
+        comp_dt = r.get("completed_at_dt")
+        if comp_dt:
+            active_days.add(comp_dt.astimezone(tz).date())
+
+    active_days_count = len(active_days)
+    per_week = total_green / max(weeks, 1.0 / 7.0)
+    per_active_day = (total_green / active_days_count) if active_days_count > 0 else 0.0
+
+    return {
+        "total_green": total_green,
+        "weeks": round(weeks, 1),
+        "per_week": round(per_week, 1),
+        "active_days_count": active_days_count,
+        "per_active_day": round(per_active_day, 1),
+    }
+
+
+def calculate_lead_time_metrics(runs: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Обчислює статистику часу виконання змін та частку черги і виконання."""
+    lead_times = [r["lead_time_minutes"] for r in runs if r.get("lead_time_minutes") is not None]
+    mean_lead = calculate_mean(lead_times)
+    median_lead = calculate_median(lead_times)
+
+    valid_qe = [r for r in runs if r.get("queue_seconds") is not None and r.get("execution_seconds") is not None]
+    total_q = sum(r["queue_seconds"] for r in valid_qe)
+    total_e = sum(r["execution_seconds"] for r in valid_qe)
+    sum_qe = total_q + total_e
+
+    q_share = (total_q / sum_qe * 100.0) if sum_qe > 0 else 0.0
+    e_share = (total_e / sum_qe * 100.0) if sum_qe > 0 else 0.0
+
+    return {
+        "mean_minutes": round(mean_lead, 1) if mean_lead is not None else None,
+        "median_minutes": round(median_lead, 1) if median_lead is not None else None,
+        "queue_share_pct": round(q_share, 1),
+        "execution_share_pct": round(e_share, 1),
+    }
+
+
+def calculate_change_failure_rate(runs: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Обчислює частоту збоїв: червоні / усі завершені × 100%."""
+    total_completed = len(runs)
+    red_count = sum(1 for r in runs if r.get("classified_status") == "red")
+    green_count = sum(1 for r in runs if r.get("classified_status") == "green")
+    cancelled_count = sum(1 for r in runs if r.get("classified_status") == "cancelled")
+    skipped_count = sum(1 for r in runs if r.get("classified_status") == "skipped")
+
+    rate = (red_count / total_completed * 100.0) if total_completed > 0 else 0.0
+    return {
+        "total_completed": total_completed,
+        "green_count": green_count,
+        "red_count": red_count,
+        "cancelled_count": cancelled_count,
+        "skipped_count": skipped_count,
+        "failure_rate_pct": round(rate, 1),
+    }
+
+
+def calculate_time_to_restore(runs: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Обчислює час відновлення: від червоного запуску до наступного зеленого."""
+    sorted_runs = sorted(
+        runs,
+        key=lambda r: r.get("completed_at_dt") or r.get("created_at_dt") or datetime.min.replace(tzinfo=timezone.utc),
+    )
+
+    restore_times_min: List[float] = []
+    red_count = sum(1 for r in sorted_runs if r.get("classified_status") == "red")
+
+    for i, r in enumerate(sorted_runs):
+        if r.get("classified_status") == "red":
+            red_comp = r.get("completed_at_dt") or r.get("created_at_dt")
+            for next_r in sorted_runs[i + 1 :]:
+                if next_r.get("classified_status") == "green":
+                    green_comp = next_r.get("completed_at_dt") or next_r.get("created_at_dt")
+                    if red_comp and green_comp:
+                        diff_sec = max(0.0, (green_comp - red_comp).total_seconds())
+                        restore_times_min.append(diff_sec / 60.0)
+                    break
+
+    if red_count == 0:
+        return {
+            "has_red": False,
+            "mean_minutes": None,
+            "median_minutes": None,
+            "status_label": "н/д (червоних запусків немає)",
+        }
+
+    if not restore_times_min:
+        return {
+            "has_red": True,
+            "mean_minutes": None,
+            "median_minutes": None,
+            "status_label": "н/д (після збою немає зеленого запуску)",
+        }
+
+    mean_rest = calculate_mean(restore_times_min)
+    med_rest = calculate_median(restore_times_min)
+    return {
+        "has_red": True,
+        "mean_minutes": round(mean_rest, 1) if mean_rest is not None else None,
+        "median_minutes": round(med_rest, 1) if med_rest is not None else None,
+        "status_label": f"середнє: {round(mean_rest, 1)} хв, медіана: {round(med_rest, 1)} хв",
+    }
+
+
 def run_gh_cmd(args: List[str]) -> str:
     """Виконує команду GitHub CLI (gh) і повертає stdout у вигляді рядка."""
     cmd = ["gh"] + args
