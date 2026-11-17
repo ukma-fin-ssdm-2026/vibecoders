@@ -7,9 +7,99 @@
 """
 
 import argparse
+import json
+import subprocess
 import sys
 from datetime import timedelta, timezone, tzinfo
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
+
+
+def run_gh_cmd(args: List[str]) -> str:
+    """Виконує команду GitHub CLI (gh) і повертає stdout у вигляді рядка."""
+    cmd = ["gh"] + args
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        err_msg = result.stderr.strip() or f"Команда {' '.join(cmd)} завершилася з кодом {result.returncode}"
+        raise RuntimeError(f"Помилка виклику gh: {err_msg}")
+    return result.stdout
+
+
+def detect_repo(explicit_repo: Optional[str] = None) -> str:
+    """Визначає репозиторій у форматі owner/repo."""
+    if explicit_repo:
+        return explicit_repo.strip()
+    try:
+        out = run_gh_cmd(["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"]).strip()
+        if out:
+            return out
+    except Exception:
+        pass
+    return "ukma-fin-ssdm-2026/vibecoders"
+
+
+def parse_json_stream(text: str) -> List[Dict[str, Any]]:
+    """Розбирає потік JSON-об'єктів (JSON lines або послідовні об'єкти від --jq)."""
+    text = text.strip()
+    if not text:
+        return []
+    items: List[Dict[str, Any]] = []
+    decoder = json.JSONDecoder()
+    idx = 0
+    while idx < len(text):
+        while idx < len(text) and text[idx].isspace():
+            idx += 1
+        if idx >= len(text):
+            break
+        obj, end = decoder.raw_decode(text, idx)
+        if isinstance(obj, list):
+            items.extend(obj)
+        elif isinstance(obj, dict):
+            items.append(obj)
+        idx = end
+    return items
+
+
+def fetch_workflow_runs(repo: str, since: str) -> List[Dict[str, Any]]:
+    """Отримує завершені запуски CI Pipeline для гілки main від вказаної дати."""
+    endpoint = f"repos/{repo}/actions/workflows/ci.yml/runs"
+    args = [
+        "api",
+        "--paginate",
+        "-X",
+        "GET",
+        endpoint,
+        "-f",
+        "branch=main",
+        "-f",
+        "event=push",
+        "-f",
+        "status=completed",
+        "-f",
+        f"created=>={since}",
+        "--jq",
+        ".workflow_runs[]",
+    ]
+    raw = run_gh_cmd(args)
+    return parse_json_stream(raw)
+
+
+def fetch_run_jobs(repo: str, run_id: int) -> List[Dict[str, Any]]:
+    """Отримує завдання (jobs) конкретного запуску workflow."""
+    endpoint = f"repos/{repo}/actions/runs/{run_id}/jobs?per_page=100"
+    args = ["api", "-X", "GET", endpoint]
+    raw = run_gh_cmd(args)
+    if not raw.strip():
+        return []
+    data = json.loads(raw)
+    jobs = data.get("jobs", [])
+    if isinstance(jobs, list):
+        return jobs
+    return []
 
 
 def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
