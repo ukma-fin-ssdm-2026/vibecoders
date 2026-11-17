@@ -86,6 +86,116 @@ def classify_run_status(conclusion: Optional[str]) -> str:
     return c or "unknown"
 
 
+def extract_commit_author_date(commit_obj: Dict[str, Any]) -> Optional[datetime]:
+    """Витягує дату автора (commit.author.date) із об'єкта коміту GitHub API."""
+    commit_data = commit_obj.get("commit")
+    if isinstance(commit_data, dict):
+        author = commit_data.get("author")
+        if isinstance(author, dict):
+            dt = parse_iso_datetime(author.get("date"))
+            if dt:
+                return dt
+        committer = commit_data.get("committer")
+        if isinstance(committer, dict):
+            dt = parse_iso_datetime(committer.get("date"))
+            if dt:
+                return dt
+    return None
+
+
+def find_earliest_commit_date(
+    commits: List[Dict[str, Any]], fallback_dt: Optional[datetime] = None
+) -> Optional[datetime]:
+    """Знаходить найранішу дату commit.author.date серед списку комітів PR."""
+    dates: List[datetime] = []
+    for c in commits:
+        dt = extract_commit_author_date(c)
+        if dt:
+            dates.append(dt)
+    if dates:
+        return min(dates)
+    return fallback_dt
+
+
+def calculate_lead_time_seconds(
+    first_commit_dt: Optional[datetime], completion_dt: Optional[datetime]
+) -> Optional[float]:
+    """Обчислює час виконання змін у секундах: завершення останнього завдання мінус перший коміт."""
+    if not first_commit_dt or not completion_dt:
+        return None
+    delta = (completion_dt - first_commit_dt).total_seconds()
+    return max(0.0, delta)
+
+
+def fetch_pull_requests_for_commit(repo: str, sha: str) -> List[Dict[str, Any]]:
+    """Отримує список PR, пов'язаних із комітом."""
+    endpoint = f"repos/{repo}/commits/{sha}/pulls"
+    try:
+        raw = run_gh_cmd(["api", "-X", "GET", endpoint])
+        if not raw.strip():
+            return []
+        data = json.loads(raw)
+        if isinstance(data, list):
+            return data
+    except Exception:
+        pass
+    return []
+
+
+def fetch_pull_request_commits(repo: str, pull_number: int) -> List[Dict[str, Any]]:
+    """Отримує всі коміти PR із пагінацією."""
+    endpoint = f"repos/{repo}/pulls/{pull_number}/commits"
+    try:
+        raw = run_gh_cmd(["api", "--paginate", "-X", "GET", endpoint])
+        return parse_json_stream(raw)
+    except Exception:
+        return []
+
+
+def fetch_commit_details(repo: str, sha: str) -> Optional[Dict[str, Any]]:
+    """Отримує дані про окремий коміт."""
+    endpoint = f"repos/{repo}/commits/{sha}"
+    try:
+        raw = run_gh_cmd(["api", "-X", "GET", endpoint])
+        if raw.strip():
+            data = json.loads(raw)
+            if isinstance(data, dict):
+                return data
+    except Exception:
+        pass
+    return None
+
+
+def resolve_commit_pr_info(repo: str, sha: str, completion_dt: Optional[datetime]) -> Dict[str, Any]:
+    """Визначає інформацію про PR, перший коміт і час виконання змін."""
+    prs = fetch_pull_requests_for_commit(repo, sha)
+    pr_label = "—"
+    first_commit_dt: Optional[datetime] = None
+
+    if prs:
+        pr = prs[0]
+        pr_number = pr.get("number")
+        if pr_number:
+            pr_label = f"#{pr_number}"
+            pr_commits = fetch_pull_request_commits(repo, pr_number)
+            first_commit_dt = find_earliest_commit_date(pr_commits)
+
+    if not first_commit_dt:
+        commit_obj = fetch_commit_details(repo, sha)
+        if commit_obj:
+            first_commit_dt = extract_commit_author_date(commit_obj)
+
+    lead_sec = calculate_lead_time_seconds(first_commit_dt, completion_dt)
+    lead_min = round(lead_sec / 60.0, 1) if lead_sec is not None else None
+
+    return {
+        "pr_label": pr_label,
+        "first_commit_dt": first_commit_dt,
+        "lead_time_seconds": lead_sec,
+        "lead_time_minutes": lead_min,
+    }
+
+
 def run_gh_cmd(args: List[str]) -> str:
     """Виконує команду GitHub CLI (gh) і повертає stdout у вигляді рядка."""
     cmd = ["gh"] + args
