@@ -235,6 +235,8 @@ def test_format_tz_label():
 @pytest.mark.technical
 def test_detect_repo_prefers_explicit_value_and_fails_without_gh(monkeypatch):
     assert dora.detect_repo(" owner/repo ") == "owner/repo"
+    with pytest.raises(RuntimeError):
+        dora.detect_repo("../repo")
 
     def broken(args):
         raise RuntimeError("gh недоступний")
@@ -313,6 +315,7 @@ def test_main_builds_report_and_anonymized_json(tmp_path, monkeypatch):
     assert any("created=2026-11-01..2026-11-14" in call for call in calls)
 
     report = out.read_text(encoding="utf-8")
+    assert "- Період: 2026-11-01 – 2026-11-14" in report
     assert "| 1 | aaaaaaa | #7 | 10.11 11:00 | 10.11 12:06 | 2.0 | 4.0 | 66.0 | ✅ |" in report
     assert "| 2 | bbbbbbb | — | 10.11 13:50 | 10.11 14:05 | 1.0 | 4.0 | 15.0 | ❌ | без PR (прямий пуш) |" in report
     assert "повторний запуск (спроба 2)" in report
@@ -335,6 +338,7 @@ def test_main_returns_error_codes(tmp_path, monkeypatch):
     assert dora.main(["--since", "2026-11-01", "--repo", "o/r", "--out", out]) == 1
     assert dora.main(["--since", "2026-11-10", "--until", "2026-11-01", "--repo", "o/r", "--out", out]) == 2
     assert dora.main(["--since", "not-a-date", "--repo", "o/r", "--out", out]) == 2
+    assert dora.main(["--since", "2026-1-1", "--repo", "o/r", "--out", out]) == 2
 
     def missing_gh(args):
         raise FileNotFoundError("gh")
