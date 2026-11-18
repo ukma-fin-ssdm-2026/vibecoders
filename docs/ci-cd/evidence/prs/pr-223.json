@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-13T12:10:17Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-13T12:10:17Z",
+      "messageBody": "Added raw CI/CD metrics for the main branch covering the period from November 1 to November 12, 2026. The table includes commit details, PR information, completion times, and notes on performance anomalies.",
+      "messageHeadline": "Add raw CI/CD metrics for November 2026",
+      "oid": "255bdefee6803c3151945e22214b71d8fad7b41e"
+    }
+  ],
+  "number": 223,
+  "title": "Add raw CI/CD metrics for November 2026",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/223"
+}

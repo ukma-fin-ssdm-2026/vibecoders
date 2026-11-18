@@ -1,0 +1,58 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-06T12:14:43Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-06T12:14:43Z",
+      "messageBody": "Make database operations transactional and serialized, return actionable service-unavailable responses, and document the reliability findings with regression tests.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "[RELIABILITY] add Lab 9 reliability safeguards",
+      "oid": "8c546569dacaf8e4088aaa1331aac685e96e1391"
+    },
+    {
+      "authoredDate": "2026-11-06T12:25:44Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-11-06T12:25:44Z",
+      "messageBody": "",
+      "messageHeadline": "Delete docs/reliability/scavenger-hunt.md",
+      "oid": "8de14db2ba6d5449d28a670bd1fa5aa776e4b9b9"
+    },
+    {
+      "authoredDate": "2026-11-06T12:26:01Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-11-06T12:26:01Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into feature/lab09-reliability",
+      "oid": "488d4c923381b791f33553dcad4d4ca8c2a00553"
+    }
+  ],
+  "number": 209,
+  "title": "reliability: deliver Lab 9 findings and safeguards",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/209"
+}

@@ -1,0 +1,52 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-11T13:54:47Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-11T13:54:47Z",
+      "messageBody": "",
+      "messageHeadline": "Add retry_with_backoff helper in resilience.py",
+      "oid": "1d316e9dea2be1f5457b42e990081434ff6f12d6"
+    },
+    {
+      "authoredDate": "2026-11-11T13:54:55Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-11T13:54:55Z",
+      "messageBody": "",
+      "messageHeadline": "Apply retry to idempotent credentials lookup in store",
+      "oid": "33e9c65880580226a61ad3d7f550d9b4f5190261"
+    },
+    {
+      "authoredDate": "2026-11-11T13:55:07Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-11T13:55:07Z",
+      "messageBody": "",
+      "messageHeadline": "Add reliability tests for retry with backoff and jitter",
+      "oid": "fdba5a985103ca9a3cdf67d37784d8e09f04a0b9"
+    }
+  ],
+  "number": 215,
+  "title": "Feature/retry backoff jitter",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/215"
+}
