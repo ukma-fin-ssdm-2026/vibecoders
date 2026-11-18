@@ -245,11 +245,62 @@ def test_detect_repo_prefers_explicit_value_and_fails_without_gh(monkeypatch):
 
 
 @pytest.mark.technical
+def test_gh_argument_validation_allows_only_supported_requests(monkeypatch):
+    allowed_requests = [
+        ["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"],
+        ["api", "-X", "GET", "repos/owner/repo/commits/aaaaaaa1111/pulls"],
+        ["api", "--paginate", "-X", "GET", "repos/owner/repo/pulls/7/commits"],
+        ["api", "-X", "GET", "repos/owner/repo/commits/aaaaaaa1111"],
+        ["api", "-X", "GET", "repos/owner/repo/actions/runs/1/jobs?per_page=100"],
+        [
+            "api",
+            "--paginate",
+            "-X",
+            "GET",
+            "repos/owner/repo/actions/workflows/ci.yml/runs",
+            "-f",
+            "branch=main",
+            "-f",
+            "event=push",
+            "-f",
+            "status=completed",
+            "-f",
+            "created=2026-11-01..2026-11-14",
+            "--jq",
+            ".workflow_runs[]",
+        ],
+    ]
+    for request in allowed_requests:
+        dora.validate_gh_args(request)
+
+    def unexpected_subprocess(*args, **kwargs):
+        raise AssertionError("subprocess must not run for rejected arguments")
+
+    monkeypatch.setattr(dora.subprocess, "run", unexpected_subprocess)
+    with pytest.raises(ValueError):
+        dora.run_gh_cmd(["api", "--help"])
+
+
+@pytest.mark.technical
+def test_write_text_file_rejects_paths_outside_workspace(tmp_path, monkeypatch):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    monkeypatch.chdir(workspace)
+
+    with pytest.raises(ValueError):
+        dora.write_text_file("../outside.md", "data")
+    with pytest.raises(ValueError):
+        dora.write_text_file(str(tmp_path / "outside.md"), "data")
+    assert not (tmp_path / "outside.md").exists()
+
+
+@pytest.mark.technical
 def test_main_builds_report_and_anonymized_json(tmp_path, monkeypatch):
     calls = []
     monkeypatch.setattr(dora, "run_gh_cmd", make_fake_gh(calls))
-    out = tmp_path / "docs" / "dora-auto.md"
-    export = tmp_path / "evidence" / "runs.json"
+    monkeypatch.chdir(tmp_path)
+    out = Path("docs") / "dora-auto.md"
+    export = Path("evidence") / "runs.json"
     code = dora.main(
         [
             "--since",

@@ -8,6 +8,7 @@
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -414,6 +415,7 @@ def classify_restore_time_dora2025(minutes: Optional[float]) -> str:
 
 def run_gh_cmd(args: List[str]) -> str:
     """Виконує команду GitHub CLI (gh) і повертає stdout у вигляді рядка."""
+    validate_gh_args(args)
     cmd = ["gh"] + args
     result = subprocess.run(
         cmd,
@@ -421,12 +423,58 @@ def run_gh_cmd(args: List[str]) -> str:
         text=True,
         encoding="utf-8",
         errors="replace",
+        shell=False,
         check=False,
     )
     if result.returncode != 0:
         err_msg = result.stderr.strip() or f"Команда {' '.join(cmd)} завершилася з кодом {result.returncode}"
         raise RuntimeError(f"Помилка виклику gh: {err_msg}")
     return result.stdout
+
+
+def validate_gh_args(args: List[str]) -> None:
+    """Дозволяє лише запити GitHub CLI, потрібні для збору метрик."""
+    if not args or not all(isinstance(arg, str) for arg in args):
+        raise ValueError("Недозволена команда GitHub CLI")
+    if args == ["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"]:
+        return
+    if not args or args[0] != "api":
+        raise ValueError("Недозволена команда GitHub CLI")
+
+    index = 1
+    paginated = index < len(args) and args[index] == "--paginate"
+    if paginated:
+        index += 1
+    if args[index : index + 2] != ["-X", "GET"]:
+        raise ValueError("Недозволені аргументи GitHub CLI")
+    index += 2
+    if index >= len(args):
+        raise ValueError("Не вказано endpoint GitHub API")
+    endpoint = args[index]
+    tail = args[index + 1 :]
+
+    repository = r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"
+    sha = r"[0-9a-fA-F]{7,64}"
+    endpoint_pattern = (
+        rf"repos/{repository}/(?:actions/workflows/ci\.yml/runs|actions/runs/[1-9]\d*/jobs\?per_page=100"
+        rf"|commits/{sha}/pulls|pulls/[1-9]\d*/commits|commits/{sha})"
+    )
+    if not re.fullmatch(endpoint_pattern, endpoint):
+        raise ValueError("Недозволений endpoint GitHub API")
+
+    if endpoint.endswith("/actions/workflows/ci.yml/runs"):
+        expected_prefix = ["-f", "branch=main", "-f", "event=push", "-f", "status=completed", "-f"]
+        created_pattern = r"created=(?:>=\d{4}-\d{2}-\d{2}|\d{4}-\d{2}-\d{2}\.\.\d{4}-\d{2}-\d{2})"
+        if (
+            not paginated
+            or tail[:7] != expected_prefix
+            or len(tail) != 10
+            or not re.fullmatch(created_pattern, tail[7])
+            or tail[8:] != ["--jq", ".workflow_runs[]"]
+        ):
+            raise ValueError("Недозволені фільтри GitHub API")
+    elif tail or (paginated != endpoint.endswith("/commits")):
+        raise ValueError("Недозволені аргументи GitHub API")
 
 
 def detect_repo(explicit_repo: Optional[str] = None) -> str:
@@ -521,12 +569,12 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--out",
         default="docs/ci-cd/dora-auto.md",
-        help="Шлях для збереження Markdown-звіту (за замовчуванням docs/ci-cd/dora-auto.md).",
+        help="Відносний шлях звіту в поточному каталозі (за замовчуванням docs/ci-cd/dora-auto.md).",
     )
     parser.add_argument(
         "--export-json",
         default=None,
-        help="Шлях для експорту зібраних знеособлених даних у форматі JSON.",
+        help="Відносний шлях JSON-файлу в поточному каталозі.",
     )
     parser.add_argument(
         "--utc-offset-hours",
@@ -740,8 +788,18 @@ def render_report(
 
 
 def write_text_file(path: str, content: str) -> None:
-    """Записує текст у файл UTF-8 і створює відсутні батьківські папки."""
-    target = Path(path)
+    """Записує UTF-8 у шлях під поточним каталогом, створивши відсутні батьківські папки."""
+    root = Path.cwd().resolve()
+    requested = Path(path)
+    if requested.is_absolute():
+        raise ValueError("Шлях для запису має бути відносним і залишатися в поточному каталозі")
+    target = (root / requested).resolve()
+    try:
+        target.relative_to(root)
+    except ValueError as exc:
+        raise ValueError("Шлях для запису має залишатися в поточному каталозі") from exc
+    if target == root:
+        raise ValueError("Шлях для запису має вказувати на файл у поточному каталозі")
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
 

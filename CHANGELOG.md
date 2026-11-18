@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Обмежено дозволені аргументи GitHub CLI та заборонено запис звітів поза поточним каталогом, зокрема через символьні посилання.
 - Remove duplicate definitions and redundant initial engine in `db.py` (R-05).
 - Run route handlers in the thread pool instead of the event loop: `async def` without `await` replaced with `def` (R-08).
 - Store failed-login counters in the database (`login_failures` table) and record them atomically under `db_lock`, so the lockout survives restarts and parallel attempts (R-09).
