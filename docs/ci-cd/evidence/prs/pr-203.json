@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-05T09:58:25Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-05T09:58:25Z",
+      "messageBody": "…ring in PR 165",
+      "messageHeadline": "docs(refactoring): append AI usage details for duplicate code refacto…",
+      "oid": "4c0eb8fd374b33c7b0776c9c23263faa617d5322"
+    },
+    {
+      "authoredDate": "2026-11-05T10:04:12Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-11-05T10:04:12Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/lab8-ai-report",
+      "oid": "436e4fc340e8a3e7c65b38e3183a576ca11bb95d"
+    }
+  ],
+  "number": 203,
+  "title": "docs(refactoring): append AI usage details for duplicate code refacto…",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/203"
+}

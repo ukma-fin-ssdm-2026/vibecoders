@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-05T10:03:47Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-11-05T10:03:47Z",
+      "messageBody": "",
+      "messageHeadline": "Add video_Spys.txt with Loom video link",
+      "oid": "4cf39110fba6d0d6e1c7a6172f19533186494d25"
+    },
+    {
+      "authoredDate": "2026-11-05T10:08:15Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-05T10:08:15Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into Labs/Lab08",
+      "oid": "69904750ca68a08e75fcfd7ce730f7bb73c62eda"
+    }
+  ],
+  "number": 204,
+  "title": "Add video_Spys.txt with Loom video link",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/204"
+}

@@ -1,0 +1,119 @@
+{
+  "jobs": [
+    {
+      "completedAt": "2026-11-01T18:42:24Z",
+      "conclusion": "success",
+      "databaseId": 124940128094,
+      "name": "validate-and-test",
+      "startedAt": "2026-11-01T18:40:43Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-01T18:40:47Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-01T18:40:44Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T18:40:48Z",
+          "conclusion": "success",
+          "name": "Checkout repository",
+          "number": 2,
+          "startedAt": "2026-11-01T18:40:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T18:40:58Z",
+          "conclusion": "success",
+          "name": "Set up Python",
+          "number": 3,
+          "startedAt": "2026-11-01T18:40:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T18:41:15Z",
+          "conclusion": "success",
+          "name": "Install dependencies",
+          "number": 4,
+          "startedAt": "2026-11-01T18:40:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T18:41:16Z",
+          "conclusion": "success",
+          "name": "Check formatting with Black",
+          "number": 5,
+          "startedAt": "2026-11-01T18:41:15Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T18:41:17Z",
+          "conclusion": "success",
+          "name": "Lint with Flake8",
+          "number": 6,
+          "startedAt": "2026-11-01T18:41:16Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T18:41:17Z",
+          "conclusion": "success",
+          "name": "Security check with Bandit",
+          "number": 7,
+          "startedAt": "2026-11-01T18:41:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T18:41:17Z",
+          "conclusion": "success",
+          "name": "Check requirement traceability",
+          "number": 8,
+          "startedAt": "2026-11-01T18:41:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T18:42:17Z",
+          "conclusion": "success",
+          "name": "Run tests with Pytest and coverage",
+          "number": 9,
+          "startedAt": "2026-11-01T18:41:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T18:42:19Z",
+          "conclusion": "success",
+          "name": "Upload coverage report",
+          "number": 10,
+          "startedAt": "2026-11-01T18:42:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T18:42:19Z",
+          "conclusion": "success",
+          "name": "Post Set up Python",
+          "number": 19,
+          "startedAt": "2026-11-01T18:42:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T18:42:20Z",
+          "conclusion": "success",
+          "name": "Post Checkout repository",
+          "number": 20,
+          "startedAt": "2026-11-01T18:42:19Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T18:42:20Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 21,
+          "startedAt": "2026-11-01T18:42:20Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/41337438558/job/124940128094"
+    }
+  ]
+}
