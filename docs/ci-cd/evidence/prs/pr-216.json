@@ -1,0 +1,52 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-11T13:58:54Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-11T13:58:54Z",
+      "messageBody": "",
+      "messageHeadline": "Remove duplicate SQLite foreign keys helper in db.py",
+      "oid": "32b1d0e63d440142a6f84dd48ac1986408d5eabd"
+    },
+    {
+      "authoredDate": "2026-11-11T14:00:08Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-11T14:00:08Z",
+      "messageBody": "",
+      "messageHeadline": "Remove duplicate resolve_database_url and initial engine in db.py",
+      "oid": "dcb988ea6aee5b7eff40e0fc15078558431bbdc3"
+    },
+    {
+      "authoredDate": "2026-11-11T14:40:14Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-11-11T14:40:14Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into fix/db-duplicate-definitions",
+      "oid": "aeeda8bb94557253a9d4dc6f31d57e4e238ed052"
+    }
+  ],
+  "number": 216,
+  "title": "Fix/db duplicate definitions",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/216"
+}

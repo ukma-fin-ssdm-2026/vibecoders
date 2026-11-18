@@ -1,0 +1,52 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-01T20:17:00Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-01T20:17:00Z",
+      "messageBody": "",
+      "messageHeadline": "Add link to midterm presentation",
+      "oid": "ea3179e5891c6f811c7cee9150e0befd9c415048"
+    },
+    {
+      "authoredDate": "2026-11-01T20:58:46Z",
+      "authors": [
+        {
+          "email": "152533645+Sonafi3@users.noreply.github.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-01T20:58:46Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/video-5",
+      "oid": "ba06b89bb5e2065597a543b8791176d7d4de2687"
+    },
+    {
+      "authoredDate": "2026-11-01T23:36:34Z",
+      "authors": [
+        {
+          "email": "152533645+Sonafi3@users.noreply.github.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-01T23:36:34Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/video-5",
+      "oid": "5f77c5a1dc4dfde7f41d2ce1691ba07b937c4931"
+    }
+  ],
+  "number": 193,
+  "title": "Add link to midterm presentation",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/193"
+}
