@@ -1,0 +1,64 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-18T13:37:27Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-18T13:37:27Z",
+      "messageBody": "Add a single image-publishing job gated on both main CI test jobs. Publish the lowercase repository image under the full commit SHA with scoped GHCR permissions and layer caching.\n\nDocument how the workflow works, how to pull an image, and what to verify after the first publish.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "ci: publish container image to ghcr.io on green main",
+      "oid": "13b2ba5f2aa84d9b54bc73211180ed32141b1066"
+    },
+    {
+      "authoredDate": "2026-11-18T13:37:31Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        }
+      ],
+      "committedDate": "2026-11-18T13:37:31Z",
+      "messageBody": "…reen-main",
+      "messageHeadline": "Merge remote-tracking branch 'origin/main' into ci/publish-image-on-g…",
+      "oid": "f75095d4628a4b62386bbd25080bb837a26b7fbe"
+    },
+    {
+      "authoredDate": "2026-11-18T14:01:41Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-18T14:01:41Z",
+      "messageBody": "Pin the three newly added Docker actions to their official release commits to satisfy the repository security gate.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "ci: pin Docker publishing actions to commit SHAs",
+      "oid": "112313c65eaa2f10f2e2c798285fd53c2b4a2f84"
+    }
+  ],
+  "number": 230,
+  "title": "ci: publish container image to ghcr.io on green main",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/230"
+}

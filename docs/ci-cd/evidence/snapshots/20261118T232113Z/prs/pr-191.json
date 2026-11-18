@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-01T18:56:44Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-01T18:56:44Z",
+      "messageBody": "",
+      "messageHeadline": "enable user blocking in admin panel and update readme",
+      "oid": "40bc17ffb6ba57c3c9383c7905d4d1222f74228b"
+    },
+    {
+      "authoredDate": "2026-11-01T19:09:40Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-01T19:09:40Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into feature/ui-admin-users",
+      "oid": "b85c80f26e48edc0ab8c7d7f3df07f18bee4df72"
+    }
+  ],
+  "number": 191,
+  "title": "Feature/UI admin users",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/191"
+}

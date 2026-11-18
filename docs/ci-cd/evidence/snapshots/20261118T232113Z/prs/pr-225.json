@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-13T12:39:28Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-13T12:39:28Z",
+      "messageBody": "Updated the improvement backlog with responsible individuals for each metric.",
+      "messageHeadline": "Add responsible individuals to improvement backlog",
+      "oid": "fd8a5b87f50979ec0ed6cab24103572772ee9554"
+    }
+  ],
+  "number": 225,
+  "title": "Add responsible individuals to improvement backlog",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/225"
+}

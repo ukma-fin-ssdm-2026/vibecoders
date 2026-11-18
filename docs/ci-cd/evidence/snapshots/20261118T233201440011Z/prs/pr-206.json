@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-05T10:46:20Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-05T10:46:20Z",
+      "messageBody": "",
+      "messageHeadline": "docs(lab8): add Loom video link for Zakharuk refactoring report",
+      "oid": "75567d3680b7cc2fed8f1133b01b81f53e0a360d"
+    }
+  ],
+  "number": 206,
+  "title": "docs(lab8): add Loom video link for Zakharuk refactoring report",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/206"
+}

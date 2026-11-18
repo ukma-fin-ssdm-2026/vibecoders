@@ -1,0 +1,43 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-18T12:40:28Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-18T12:40:28Z",
+      "messageBody": "Add a repeatable collector for main-branch workflow runs, job timing, PR first-commit dates, and failure logs. Save source evidence and regenerate the raw metrics table without modifying the DORA summary or workflow definitions.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "docs(ci-cd): collect raw main CI run data",
+      "oid": "2c1ade28c52973c1661d71f2ba79975a82f4acaa"
+    },
+    {
+      "authoredDate": "2026-11-18T13:26:37Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-18T13:26:37Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/ci-cd-raw-data",
+      "oid": "6ef5b177903bdb432c6970d2babd331d944886c5"
+    }
+  ],
+  "number": 227,
+  "title": "docs(ci-cd): raw CI run data for DORA metrics",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/227"
+}

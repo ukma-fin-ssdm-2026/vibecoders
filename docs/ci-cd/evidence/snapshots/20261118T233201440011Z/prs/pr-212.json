@@ -1,0 +1,106 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-11T09:20:55Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T09:20:55Z",
+      "messageBody": "Ignore non-ASCII numeric game ID suffixes and fail fast when production lacks PASSWORD_SALT, while retaining a logged development fallback. Configure Render as production.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "[RELIABILITY] validate game IDs and require production password salt",
+      "oid": "ad304c57d99689bd27f64ba98e0f8bd955412511"
+    },
+    {
+      "authoredDate": "2026-11-11T09:25:25Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T09:25:25Z",
+      "messageBody": "Ignore malformed and non-ASCII user ID suffixes when assigning new IDs, using the same validation for game IDs.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "[RELIABILITY] validate registration ID suffixes",
+      "oid": "10555fdf29cb9ce5806ef04a906a4c977cb3ac26"
+    },
+    {
+      "authoredDate": "2026-11-11T10:31:50Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T10:31:50Z",
+      "messageBody": "Move R-10 identifier regressions into the reliability suite and cover malformed textual, empty, alphanumeric, and Unicode suffixes for users and games.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "[RELIABILITY] add malformed ID boundary tests",
+      "oid": "2168f36eb14d3f1a0c10d33a4a106bcd12003aa0"
+    },
+    {
+      "authoredDate": "2026-11-11T11:12:33Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T11:12:33Z",
+      "messageBody": "Make traceability discovery recursive, prevent regression with a nested-test check, and move all R-10/R-11 tests into the dedicated reliability suite so the CI job executes them.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "[RELIABILITY] trace nested tests and move salt checks",
+      "oid": "bb95154ce3a5b36410e9c7d09e09a5c67c4ab1c3"
+    },
+    {
+      "authoredDate": "2026-11-11T11:21:52Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-11T11:21:52Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into feature/lab09-r10-r11",
+      "oid": "c6405b81be5aaf8b4a20c1b475b30f05d267f541"
+    }
+  ],
+  "number": 212,
+  "title": "[RELIABILITY] validate game IDs and require production password salt",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/212"
+}

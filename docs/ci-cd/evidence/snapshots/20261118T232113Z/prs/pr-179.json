@@ -1,0 +1,52 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-31T18:26:26Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        }
+      ],
+      "committedDate": "2026-10-31T18:26:26Z",
+      "messageBody": "Co-authored-by: Copilot",
+      "messageHeadline": "Add registration and user/room blocking APIs",
+      "oid": "fa9e170dcb6c6e68133aefd88c1cfcb48ad65429"
+    },
+    {
+      "authoredDate": "2026-10-31T18:34:57Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        }
+      ],
+      "committedDate": "2026-10-31T18:34:57Z",
+      "messageBody": "Co-authored-by: Copilot",
+      "messageHeadline": "Fix Python formatting for CI",
+      "oid": "f3148e3b7a797e808ed786d199455699f5d46fef"
+    },
+    {
+      "authoredDate": "2026-10-31T18:39:13Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-31T18:39:13Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into feature/midterm-backend-update",
+      "oid": "b47bb53f342152cc510abffd2d69fe16fc9344a2"
+    }
+  ],
+  "number": 179,
+  "title": "Add registration and user/room blocking APIs",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/179"
+}

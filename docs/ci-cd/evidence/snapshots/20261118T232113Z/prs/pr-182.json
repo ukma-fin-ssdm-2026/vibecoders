@@ -1,0 +1,28 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-31T20:14:16Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-10-31T20:15:38Z",
+      "messageBody": "Resolve SQLite database paths absolutely, enforce foreign keys, and seed missing demo entities during application startup. Add database bootstrap coverage and document configuration.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "fix(db): make demo seeding idempotent",
+      "oid": "23f9b4160fe0a96c81e178a5425314ed9c0048d1"
+    }
+  ],
+  "number": 182,
+  "title": "db: make SQLite bootstrap and seeding reliable",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/182"
+}

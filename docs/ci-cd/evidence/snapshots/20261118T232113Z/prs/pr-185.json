@@ -1,0 +1,88 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-31T20:23:53Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-10-31T20:23:53Z",
+      "messageBody": "Expose authenticated profile read/update endpoints, an owner-only paginated user list, and a current-user notification feed. Document and generate the API contract, with access-control and validation coverage.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "feat(users): add self-service profiles and notifications",
+      "oid": "bfc919f552c38cde2dbb3ef909e21d66f11463eb"
+    },
+    {
+      "authoredDate": "2026-11-01T10:29:29Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-01T10:29:29Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into feature/user-profiles-notifications",
+      "oid": "588b78a17963d5581b4daeb907d09c02c6b98ec8"
+    },
+    {
+      "authoredDate": "2026-11-01T10:40:28Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-01T10:40:28Z",
+      "messageBody": "",
+      "messageHeadline": "resolve conflict in test_notification.py",
+      "oid": "c4f11d89598b1eb7d45aca82c57a0d8fd12ca31e"
+    },
+    {
+      "authoredDate": "2026-11-01T10:50:36Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-01T10:50:36Z",
+      "messageBody": "…com/ukma-fin-ssdm-2026/vibecoders into fix/users",
+      "messageHeadline": "Merge branch 'feature/user-profiles-notifications' of https://github.…",
+      "oid": "2b9343bb56a11daf72ee68b3018a473bacb1a00f"
+    },
+    {
+      "authoredDate": "2026-11-01T10:58:48Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-01T10:58:48Z",
+      "messageBody": "",
+      "messageHeadline": "delete useless function",
+      "oid": "4222388bfd8165167379ec2171961e6642fe7895"
+    }
+  ],
+  "number": 185,
+  "title": "resolve conflict in test_notification.py",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/185"
+}

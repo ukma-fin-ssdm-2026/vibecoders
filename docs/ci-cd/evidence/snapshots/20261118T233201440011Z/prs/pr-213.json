@@ -1,0 +1,64 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-11T09:22:36Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T09:22:36Z",
+      "messageBody": "Run the resilience suite as a distinct pull-request status with the repository's Python 3.9 and wheel-only dependency setup.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "ci: add a dedicated reliability test job",
+      "oid": "6bc95c2472b3e8d6ad4c0787b60b42d1372b7e0a"
+    },
+    {
+      "authoredDate": "2026-11-11T09:33:13Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T09:33:13Z",
+      "messageBody": "Use exact Python 3.9-compatible package versions to keep the dedicated reliability job reproducible and clear SonarCloud's dependency-version findings.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "ci: pin reliability-test dependencies",
+      "oid": "3157d352830043d396c7e7386047e99da081feb5"
+    },
+    {
+      "authoredDate": "2026-11-11T11:26:41Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-11T11:26:41Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into ci/lab09-reliability-tests",
+      "oid": "6391d2829d2643fb1c23aed640d3cad187e8f86b"
+    }
+  ],
+  "number": 213,
+  "title": "ci: add a dedicated reliability test job",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/213"
+}

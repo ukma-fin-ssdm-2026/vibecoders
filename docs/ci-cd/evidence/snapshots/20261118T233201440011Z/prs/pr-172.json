@@ -1,0 +1,52 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-30T21:18:51Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-30T21:18:51Z",
+      "messageBody": "",
+      "messageHeadline": "feat(ui): add getMe, formatDateTime, and formatSlot to App",
+      "oid": "d60933851107adeeb033fc6d6080a9a7ade2e5db"
+    },
+    {
+      "authoredDate": "2026-10-30T21:20:49Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-30T21:20:49Z",
+      "messageBody": "",
+      "messageHeadline": "feat(ui): add getMe, formatDateTime, and formatSlot to App",
+      "oid": "841983a38de1ef9f472e2f29cbea4be99b8cb444"
+    },
+    {
+      "authoredDate": "2026-10-31T11:33:09Z",
+      "authors": [
+        {
+          "email": "152533645+Sonafi3@users.noreply.github.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T11:33:09Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into feature/ui-games",
+      "oid": "b8787fa1bc6ea713feded743878e8b664d118a27"
+    }
+  ],
+  "number": 172,
+  "title": "Feature/UI games",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/172"
+}

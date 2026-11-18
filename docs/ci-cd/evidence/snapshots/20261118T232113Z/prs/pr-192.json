@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-01T20:03:05Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-01T20:03:05Z",
+      "messageBody": "",
+      "messageHeadline": "docs: add video reports for Labs02-06",
+      "oid": "fabb5d42057c51cc685617a70a205f86895aa483"
+    },
+    {
+      "authoredDate": "2026-11-01T20:58:29Z",
+      "authors": [
+        {
+          "email": "152533645+Sonafi3@users.noreply.github.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-01T20:58:29Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docx/labs-videos",
+      "oid": "839336b359c419a6e5a1c4a4609483cec1b3ed5c"
+    }
+  ],
+  "number": 192,
+  "title": "docs: add video reports for Labs02-06",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/192"
+}

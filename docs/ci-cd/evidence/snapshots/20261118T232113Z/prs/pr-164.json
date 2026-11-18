@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-30T12:20:44Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-30T12:20:44Z",
+      "messageBody": "Added a comprehensive SonarQube Cloud analysis report detailing security, reliability, and maintainability metrics along with specific issues and recommendations for improvement.",
+      "messageHeadline": "Add SonarQube Cloud analysis report",
+      "oid": "b0ed596900428d17eba08d6c9ddd33309ec51cc6"
+    },
+    {
+      "authoredDate": "2026-11-01T09:55:36Z",
+      "authors": [
+        {
+          "email": "khamaza.igor@gmail.com",
+          "id": "U_kgDOCstKKw",
+          "login": "Reonor",
+          "name": "Reonor"
+        }
+      ],
+      "committedDate": "2026-11-01T09:55:36Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into feature/docs/refactoring",
+      "oid": "2a82c1b2870fc6b11be688fa272ac8006baca513"
+    }
+  ],
+  "number": 164,
+  "title": "Add SonarQube Cloud analysis report",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/164"
+}

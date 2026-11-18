@@ -1,0 +1,87 @@
+{
+  "jobs": [
+    {
+      "completedAt": "2026-11-01T17:50:15Z",
+      "conclusion": "success",
+      "databaseId": 124924193455,
+      "name": "generate-and-deploy",
+      "startedAt": "2026-11-01T17:49:46Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-11-01T17:49:49Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-11-01T17:49:47Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T17:49:50Z",
+          "conclusion": "success",
+          "name": "Run actions/checkout@v4",
+          "number": 2,
+          "startedAt": "2026-11-01T17:49:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T17:49:58Z",
+          "conclusion": "success",
+          "name": "Setup Python",
+          "number": 3,
+          "startedAt": "2026-11-01T17:49:50Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T17:50:09Z",
+          "conclusion": "success",
+          "name": "Install dependencies",
+          "number": 4,
+          "startedAt": "2026-11-01T17:49:58Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T17:50:10Z",
+          "conclusion": "success",
+          "name": "Generate OpenAPI spec from code",
+          "number": 5,
+          "startedAt": "2026-11-01T17:50:09Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T17:50:12Z",
+          "conclusion": "success",
+          "name": "Deploy to GitHub Pages",
+          "number": 6,
+          "startedAt": "2026-11-01T17:50:10Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T17:50:12Z",
+          "conclusion": "success",
+          "name": "Post Setup Python",
+          "number": 11,
+          "startedAt": "2026-11-01T17:50:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T17:50:12Z",
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v4",
+          "number": 12,
+          "startedAt": "2026-11-01T17:50:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-11-01T17:50:12Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 13,
+          "startedAt": "2026-11-01T17:50:12Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/41332108367/job/124924193455"
+    }
+  ]
+}

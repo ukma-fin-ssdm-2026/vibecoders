@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-30T19:49:24Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-30T19:49:24Z",
+      "messageBody": "",
+      "messageHeadline": "remove tracked __pycache__ and coverage files from git",
+      "oid": "386ecd21e7cfed5323e96c59298cd9f006d3b6df"
+    },
+    {
+      "authoredDate": "2026-10-31T11:13:09Z",
+      "authors": [
+        {
+          "email": "152533645+Sonafi3@users.noreply.github.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T11:13:09Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into fix/remove-cache-files",
+      "oid": "66c16265f4e51bfaf3b1763c30ad4c0d52318337"
+    }
+  ],
+  "number": 169,
+  "title": "Fix/remove cache files",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/169"
+}

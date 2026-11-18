@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T11:01:02Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T11:01:02Z",
+      "messageBody": "",
+      "messageHeadline": "Add video link to video_Spys.txt",
+      "oid": "01c80d60b3dce75840c4706ad431965735291351"
+    }
+  ],
+  "number": 160,
+  "title": "Add video link to video_Spys.txt",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/160"
+}

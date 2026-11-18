@@ -1,0 +1,112 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-03T17:45:43Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-03T17:45:43Z",
+      "messageBody": "",
+      "messageHeadline": "[REFACTOR] ci: pin peaceiris/actions-gh-pages to full commit SHA",
+      "oid": "db9581a05ff52bdc4e0fd4127de3311acc254814"
+    },
+    {
+      "authoredDate": "2026-11-03T17:50:55Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-03T17:50:55Z",
+      "messageBody": "",
+      "messageHeadline": "[REFACTOR] ci: use --only-binary for docs deployment",
+      "oid": "6ba62bb433b2f2cbc003202aa4d1b5c2ac99ab21"
+    },
+    {
+      "authoredDate": "2026-11-03T17:56:00Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-03T17:56:00Z",
+      "messageBody": "",
+      "messageHeadline": "[REFACTOR] ci: use --only-binary and pin tool versions",
+      "oid": "47bebe29cd58e542bde1a099f9a8791e186c66c8"
+    },
+    {
+      "authoredDate": "2026-11-03T18:03:27Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-03T18:03:27Z",
+      "messageBody": "",
+      "messageHeadline": "[REFACTOR] scripts: fix double brackets in mutation script",
+      "oid": "a79b67d24ea4ca0db057aef37bc3af1907a7fc71"
+    },
+    {
+      "authoredDate": "2026-11-03T18:09:09Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-03T18:09:09Z",
+      "messageBody": "",
+      "messageHeadline": "[REFACTOR] docs: fix language attribute in api index",
+      "oid": "7f5ab7d862964f69ac22e507d8078f9915e5b107"
+    },
+    {
+      "authoredDate": "2026-11-03T18:12:14Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-03T18:12:14Z",
+      "messageBody": "",
+      "messageHeadline": "[REFACTOR] game: fix title placeholder",
+      "oid": "2f4755682be4d4cc2684f1a16d237a1cfa586354"
+    },
+    {
+      "authoredDate": "2026-11-03T18:17:30Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-03T18:17:30Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into refactor/analyst-security-fixes",
+      "oid": "b285ffa5d79fd8d1a01ac8b7175194ed8e9064da"
+    }
+  ],
+  "number": 196,
+  "title": "[REFACTOR] ci: pin peaceiris/actions-gh-pages to full commit SHA",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/196"
+}

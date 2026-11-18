@@ -1,0 +1,82 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T10:10:43Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:10:43Z",
+      "messageBody": "Updated mutation testing details and results, including changes to the mutmut tool version and test cases. Added explanations for surviving mutants and their relation to tests.",
+      "messageHeadline": "Revise mutation testing section with new results",
+      "oid": "9cd81d4587748a16913a4e8b009579bd92cead43"
+    },
+    {
+      "authoredDate": "2026-10-29T10:20:52Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:20:52Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-5",
+      "oid": "1dc1aff5253858f4b3041cd4502ce9f2cc4847c8"
+    },
+    {
+      "authoredDate": "2026-10-29T10:24:01Z",
+      "authors": [
+        {
+          "email": "khamaza.igor@gmail.com",
+          "id": "U_kgDOCstKKw",
+          "login": "Reonor",
+          "name": "Reonor"
+        }
+      ],
+      "committedDate": "2026-10-29T10:24:01Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-5",
+      "oid": "b7505d3c4ce813a78853d9176349cef57000288e"
+    },
+    {
+      "authoredDate": "2026-10-29T10:26:16Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:26:16Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-5",
+      "oid": "c2ad9ceb9029bff4dcaa0cefd9d9d4e941f9b8f1"
+    },
+    {
+      "authoredDate": "2026-10-29T10:32:28Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:32:28Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-5",
+      "oid": "e2214a2fa759b25864a27abafcdedc19f0fe3f3c"
+    }
+  ],
+  "number": 156,
+  "title": "Revise mutation testing section with new results",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/156"
+}

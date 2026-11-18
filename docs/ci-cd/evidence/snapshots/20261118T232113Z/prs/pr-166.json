@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-30T13:49:04Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-30T13:50:32Z",
+      "messageBody": "",
+      "messageHeadline": "fix testing-strategy.md",
+      "oid": "f74ccf6a9b39554879503b8b75554a34dc1e2c60"
+    },
+    {
+      "authoredDate": "2026-10-30T13:51:03Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-10-30T13:51:03Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/fix-documentation",
+      "oid": "550d4ba6a501bb9163a16b6637bb2c316e8c1fef"
+    }
+  ],
+  "number": 166,
+  "title": "fix testing-strategy.md",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/166"
+}

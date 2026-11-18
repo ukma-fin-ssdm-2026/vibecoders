@@ -1,0 +1,52 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-31T12:14:31Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-31T12:14:31Z",
+      "messageBody": "",
+      "messageHeadline": "test(ui): add test for create-game.html and ensure proper rendering",
+      "oid": "c47c10cde5708ed4712f148e91cc5158ef18a6cc"
+    },
+    {
+      "authoredDate": "2026-10-31T12:32:16Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-31T12:32:16Z",
+      "messageBody": "",
+      "messageHeadline": "add game creation form and game management section",
+      "oid": "736571a9887c9948320e4e93433dac05e730a46e"
+    },
+    {
+      "authoredDate": "2026-10-31T12:32:53Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-10-31T12:32:53Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into feature/ui-manage-games",
+      "oid": "c46d7b6eb6f702e4db85d358d55d489fde4a15c2"
+    }
+  ],
+  "number": 173,
+  "title": "test(ui): add test for create-game.html and ensure proper rendering",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/173"
+}

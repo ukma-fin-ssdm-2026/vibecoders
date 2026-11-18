@@ -1,0 +1,43 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-04T17:47:43Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-04T17:47:43Z",
+      "messageBody": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "[REFACTOR] web: use explicit Number APIs",
+      "oid": "fb437ba99f5d3539982fe7c103db740d3718eddf"
+    },
+    {
+      "authoredDate": "2026-11-04T19:02:26Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-11-04T19:02:26Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into feature/lab08-refactoring",
+      "oid": "ca0d1bf7a7cb100b1c9e49ed9d912ef9913ed7fa"
+    }
+  ],
+  "number": 199,
+  "title": "[REFACTOR] web: use explicit Number APIs",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/199"
+}

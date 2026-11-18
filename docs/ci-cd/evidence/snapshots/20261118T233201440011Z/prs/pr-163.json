@@ -1,0 +1,217 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T14:18:43Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T14:18:43Z",
+      "messageBody": "",
+      "messageHeadline": "edit traceability-matrix.md",
+      "oid": "8e0cc77a6fd0b81c5e4b2a2564a1c2a63e6c467a"
+    },
+    {
+      "authoredDate": "2026-10-29T14:24:12Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T14:24:12Z",
+      "messageBody": "",
+      "messageHeadline": "edit docs/architecture/uml",
+      "oid": "f3b32e0ac3e5e73c51d756f65525169277db08fa"
+    },
+    {
+      "authoredDate": "2026-10-29T14:27:05Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T14:27:05Z",
+      "messageBody": "",
+      "messageHeadline": "edit deployment-diagram.puml",
+      "oid": "2b85ab4358ff74a2c0e31e84c3e71f6570fff0d8"
+    },
+    {
+      "authoredDate": "2026-10-29T14:31:01Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T14:31:01Z",
+      "messageBody": "",
+      "messageHeadline": "edit rtm.md",
+      "oid": "462c05de35e471333637c79228d9012d0dd222fb"
+    },
+    {
+      "authoredDate": "2026-10-29T20:01:30Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T20:01:30Z",
+      "messageBody": "",
+      "messageHeadline": "fix goals and failure conditions in quality-attributes.md",
+      "oid": "e58d9c244165c32934d125b57d6c5c28c44d3a8b"
+    },
+    {
+      "authoredDate": "2026-10-29T20:09:05Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T20:09:05Z",
+      "messageBody": "",
+      "messageHeadline": "add boundary tests for REL-002, SEC-001",
+      "oid": "9aacdd3c7a432afd40047431f4131fc1735d8349"
+    },
+    {
+      "authoredDate": "2026-10-29T20:10:55Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T20:10:55Z",
+      "messageBody": "",
+      "messageHeadline": "edit quality-attributes.md",
+      "oid": "0eb0143bb30f68c242efbe38e5d061f0b9b279eb"
+    },
+    {
+      "authoredDate": "2026-10-29T20:19:26Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T20:19:26Z",
+      "messageBody": "",
+      "messageHeadline": "add boundary tests for REL-002, SEC-001",
+      "oid": "ffa42c26aec3a86130e3d87b576f1500db7a7ceb"
+    },
+    {
+      "authoredDate": "2026-10-29T20:31:16Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T20:31:16Z",
+      "messageBody": "…rix - AI used",
+      "messageHeadline": "implement game cancellation notifications and update traceability mat…",
+      "oid": "d6f4d7fc3f9a908783d4419b1d0b19f58fa90287"
+    },
+    {
+      "authoredDate": "2026-10-29T20:37:02Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T20:37:02Z",
+      "messageBody": "",
+      "messageHeadline": "move progress.md to docs/code-quality/ and update - AI used",
+      "oid": "706e5ae7cacc69ded29dc596acebf9af31882454"
+    },
+    {
+      "authoredDate": "2026-10-29T20:48:36Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T20:48:36Z",
+      "messageBody": "",
+      "messageHeadline": "update bandit scan reports - AI used",
+      "oid": "e62cb57ace8d917438a9c67fff09cea4c7ac4c0b"
+    },
+    {
+      "authoredDate": "2026-10-29T20:53:54Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T20:53:54Z",
+      "messageBody": "",
+      "messageHeadline": "add SHA to review-report.md",
+      "oid": "8a57f5cba739427a06e0396c27022afd46573d26"
+    },
+    {
+      "authoredDate": "2026-10-29T20:58:24Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T20:58:24Z",
+      "messageBody": "",
+      "messageHeadline": "fix FR-001 tests requirements",
+      "oid": "da8572a96a07bae606977cf9fc23f559b29eb3fd"
+    },
+    {
+      "authoredDate": "2026-10-30T10:49:30Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-30T10:49:30Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/fix-documentation",
+      "oid": "d6b6180ddfe75ff50bcd4a0c413d40e11e996236"
+    }
+  ],
+  "number": 163,
+  "title": "Docs/fix documentation",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/163"
+}
