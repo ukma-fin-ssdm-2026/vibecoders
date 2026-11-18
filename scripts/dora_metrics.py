@@ -10,8 +10,9 @@ import argparse
 import json
 import subprocess
 import sys
+from pathlib import Path
 from datetime import datetime, timedelta, timezone, tzinfo
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
@@ -137,8 +138,9 @@ def fetch_pull_requests_for_commit(repo: str, sha: str) -> List[Dict[str, Any]]:
         data = json.loads(raw)
         if isinstance(data, list):
             return data
-    except Exception:
-        pass
+        warn(f"неочікуваний формат відповіді PR для коміту {sha[:7]}")
+    except Exception as exc:
+        warn(f"не вдалося отримати PR для коміту {sha[:7]}: {exc}")
     return []
 
 
@@ -148,7 +150,8 @@ def fetch_pull_request_commits(repo: str, pull_number: int) -> List[Dict[str, An
     try:
         raw = run_gh_cmd(["api", "--paginate", "-X", "GET", endpoint])
         return parse_json_stream(raw)
-    except Exception:
+    except Exception as exc:
+        warn(f"не вдалося отримати коміти PR #{pull_number}: {exc}")
         return []
 
 
@@ -161,8 +164,9 @@ def fetch_commit_details(repo: str, sha: str) -> Optional[Dict[str, Any]]:
             data = json.loads(raw)
             if isinstance(data, dict):
                 return data
-    except Exception:
-        pass
+            warn(f"неочікуваний формат відповіді коміту {sha[:7]}")
+    except Exception as exc:
+        warn(f"не вдалося отримати коміт {sha[:7]}: {exc}")
     return None
 
 
@@ -246,7 +250,11 @@ def calculate_deployment_frequency(
 
 
 def calculate_lead_time_metrics(runs: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Обчислює статистику часу виконання змін та частку черги і виконання."""
+    """Обчислює статистику часу виконання змін та частку черги і виконання.
+
+    Частки рахуються двома способами: у часі CI (черга + виконання) і в часі виконання змін
+    (від першого коміту до завершення запуску).
+    """
     lead_times = [r["lead_time_minutes"] for r in runs if r.get("lead_time_minutes") is not None]
     mean_lead = calculate_mean(lead_times)
     median_lead = calculate_median(lead_times)
@@ -259,24 +267,36 @@ def calculate_lead_time_metrics(runs: List[Dict[str, Any]]) -> Dict[str, Any]:
     q_share = (total_q / sum_qe * 100.0) if sum_qe > 0 else 0.0
     e_share = (total_e / sum_qe * 100.0) if sum_qe > 0 else 0.0
 
+    valid_lead = [r for r in valid_qe if r.get("lead_time_seconds")]
+    total_lead = sum(r["lead_time_seconds"] for r in valid_lead)
+    lead_q = sum(r["queue_seconds"] for r in valid_lead)
+    lead_e = sum(r["execution_seconds"] for r in valid_lead)
+    q_of_lead = (lead_q / total_lead * 100.0) if total_lead > 0 else 0.0
+    e_of_lead = (lead_e / total_lead * 100.0) if total_lead > 0 else 0.0
+    other_of_lead = max(0.0, 100.0 - q_of_lead - e_of_lead) if total_lead > 0 else 0.0
+
     return {
         "mean_minutes": round(mean_lead, 1) if mean_lead is not None else None,
         "median_minutes": round(median_lead, 1) if median_lead is not None else None,
         "queue_share_pct": round(q_share, 1),
         "execution_share_pct": round(e_share, 1),
+        "queue_of_lead_pct": round(q_of_lead, 1),
+        "execution_of_lead_pct": round(e_of_lead, 1),
+        "other_of_lead_pct": round(other_of_lead, 1),
     }
 
 
 def calculate_change_failure_rate(runs: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Обчислює частоту збоїв: червоні / усі завершені × 100%."""
-    total_completed = len(runs)
+    """Обчислює частоту збоїв: червоні / (зелені + червоні) × 100%. Cancelled і skipped не рахуються."""
     red_count = sum(1 for r in runs if r.get("classified_status") == "red")
     green_count = sum(1 for r in runs if r.get("classified_status") == "green")
     cancelled_count = sum(1 for r in runs if r.get("classified_status") == "cancelled")
     skipped_count = sum(1 for r in runs if r.get("classified_status") == "skipped")
+    total_completed = green_count + red_count
 
     rate = (red_count / total_completed * 100.0) if total_completed > 0 else 0.0
     return {
+        "total_runs": len(runs),
         "total_completed": total_completed,
         "green_count": green_count,
         "red_count": red_count,
@@ -333,6 +353,65 @@ def calculate_time_to_restore(runs: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+def classify_lead_time_dora2025(minutes: Optional[float]) -> str:
+    """Визначає категорію DORA 2025 для часу виконання змін.
+
+    Категорії:
+      <1 год (9,4%) · <1 доби (24,4%) · доба–тиждень (56,4%) · тиждень–місяць (84,7%).
+    """
+    if minutes is None:
+        return "н/д"
+    if minutes < 60.0:
+        return "<1 год (9,4% опитаних)"
+    if minutes < 24.0 * 60.0:
+        return "<1 доби (24,4% опитаних)"
+    if minutes < 7.0 * 24.0 * 60.0:
+        return "доба–тиждень (56,4% опитаних)"
+    if minutes < 30.0 * 24.0 * 60.0:
+        return "тиждень–місяць (84,7% опитаних)"
+    return ">1 місяця"
+
+
+def classify_failure_rate_dora2025(rate_pct: float) -> str:
+    """Визначає категорію DORA 2025 для частоти збоїв розгортань.
+
+    Категорії:
+      0–2% (8,5%) · 2–4% (16,7%) · 4–8% (36,2%) · 8–16% (62,2%) · 16–32% (81,6%) · 32–64% (94,1%).
+    """
+    if rate_pct <= 2.0:
+        return "0–2% (8,5% опитаних)"
+    if rate_pct <= 4.0:
+        return "2–4% (16,7% опитаних)"
+    if rate_pct <= 8.0:
+        return "4–8% (36,2% опитаних)"
+    if rate_pct <= 16.0:
+        return "8–16% (62,2% опитаних)"
+    if rate_pct <= 32.0:
+        return "16–32% (81,6% опитаних)"
+    if rate_pct <= 64.0:
+        return "32–64% (94,1% опитаних)"
+    return ">64%"
+
+
+def classify_restore_time_dora2025(minutes: Optional[float]) -> str:
+    """Визначає категорію DORA 2025 для часу відновлення після збою.
+
+    Категорії:
+      <1 год (21,3%) · <1 доби (56,5%) · доба–тиждень (84,5%) · тиждень–місяць (93,9%).
+    """
+    if minutes is None:
+        return "н/д"
+    if minutes < 60.0:
+        return "<1 год (21,3% опитаних)"
+    if minutes < 24.0 * 60.0:
+        return "<1 доби (56,5% опитаних)"
+    if minutes < 7.0 * 24.0 * 60.0:
+        return "доба–тиждень (84,5% опитаних)"
+    if minutes < 30.0 * 24.0 * 60.0:
+        return "тиждень–місяць (93,9% опитаних)"
+    return ">1 місяця"
+
+
 def run_gh_cmd(args: List[str]) -> str:
     """Виконує команду GitHub CLI (gh) і повертає stdout у вигляді рядка."""
     cmd = ["gh"] + args
@@ -340,6 +419,8 @@ def run_gh_cmd(args: List[str]) -> str:
         cmd,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
     if result.returncode != 0:
@@ -349,16 +430,16 @@ def run_gh_cmd(args: List[str]) -> str:
 
 
 def detect_repo(explicit_repo: Optional[str] = None) -> str:
-    """Визначає репозиторій у форматі owner/repo."""
+    """Визначає репозиторій у форматі owner/repo (--repo або поточна папка через gh)."""
     if explicit_repo:
         return explicit_repo.strip()
     try:
         out = run_gh_cmd(["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"]).strip()
-        if out:
-            return out
-    except Exception:
-        pass
-    return "ukma-fin-ssdm-2026/vibecoders"
+    except (RuntimeError, OSError) as exc:
+        raise RuntimeError(f"Не вдалося визначити репозиторій; вкажіть --repo owner/repo. {exc}") from exc
+    if not out:
+        raise RuntimeError("Не вдалося визначити репозиторій: вкажіть --repo owner/repo")
+    return out
 
 
 def parse_json_stream(text: str) -> List[Dict[str, Any]]:
@@ -383,8 +464,9 @@ def parse_json_stream(text: str) -> List[Dict[str, Any]]:
     return items
 
 
-def fetch_workflow_runs(repo: str, since: str) -> List[Dict[str, Any]]:
-    """Отримує завершені запуски CI Pipeline для гілки main від вказаної дати."""
+def fetch_workflow_runs(repo: str, since: str, until: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Отримує завершені запуски CI Pipeline для гілки main за період since..until."""
+    created = f"{since}..{until}" if until else f">={since}"
     endpoint = f"repos/{repo}/actions/workflows/ci.yml/runs"
     args = [
         "api",
@@ -399,7 +481,7 @@ def fetch_workflow_runs(repo: str, since: str) -> List[Dict[str, Any]]:
         "-f",
         "status=completed",
         "-f",
-        f"created=>={since}",
+        f"created={created}",
         "--jq",
         ".workflow_runs[]",
     ]
@@ -474,11 +556,250 @@ def format_tz_label(offset_hours: float) -> str:
     return f"UTC{sign}{val:.1f}"
 
 
+STATUS_ICONS = {"green": "✅", "red": "❌"}
+RAW_TABLE_HEADER = (
+    "| № | Коміт | PR | Перший коміт PR | Запуск завершено | Черга, хв | Виконання, хв "
+    "| Час виконання змін, хв | Статус | Примітка |"
+)
+
+
+def warn(message: str) -> None:
+    """Виводить попередження у stderr, не перериваючи роботу скрипта."""
+    print(f"Попередження: {message}", file=sys.stderr)
+
+
+def configure_output() -> None:
+    """Вмикає UTF-8 у stdout/stderr: у PowerShell на Windows за замовчуванням інше кодування."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError):
+            pass
+
+
+def parse_date(value: str) -> datetime:
+    """Розбирає дату YYYY-MM-DD як початок доби за UTC."""
+    return datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+
+
+def resolve_period(since: str, until: Optional[str]) -> Tuple[datetime, datetime]:
+    """Повертає межі періоду: від початку доби --since до кінця доби --until (або до поточного моменту)."""
+    since_dt = parse_date(since)
+    if until:
+        until_dt = parse_date(until) + timedelta(days=1)
+    else:
+        until_dt = datetime.now(timezone.utc)
+    if until_dt <= since_dt:
+        raise ValueError("--until має бути не раніше за --since")
+    return since_dt, until_dt
+
+
+def collect_run_records(repo: str, since: str, until: Optional[str]) -> List[Dict[str, Any]]:
+    """Збирає для кожного запуску статус, чергу, виконання, PR і час виконання змін."""
+    runs = fetch_workflow_runs(repo, since, until)
+    runs.sort(key=lambda r: r.get("created_at") or "")
+    records: List[Dict[str, Any]] = []
+    for run in runs:
+        sha = run.get("head_sha") or ""
+        jobs = fetch_run_jobs(repo, run["id"])
+        timings = calculate_job_timings(run.get("created_at"), jobs)
+        completed_dt = parse_iso_datetime(timings["max_completed_at"]) or parse_iso_datetime(run.get("updated_at"))
+        pr_info = resolve_commit_pr_info(repo, sha, completed_dt)
+        records.append(
+            {
+                "run_id": run["id"],
+                "sha": sha,
+                "run_attempt": int(run.get("run_attempt") or 1),
+                "conclusion": run.get("conclusion"),
+                "classified_status": classify_run_status(run.get("conclusion")),
+                "created_at_dt": parse_iso_datetime(run.get("created_at")),
+                "completed_at_dt": completed_dt,
+                "queue_seconds": timings["queue_seconds"],
+                "execution_seconds": timings["execution_seconds"],
+                "queue_minutes": timings["queue_minutes"],
+                "execution_minutes": timings["execution_minutes"],
+                "pr_label": pr_info["pr_label"],
+                "first_commit_dt": pr_info["first_commit_dt"],
+                "lead_time_seconds": pr_info["lead_time_seconds"],
+                "lead_time_minutes": pr_info["lead_time_minutes"],
+            }
+        )
+    return records
+
+
+def build_metrics(records: List[Dict[str, Any]], since_dt: datetime, until_dt: datetime, tz: tzinfo) -> Dict[str, Any]:
+    """Обчислює чотири метрики DORA за зібраними запусками."""
+    green = [r for r in records if r["classified_status"] == "green"]
+    finished = [r for r in records if r["classified_status"] in ("green", "red")]
+    return {
+        "frequency": calculate_deployment_frequency(green, since_dt, until_dt, tz),
+        "lead": calculate_lead_time_metrics(green),
+        "failure": calculate_change_failure_rate(records),
+        "restore": calculate_time_to_restore(finished),
+        "retries": [r for r in records if r["run_attempt"] > 1],
+    }
+
+
+def fmt_minutes(value: Optional[float]) -> str:
+    """Форматує хвилини для таблиці."""
+    return "н/д" if value is None else f"{value:.1f}"
+
+
+def fmt_dt(value: Optional[datetime], tz: tzinfo) -> str:
+    """Форматує дату й час у вказаному часовому поясі."""
+    return value.astimezone(tz).strftime("%d.%m %H:%M") if value else "—"
+
+
+def render_metrics_section(metrics: Dict[str, Any]) -> List[str]:
+    """Формує рядки markdown з метриками DORA, чергою і виконанням."""
+    freq = metrics["frequency"]
+    lead = metrics["lead"]
+    fail = metrics["failure"]
+    restore = metrics["restore"]
+    return [
+        "| Метрика | Формула | Результат | Категорія (DORA 2025) |",
+        "|---|---|---|---|",
+        "| Частота розгортань | зелені запуски на main / кількість тижнів | "
+        f"{freq['total_green']} зелених / {freq['weeks']} тиж. = {freq['per_week']} на тиждень "
+        f"({freq['per_active_day']} на активний день, активних днів: {freq['active_days_count']}) | "
+        "визначте вручну за таблицею DORA 2025 |",
+        "| Час виконання змін | від першого коміту PR до завершення зеленого запуску на main | "
+        f"середнє {fmt_minutes(lead['mean_minutes'])} хв, медіана {fmt_minutes(lead['median_minutes'])} хв | "
+        f"за медіаною: {classify_lead_time_dora2025(lead['median_minutes'])}; "
+        f"за середнім: {classify_lead_time_dora2025(lead['mean_minutes'])} |",
+        "| Частота збоїв змін | червоні / (зелені + червоні) на main × 100% | "
+        f"{fail['red_count']} / {fail['total_completed']} × 100% = {fail['failure_rate_pct']}% | "
+        f"{classify_failure_rate_dora2025(fail['failure_rate_pct'])} |",
+        "| Час відновлення | від червоного запуску на main до наступного зеленого | "
+        f"{restore['status_label']} | {classify_restore_time_dora2025(restore['median_minutes'])} |",
+        "",
+        "Черга і виконання (зелені запуски):",
+        "",
+        f"- У часі CI (черга + виконання): черга {lead['queue_share_pct']}%, виконання {lead['execution_share_pct']}%.",
+        f"- У часі виконання змін (від першого коміту): черга {lead['queue_of_lead_pct']}%, "
+        f"виконання {lead['execution_of_lead_pct']}%, решта {lead['other_of_lead_pct']}% "
+        "припадає на час до запуску CI (розробка, рев'ю, очікування злиття).",
+        f"- Запусків: зелених {fail['green_count']}, червоних {fail['red_count']}; "
+        f"cancelled {fail['cancelled_count']} і skipped {fail['skipped_count']} у метриках не враховано.",
+    ]
+
+
+def render_raw_table(records: List[Dict[str, Any]], tz: tzinfo) -> List[str]:
+    """Формує таблицю сирих даних про запуски."""
+    lines = [RAW_TABLE_HEADER, "|" + "---|" * 10]
+    for number, record in enumerate(records, 1):
+        notes: List[str] = []
+        if record["run_attempt"] > 1:
+            notes.append(f"повторний запуск (спроба {record['run_attempt']})")
+        if record["classified_status"] not in ("green", "red"):
+            notes.append(f"результат: {record['conclusion'] or 'невідомо'}")
+        if record["pr_label"] == "—":
+            notes.append("без PR (прямий пуш)")
+        lines.append(
+            f"| {number} | {record['sha'][:7]} | {record['pr_label']} | {fmt_dt(record['first_commit_dt'], tz)} "
+            f"| {fmt_dt(record['completed_at_dt'], tz)} | {fmt_minutes(record['queue_minutes'])} "
+            f"| {fmt_minutes(record['execution_minutes'])} | {fmt_minutes(record['lead_time_minutes'])} "
+            f"| {STATUS_ICONS.get(record['classified_status'], '⚪')} | {'; '.join(notes)} |"
+        )
+    return lines
+
+
+def render_report(
+    repo: str,
+    since: str,
+    until: Optional[str],
+    tz_label: str,
+    records: List[Dict[str, Any]],
+    metrics: Dict[str, Any],
+    tz: tzinfo,
+) -> str:
+    """Формує повний звіт у форматі Markdown."""
+    lines = [
+        "# Автоматичний підрахунок метрик DORA",
+        "",
+        f"- Репозиторій: `{repo}`",
+        "- Workflow: CI Pipeline (`ci.yml`), гілка `main`, подія `push`",
+        f"- Період: {since} – {until or 'сьогодні'}",
+        f"- Час у таблицях: {tz_label}",
+        "- Розгортання = зелений запуск CI на main; невдала зміна = червоний запуск на main.",
+        f"- Згенеровано: {datetime.now(tz).strftime('%d.%m.%Y %H:%M')} ({tz_label}), скрипт `scripts/dora_metrics.py`",
+        "",
+        "## Метрики DORA",
+        "",
+    ]
+    lines += render_metrics_section(metrics)
+    lines += ["", "## Сирі дані по запусках", ""]
+    lines += render_raw_table(records, tz)
+    lines += ["", "## Повторні запуски (run_attempt > 1)", ""]
+    if metrics["retries"]:
+        for record in metrics["retries"]:
+            lines.append(f"- {record['sha'][:7]}: спроба {record['run_attempt']}, результат {record['conclusion']}")
+    else:
+        lines.append("Повторних запусків немає: усі запуски мають run_attempt = 1.")
+    return "\n".join(lines) + "\n"
+
+
+def write_text_file(path: str, content: str) -> None:
+    """Записує текст у файл UTF-8 і створює відсутні батьківські папки."""
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content, encoding="utf-8")
+
+
+def export_records_json(path: str, repo: str, since: str, until: Optional[str], records: List[Dict[str, Any]]) -> None:
+    """Експортує знеособлені дані запусків без імен і email авторів."""
+
+    def iso(value: Optional[datetime]) -> Optional[str]:
+        return value.isoformat() if value else None
+
+    runs = [
+        {
+            "run_id": record["run_id"],
+            "head_sha": record["sha"],
+            "run_attempt": record["run_attempt"],
+            "conclusion": record["conclusion"],
+            "pr": record["pr_label"],
+            "created_at": iso(record["created_at_dt"]),
+            "completed_at": iso(record["completed_at_dt"]),
+            "first_commit_at": iso(record["first_commit_dt"]),
+            "queue_minutes": record["queue_minutes"],
+            "execution_minutes": record["execution_minutes"],
+            "lead_time_minutes": record["lead_time_minutes"],
+        }
+        for record in records
+    ]
+    payload = {"repo": repo, "workflow": "ci.yml", "since": since, "until": until, "runs": runs}
+    write_text_file(path, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     """Точка входу CLI."""
     args = parse_args(argv)
+    configure_output()
+    tz = get_tz(args.utc_offset_hours)
     tz_label = format_tz_label(args.utc_offset_hours)
-    print(f"DORA metrics: since={args.since}, until={args.until}, tz={tz_label}, out={args.out}")
+    try:
+        since_dt, until_dt = resolve_period(args.since, args.until)
+    except ValueError as exc:
+        print(f"Помилка в аргументах: {exc}", file=sys.stderr)
+        return 2
+    try:
+        repo = detect_repo(args.repo)
+        print(f"Збираю запуски CI Pipeline для {repo} з {args.since}...")
+        records = collect_run_records(repo, args.since, args.until)
+    except (RuntimeError, OSError, ValueError) as exc:
+        print(f"Помилка: {exc}", file=sys.stderr)
+        return 1
+    if not records:
+        print("За цей період завершених запусків не знайдено.", file=sys.stderr)
+        return 1
+
+    metrics = build_metrics(records, since_dt, until_dt, tz)
+    write_text_file(args.out, render_report(repo, args.since, args.until, tz_label, records, metrics, tz))
+    if args.export_json:
+        export_records_json(args.export_json, repo, args.since, args.until, records)
+    print("\n".join(render_metrics_section(metrics)))
+    print(f"\nЗвіт збережено: {args.out}")
     return 0
 
 
