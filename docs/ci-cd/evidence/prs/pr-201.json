@@ -1,0 +1,28 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-05T08:46:49Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-05T08:46:49Z",
+      "messageBody": "Record the 0.1.1 refactoring release and verify current regression and mutation evidence.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "[REFACTOR] release 0.1.1",
+      "oid": "d9fe175591f7cc2372b38e2d1ddc9743e95f9f03"
+    }
+  ],
+  "number": 201,
+  "title": "release: prepare 0.1.1 refactoring release",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/201"
+}

@@ -1,0 +1,49 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-04T20:21:46Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-04T20:21:46Z",
+      "messageBody": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "docs(release): record 0.1.0 and Sonar results",
+      "oid": "bfca27053425ce6b5e357cf196bbf015e9d0dc3a"
+    },
+    {
+      "authoredDate": "2026-11-04T20:35:42Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-04T20:35:42Z",
+      "messageBody": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "docs(release): use standard project version metadata",
+      "oid": "7ad27e98a28582b076c4b8607e7335d2896d6d56"
+    }
+  ],
+  "number": 200,
+  "title": "docs(release): add 0.1.0 changelog and Sonar results",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/200"
+}

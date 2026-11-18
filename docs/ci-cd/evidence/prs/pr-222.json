@@ -1,0 +1,127 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-12T07:37:18Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-12T07:37:18Z",
+      "messageBody": "…in counter, fetch timeout, SQL game queries, bounded cache)",
+      "messageHeadline": "fix(reliability): close R-08, R-09, R-12..R-15 (sync handlers, DB log…",
+      "oid": "12ed9208047a0b52b737f71b25c8f5141f34ce5f"
+    },
+    {
+      "authoredDate": "2026-11-12T07:37:41Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-12T07:37:41Z",
+      "messageBody": "",
+      "messageHeadline": "test(reliability): add tests for R-08, R-09, R-12..R-15",
+      "oid": "77f3d8b228034c3761d6599b22f6650f9f06a1d2"
+    },
+    {
+      "authoredDate": "2026-11-12T07:38:38Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-12T07:38:38Z",
+      "messageBody": "",
+      "messageHeadline": "docs(reliability): update scavenger hunt and report, add bonus 3 section",
+      "oid": "5a17f0a1bfbbd7702b311517df8c016d6acc5671"
+    },
+    {
+      "authoredDate": "2026-11-12T07:46:28Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-12T07:46:28Z",
+      "messageBody": "…I routing; apply black",
+      "messageHeadline": "test(reliability): make coroutine-handler check independent of FastAP…",
+      "oid": "befb712610f956d1e43b68cd27feb905c83b2b11"
+    },
+    {
+      "authoredDate": "2026-11-12T08:00:11Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-12T08:00:11Z",
+      "messageBody": "",
+      "messageHeadline": "style: force black formatting for CI",
+      "oid": "7d7ed5aa83ea1751cd50e991c23d942ae3655de8"
+    },
+    {
+      "authoredDate": "2026-11-12T08:04:27Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-12T08:04:27Z",
+      "messageBody": "",
+      "messageHeadline": "chore: enforce LF line endings for Black CI",
+      "oid": "33126390c326f032b44c82de1d1bf60f4ffbc36a"
+    },
+    {
+      "authoredDate": "2026-11-12T08:09:25Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-12T08:09:25Z",
+      "messageBody": "",
+      "messageHeadline": "style: bypass black formatting for frontend test multiline strings",
+      "oid": "eb116fbf6c7a63521dd8da6181274ffa35c0de4a"
+    },
+    {
+      "authoredDate": "2026-11-12T08:51:35Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-12T08:51:35Z",
+      "messageBody": "",
+      "messageHeadline": "docs(lab9): add Loom video link",
+      "oid": "30c182413612e3643e72b480a2d1a0b263493325"
+    }
+  ],
+  "number": 222,
+  "title": "Fix/reliability open issues",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/222"
+}
