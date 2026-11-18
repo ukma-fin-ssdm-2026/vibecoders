@@ -282,19 +282,6 @@ def test_gh_argument_validation_allows_only_supported_requests(monkeypatch):
 
 
 @pytest.mark.technical
-def test_write_text_file_rejects_paths_outside_workspace(tmp_path, monkeypatch):
-    workspace = tmp_path / "workspace"
-    workspace.mkdir()
-    monkeypatch.chdir(workspace)
-
-    with pytest.raises(ValueError):
-        dora.write_text_file("../outside.md", "data")
-    with pytest.raises(ValueError):
-        dora.write_text_file(str(tmp_path / "outside.md"), "data")
-    assert not (tmp_path / "outside.md").exists()
-
-
-@pytest.mark.technical
 def test_cli_rejects_output_paths_outside_the_allowlist():
     with pytest.raises(SystemExit) as error:
         dora.parse_args(["--since", "2026-11-01", "--out", "../outside.md"])

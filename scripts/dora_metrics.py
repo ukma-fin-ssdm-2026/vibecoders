@@ -13,7 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 from datetime import datetime, timedelta, timezone, tzinfo
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
@@ -795,24 +795,17 @@ def render_report(
     return "\n".join(lines) + "\n"
 
 
-def write_text_file(path: Union[str, Path], content: str) -> None:
-    """Записує UTF-8 у шлях під поточним каталогом, створивши відсутні батьківські папки."""
+def write_report_file(content: str) -> None:
+    """Записує Markdown-звіт у фіксований шлях у поточному каталозі."""
     root = Path.cwd().resolve()
-    requested = Path(path)
-    if requested.is_absolute():
-        raise ValueError("Шлях для запису має бути відносним і залишатися в поточному каталозі")
-    target = (root / requested).resolve()
-    try:
-        target.relative_to(root)
-    except ValueError as exc:
-        raise ValueError("Шлях для запису має залишатися в поточному каталозі") from exc
-    if target == root:
-        raise ValueError("Шлях для запису має вказувати на файл у поточному каталозі")
+    target = (root / REPORT_OUTPUT_PATH).resolve()
+    if not target.is_relative_to(root):
+        raise ValueError("Шлях звіту має залишатися в поточному каталозі")
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content, encoding="utf-8")
 
 
-def export_records_json(path: Path, repo: str, since: str, until: Optional[str], records: List[Dict[str, Any]]) -> None:
+def export_records_json(repo: str, since: str, until: Optional[str], records: List[Dict[str, Any]]) -> None:
     """Експортує знеособлені дані запусків без імен і email авторів."""
 
     def iso(value: Optional[datetime]) -> Optional[str]:
@@ -835,7 +828,12 @@ def export_records_json(path: Path, repo: str, since: str, until: Optional[str],
         for record in records
     ]
     payload = {"repo": repo, "workflow": "ci.yml", "since": since, "until": until, "runs": runs}
-    write_text_file(path, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    root = Path.cwd().resolve()
+    target = (root / EXPORT_JSON_PATH).resolve()
+    if not target.is_relative_to(root):
+        raise ValueError("Шлях JSON-експорту має залишатися в поточному каталозі")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -862,12 +860,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 1
 
     metrics = build_metrics(records, since_dt, until_dt, tz)
-    write_text_file(
-        REPORT_OUTPUT_PATH,
-        render_report(repo, args.since, args.until, tz_label, records, metrics, tz),
-    )
+    write_report_file(render_report(repo, args.since, args.until, tz_label, records, metrics, tz))
     if args.export_json:
-        export_records_json(EXPORT_JSON_PATH, repo, args.since, args.until, records)
+        export_records_json(repo, args.since, args.until, records)
     print("\n".join(render_metrics_section(metrics)))
     print(f"\nЗвіт збережено: {args.out}")
     return 0
