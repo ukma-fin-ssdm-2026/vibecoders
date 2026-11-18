@@ -13,7 +13,7 @@ import subprocess
 import sys
 from pathlib import Path
 from datetime import datetime, timedelta, timezone, tzinfo
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 
 def parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
@@ -512,9 +512,11 @@ def parse_json_stream(text: str) -> List[Dict[str, Any]]:
     return items
 
 
-def fetch_workflow_runs(repo: str, since: str, until: Optional[str] = None) -> List[Dict[str, Any]]:
+def fetch_workflow_runs(repo: str, since: datetime, until: Optional[datetime] = None) -> List[Dict[str, Any]]:
     """Отримує завершені запуски CI Pipeline для гілки main за період since..until."""
-    created = f"{since}..{until}" if until else f">={since}"
+    since_date = since.strftime("%Y-%m-%d")
+    until_date = until.strftime("%Y-%m-%d") if until else None
+    created = f"{since_date}..{until_date}" if until_date else f">={since_date}"
     endpoint = f"repos/{repo}/actions/workflows/ci.yml/runs"
     args = [
         "api",
@@ -551,6 +553,10 @@ def fetch_run_jobs(repo: str, run_id: int) -> List[Dict[str, Any]]:
     return []
 
 
+REPORT_PATHS = {"docs/ci-cd/dora-auto.md": Path("docs/ci-cd/dora-auto.md")}
+EXPORT_PATHS = {"docs/ci-cd/evidence/runs-main.json": Path("docs/ci-cd/evidence/runs-main.json")}
+
+
 def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     """Розбір аргументів командного рядка."""
     parser = argparse.ArgumentParser(
@@ -568,13 +574,15 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--out",
+        choices=list(REPORT_PATHS),
         default="docs/ci-cd/dora-auto.md",
-        help="Відносний шлях звіту в поточному каталозі (за замовчуванням docs/ci-cd/dora-auto.md).",
+        help="Шлях Markdown-звіту (за замовчуванням docs/ci-cd/dora-auto.md).",
     )
     parser.add_argument(
         "--export-json",
+        choices=list(EXPORT_PATHS),
         default=None,
-        help="Відносний шлях JSON-файлу в поточному каталозі.",
+        help="Шлях для знеособленого JSON-файлу.",
     )
     parser.add_argument(
         "--utc-offset-hours",
@@ -642,7 +650,7 @@ def resolve_period(since: str, until: Optional[str]) -> Tuple[datetime, datetime
     return since_dt, until_dt
 
 
-def collect_run_records(repo: str, since: str, until: Optional[str]) -> List[Dict[str, Any]]:
+def collect_run_records(repo: str, since: datetime, until: Optional[datetime]) -> List[Dict[str, Any]]:
     """Збирає для кожного запуску статус, чергу, виконання, PR і час виконання змін."""
     runs = fetch_workflow_runs(repo, since, until)
     runs.sort(key=lambda r: r.get("created_at") or "")
@@ -787,7 +795,7 @@ def render_report(
     return "\n".join(lines) + "\n"
 
 
-def write_text_file(path: str, content: str) -> None:
+def write_text_file(path: Union[str, Path], content: str) -> None:
     """Записує UTF-8 у шлях під поточним каталогом, створивши відсутні батьківські папки."""
     root = Path.cwd().resolve()
     requested = Path(path)
@@ -804,7 +812,7 @@ def write_text_file(path: str, content: str) -> None:
     target.write_text(content, encoding="utf-8")
 
 
-def export_records_json(path: str, repo: str, since: str, until: Optional[str], records: List[Dict[str, Any]]) -> None:
+def export_records_json(path: Path, repo: str, since: str, until: Optional[str], records: List[Dict[str, Any]]) -> None:
     """Експортує знеособлені дані запусків без імен і email авторів."""
 
     def iso(value: Optional[datetime]) -> Optional[str]:
@@ -838,13 +846,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     tz_label = format_tz_label(args.utc_offset_hours)
     try:
         since_dt, until_dt = resolve_period(args.since, args.until)
+        api_until_dt = parse_date(args.until) if args.until else None
     except ValueError as exc:
         print(f"Помилка в аргументах: {exc}", file=sys.stderr)
         return 2
     try:
         repo = detect_repo(args.repo)
         print(f"Збираю запуски CI Pipeline для {repo} з {args.since}...")
-        records = collect_run_records(repo, args.since, args.until)
+        records = collect_run_records(repo, since_dt, api_until_dt)
     except (RuntimeError, OSError, ValueError) as exc:
         print(f"Помилка: {exc}", file=sys.stderr)
         return 1
@@ -853,9 +862,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 1
 
     metrics = build_metrics(records, since_dt, until_dt, tz)
-    write_text_file(args.out, render_report(repo, args.since, args.until, tz_label, records, metrics, tz))
+    write_text_file(
+        REPORT_PATHS[args.out],
+        render_report(repo, args.since, args.until, tz_label, records, metrics, tz),
+    )
     if args.export_json:
-        export_records_json(args.export_json, repo, args.since, args.until, records)
+        export_records_json(EXPORT_PATHS[args.export_json], repo, args.since, args.until, records)
     print("\n".join(render_metrics_section(metrics)))
     print(f"\nЗвіт збережено: {args.out}")
     return 0

@@ -295,12 +295,19 @@ def test_write_text_file_rejects_paths_outside_workspace(tmp_path, monkeypatch):
 
 
 @pytest.mark.technical
+def test_cli_rejects_output_paths_outside_the_allowlist():
+    with pytest.raises(SystemExit) as error:
+        dora.parse_args(["--since", "2026-11-01", "--out", "../outside.md"])
+    assert error.value.code == 2
+
+
+@pytest.mark.technical
 def test_main_builds_report_and_anonymized_json(tmp_path, monkeypatch):
     calls = []
     monkeypatch.setattr(dora, "run_gh_cmd", make_fake_gh(calls))
     monkeypatch.chdir(tmp_path)
-    out = Path("docs") / "dora-auto.md"
-    export = Path("evidence") / "runs.json"
+    out = Path("docs") / "ci-cd" / "dora-auto.md"
+    export = Path("docs") / "ci-cd" / "evidence" / "runs-main.json"
     code = dora.main(
         [
             "--since",
@@ -310,9 +317,9 @@ def test_main_builds_report_and_anonymized_json(tmp_path, monkeypatch):
             "--repo",
             "owner/repo",
             "--out",
-            str(out),
+            out.as_posix(),
             "--export-json",
-            str(export),
+            export.as_posix(),
         ]
     )
     assert code == 0
@@ -335,7 +342,8 @@ def test_main_builds_report_and_anonymized_json(tmp_path, monkeypatch):
 
 @pytest.mark.technical
 def test_main_returns_error_codes(tmp_path, monkeypatch):
-    out = str(tmp_path / "out.md")
+    monkeypatch.chdir(tmp_path)
+    out = "docs/ci-cd/dora-auto.md"
     monkeypatch.setattr(dora, "run_gh_cmd", make_fake_gh([], runs=[]))
     assert dora.main(["--since", "2026-11-01", "--repo", "o/r", "--out", out]) == 1
     assert dora.main(["--since", "2026-11-10", "--until", "2026-11-01", "--repo", "o/r", "--out", out]) == 2
