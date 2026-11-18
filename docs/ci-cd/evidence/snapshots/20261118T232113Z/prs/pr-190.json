@@ -1,0 +1,52 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-01T18:49:57Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-01T18:49:57Z",
+      "messageBody": "",
+      "messageHeadline": "bandit-report.txt",
+      "oid": "cdd1361fcf9ac23382aa0d25e7d5bc1667a19b61"
+    },
+    {
+      "authoredDate": "2026-11-01T18:52:56Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-01T18:52:56Z",
+      "messageBody": "",
+      "messageHeadline": "edit static-analysis.md",
+      "oid": "540be8c8621df3003d2d050348f1b5a0ccdc209d"
+    },
+    {
+      "authoredDate": "2026-11-01T19:05:21Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-01T19:05:21Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/report",
+      "oid": "9ac26279dfa2f827227419b0690ab9a908041c49"
+    }
+  ],
+  "number": 190,
+  "title": "Docs/report",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/190"
+}

@@ -1,0 +1,67 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T10:04:48Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:04:48Z",
+      "messageBody": "Updated test plan for Lab 7, including changes in test coverage, risk assessment, and traceability. Added new test cases and clarified existing ones.",
+      "messageHeadline": "Revise test plan for Lab 7 with updates and additions",
+      "oid": "e59c0fbcdca9947b8bbe027ed2c43a14fecba0ef"
+    },
+    {
+      "authoredDate": "2026-10-29T10:05:05Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:05:05Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-2",
+      "oid": "87ec55fb8a011d61ae8a46a9ba702df10f001622"
+    },
+    {
+      "authoredDate": "2026-10-29T10:19:35Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:19:35Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-2",
+      "oid": "485231f1da14319f25f9527f784b330d4eb6ea1d"
+    },
+    {
+      "authoredDate": "2026-10-29T10:20:33Z",
+      "authors": [
+        {
+          "email": "khamaza.igor@gmail.com",
+          "id": "U_kgDOCstKKw",
+          "login": "Reonor",
+          "name": "Reonor"
+        }
+      ],
+      "committedDate": "2026-10-29T10:20:33Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-2",
+      "oid": "4cfae001c37a4976fef05ca213dd08957e0dfbd0"
+    }
+  ],
+  "number": 153,
+  "title": "Revise test plan for Lab 7 with updates and additions",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/153"
+}

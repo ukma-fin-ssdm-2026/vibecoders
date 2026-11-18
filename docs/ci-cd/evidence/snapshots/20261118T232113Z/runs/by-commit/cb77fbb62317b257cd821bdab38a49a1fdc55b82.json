@@ -1,0 +1,11 @@
+[
+  {
+    "attempt": 1,
+    "conclusion": "success",
+    "createdAt": "2026-11-11T11:21:22Z",
+    "databaseId": 43011259059,
+    "headSha": "cb77fbb62317b257cd821bdab38a49a1fdc55b82",
+    "updatedAt": "2026-11-11T11:22:52Z",
+    "workflowName": "CI Pipeline"
+  }
+]

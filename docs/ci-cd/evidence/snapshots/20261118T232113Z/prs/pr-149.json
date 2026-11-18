@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T09:26:39Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-10-29T09:26:39Z",
+      "messageBody": "",
+      "messageHeadline": "Add video link to video_holdynska.txt",
+      "oid": "5139d08f59be66add3321a3cfc0a95f7141cc550"
+    }
+  ],
+  "number": 149,
+  "title": "Add video link to video_Holdynska.txt",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/149"
+}

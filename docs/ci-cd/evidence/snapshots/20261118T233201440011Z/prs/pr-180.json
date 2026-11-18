@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-31T18:32:14Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T18:32:14Z",
+      "messageBody": "…an, use relative dates for seed",
+      "messageHeadline": "fix(deploy): update dockerfile and render.yaml, add db init to lifesp…",
+      "oid": "3911885d9e8318ecba0cdd8acf7bc1f4ed51c737"
+    }
+  ],
+  "number": 180,
+  "title": "fix(deploy): update dockerfile and render.yaml, add db init to lifesp…",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/180"
+}

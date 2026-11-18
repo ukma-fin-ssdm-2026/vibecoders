@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T09:55:45Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T09:55:45Z",
+      "messageBody": "",
+      "messageHeadline": "Add deferred requirements in check_traceability.py",
+      "oid": "703c049065562c7d11a9b0b7cd81e51558b4baa5"
+    },
+    {
+      "authoredDate": "2026-10-29T10:03:16Z",
+      "authors": [
+        {
+          "email": "khamaza.igor@gmail.com",
+          "id": "U_kgDOCstKKw",
+          "login": "Reonor",
+          "name": "Reonor"
+        }
+      ],
+      "committedDate": "2026-10-29T10:03:16Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-1",
+      "oid": "9dcb6493ee6ee4f64bec36dff58949e6fe21164f"
+    }
+  ],
+  "number": 151,
+  "title": "Add deferred requirements in check_traceability.py",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/151"
+}

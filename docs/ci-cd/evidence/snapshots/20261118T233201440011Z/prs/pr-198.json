@@ -1,0 +1,28 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-04T15:50:45Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-04T15:50:45Z",
+      "messageBody": "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "test(api): characterize OpenAPI generator CLI",
+      "oid": "c0f75e0f43c4680c65620728b857d4892416570c"
+    }
+  ],
+  "number": 198,
+  "title": "tests: characterize OpenAPI generator CLI",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/198"
+}

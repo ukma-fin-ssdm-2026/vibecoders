@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T09:53:50Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T09:53:50Z",
+      "messageBody": "Updated the requirements traceability matrix (RTM) with new user stories, non-functional requirements, and test cases. Adjusted existing entries and added AI-generated lines verified against the test plan.",
+      "messageHeadline": "Revise RTM with new user stories and test cases",
+      "oid": "0463aff4da93f11633dabe191a2142597144620c"
+    },
+    {
+      "authoredDate": "2026-10-29T10:05:20Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:05:20Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan",
+      "oid": "dea3e62f7cdd44b78104341b073480d17606d230"
+    }
+  ],
+  "number": 150,
+  "title": "Revise RTM with new user stories and test cases",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/150"
+}

@@ -1,0 +1,67 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-30T12:38:56Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-30T12:38:56Z",
+      "messageBody": "",
+      "messageHeadline": "refactor: extract method to reduce duplication",
+      "oid": "bee4dd1c5e24ec064cda9069df1ed2c84c140970"
+    },
+    {
+      "authoredDate": "2026-10-30T12:52:02Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-30T12:52:02Z",
+      "messageBody": "",
+      "messageHeadline": "refactor: extract method to reduce duplication-v2",
+      "oid": "64330320a039ce45b4509a10b6b243a5343b0ca0"
+    },
+    {
+      "authoredDate": "2026-10-30T13:02:34Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-30T13:02:34Z",
+      "messageBody": "",
+      "messageHeadline": "fix: make password salt module-scoped to pass deterministic tests",
+      "oid": "fd743e0ec87eb386ace46406743d0314eae84721"
+    },
+    {
+      "authoredDate": "2026-10-30T13:04:57Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-30T13:04:57Z",
+      "messageBody": "",
+      "messageHeadline": "fix: make password salt module-scoped to pass deterministic tests-v1",
+      "oid": "2d1cb2606294106c4b607f7bc73ebf0c82e9ba84"
+    }
+  ],
+  "number": 165,
+  "title": "refactor: extract method to reduce duplication",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/165"
+}

@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T11:24:28Z",
+      "authors": [
+        {
+          "email": "khamaza.igor@gmail.com",
+          "id": "U_kgDOCstKKw",
+          "login": "Reonor",
+          "name": "Reonor"
+        }
+      ],
+      "committedDate": "2026-10-29T11:24:28Z",
+      "messageBody": "Updated test plan to include additional risks, test cases, and clarifications on test coverage and requirements.\r\n\r\nТест відредаговано за допомогою Claude Sonnet 5.5.",
+      "messageHeadline": "Revise test plan with new risks and test case details",
+      "oid": "4d57f6b95bf50ac41cb40e175d8100eab48b1d8b"
+    }
+  ],
+  "number": 161,
+  "title": "Revise test plan with new risks and test case details",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/161"
+}

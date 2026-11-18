@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-30T21:06:23Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-30T21:06:23Z",
+      "messageBody": "",
+      "messageHeadline": "feat(ui): add login and register pages with validation and tests",
+      "oid": "a6b414a1b823b69f53600ceb01bd673ae6b30111"
+    },
+    {
+      "authoredDate": "2026-10-31T11:17:51Z",
+      "authors": [
+        {
+          "email": "152533645+Sonafi3@users.noreply.github.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T11:17:51Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into feature/ui-login-register",
+      "oid": "afc0353d7980ed0fc4ff42362eddcd77fc58e2c3"
+    }
+  ],
+  "number": 171,
+  "title": "Feature/UI login register",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/171"
+}

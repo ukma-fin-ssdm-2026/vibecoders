@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-01T18:08:19Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-01T18:08:19Z",
+      "messageBody": "",
+      "messageHeadline": "add notifications and profile web pages",
+      "oid": "10cdd44a72ee6d49d30771ef84fe417723368aca"
+    },
+    {
+      "authoredDate": "2026-11-01T18:09:17Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-01T18:09:17Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/ui",
+      "oid": "578fc202eaffd7827312a57abff415f2c0212a55"
+    }
+  ],
+  "number": 189,
+  "title": "add notifications and profile web pages",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/189"
+}

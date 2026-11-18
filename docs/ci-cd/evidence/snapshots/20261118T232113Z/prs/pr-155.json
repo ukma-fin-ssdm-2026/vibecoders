@@ -1,0 +1,52 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T10:09:05Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:09:05Z",
+      "messageBody": "Added logic to modify test files based on mutation conditions and updated setup configuration.",
+      "messageHeadline": "Enhance mutation script with test modification logic",
+      "oid": "10ef48a10b82fec88db8c22e182249bd97f24ea3"
+    },
+    {
+      "authoredDate": "2026-10-29T10:21:13Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:21:13Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-4",
+      "oid": "0f57a51fdb29648c3af68e38bea23fd909355c5d"
+    },
+    {
+      "authoredDate": "2026-10-29T10:23:53Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:23:53Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-4",
+      "oid": "4f94bb73f9f2d2a6770a332b23e05d718db50abd"
+    }
+  ],
+  "number": 155,
+  "title": "Enhance mutation script with test modification logic",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/155"
+}

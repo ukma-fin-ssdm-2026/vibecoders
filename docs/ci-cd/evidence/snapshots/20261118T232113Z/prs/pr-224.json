@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-13T12:21:22Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-13T12:21:22Z",
+      "messageBody": "Added a summary of DORA metrics for the main branch, covering deployment frequency, change lead time, change failure rate, and recovery time. Included insights and improvement plans based on CI/CD performance data.",
+      "messageHeadline": "Add DORA metrics summary for main branch",
+      "oid": "6e70b70c2c0c21f5c0435e160ba59185628fa528"
+    }
+  ],
+  "number": 224,
+  "title": "Add DORA metrics summary for main branch",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/224"
+}

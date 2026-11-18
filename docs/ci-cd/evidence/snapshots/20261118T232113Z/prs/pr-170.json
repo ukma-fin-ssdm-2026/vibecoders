@@ -1,0 +1,82 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-30T20:15:40Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-30T20:15:40Z",
+      "messageBody": "",
+      "messageHeadline": "feat(web): add static UI skeleton with index.html, app.js and style.css",
+      "oid": "73a6ce36d960cbe5a96e44e89f6f676e6dd98f15"
+    },
+    {
+      "authoredDate": "2026-10-30T20:23:16Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-30T20:23:16Z",
+      "messageBody": "",
+      "messageHeadline": "feat(ui): add UI skeleton and static files mount",
+      "oid": "6ed45732d3ba443310681f0e3938e7a145f9f483"
+    },
+    {
+      "authoredDate": "2026-10-30T20:28:03Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-30T20:28:03Z",
+      "messageBody": "",
+      "messageHeadline": "chore: remove cached pycache, site-packages and coverage files",
+      "oid": "8e07ee8b326a55f64665c6ea74d69127448f3fb9"
+    },
+    {
+      "authoredDate": "2026-10-30T20:38:33Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-30T20:38:33Z",
+      "messageBody": "",
+      "messageHeadline": "fix: resolve pycache merge conflict",
+      "oid": "a2a6712003b6b36f128efb295db6604d195641f6"
+    },
+    {
+      "authoredDate": "2026-10-31T11:15:36Z",
+      "authors": [
+        {
+          "email": "152533645+Sonafi3@users.noreply.github.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T11:15:36Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into feature/ui-skeleton",
+      "oid": "3f97f3ed74708e033f879557639ccec7ba79aee4"
+    }
+  ],
+  "number": 170,
+  "title": "Feature/UI skeleton",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/170"
+}

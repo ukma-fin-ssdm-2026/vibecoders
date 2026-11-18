@@ -1,0 +1,97 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-31T13:51:55Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T13:51:55Z",
+      "messageBody": "",
+      "messageHeadline": "feat(db): create SQLAlchemy skeleton with 7 models matching UML",
+      "oid": "f698da980d7b4459b8f1075abaf1fc69fd37d845"
+    },
+    {
+      "authoredDate": "2026-10-31T14:05:32Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T14:05:32Z",
+      "messageBody": "",
+      "messageHeadline": "fix(db): add noqa to models import to pass flake8",
+      "oid": "050191b778f6ebf81b67735cc7e6bd26600e0c3a"
+    },
+    {
+      "authoredDate": "2026-10-31T14:12:58Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T14:12:58Z",
+      "messageBody": "",
+      "messageHeadline": "test: add db models initialization test to restore >95% coverage",
+      "oid": "b2a0bd6f2772a4fff999c17b2bc7b3e6bc23e57d"
+    },
+    {
+      "authoredDate": "2026-10-31T14:14:58Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T14:14:58Z",
+      "messageBody": "",
+      "messageHeadline": "style: format test_db_models.py with black",
+      "oid": "239b654bb0a0c49b5d734eb8ac8b272d99f6144e"
+    },
+    {
+      "authoredDate": "2026-10-31T14:29:30Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T14:29:30Z",
+      "messageBody": "…vars",
+      "messageHeadline": "feat(db): add seed.py for initial data and move PASSWORD_SALT to env …",
+      "oid": "134ce91599c8cce0f8cb1f6627c4231c32e2c26e"
+    },
+    {
+      "authoredDate": "2026-10-31T14:29:48Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T14:29:48Z",
+      "messageBody": "…seed.py",
+      "messageHeadline": "fix(db): update models to use String IDs and correct table names for …",
+      "oid": "6d2c2d975e19a4d8b5251b9e1a164e49b404f0e6"
+    }
+  ],
+  "number": 175,
+  "title": "Feature/db seed and security",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/175"
+}
