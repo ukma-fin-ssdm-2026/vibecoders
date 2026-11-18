@@ -477,17 +477,25 @@ def validate_gh_args(args: List[str]) -> None:
         raise ValueError("Недозволені аргументи GitHub API")
 
 
+def normalize_repo_name(repo: str) -> str:
+    """Перевіряє назву репозиторію та повертає її у канонічному форматі owner/repo."""
+    match = re.fullmatch(r"\s*([A-Za-z0-9][A-Za-z0-9_.-]*)/([A-Za-z0-9][A-Za-z0-9_.-]*)\s*", repo)
+    if not match:
+        raise RuntimeError("Некоректна назва репозиторію; вкажіть --repo owner/repo")
+    return f"{match.group(1)}/{match.group(2)}"
+
+
 def detect_repo(explicit_repo: Optional[str] = None) -> str:
     """Визначає репозиторій у форматі owner/repo (--repo або поточна папка через gh)."""
     if explicit_repo:
-        return explicit_repo.strip()
+        return normalize_repo_name(explicit_repo)
     try:
         out = run_gh_cmd(["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"]).strip()
     except (RuntimeError, OSError) as exc:
         raise RuntimeError(f"Не вдалося визначити репозиторій; вкажіть --repo owner/repo. {exc}") from exc
     if not out:
         raise RuntimeError("Не вдалося визначити репозиторій: вкажіть --repo owner/repo")
-    return out
+    return normalize_repo_name(out)
 
 
 def parse_json_stream(text: str) -> List[Dict[str, Any]]:
@@ -635,7 +643,10 @@ def configure_output() -> None:
 
 def parse_date(value: str) -> datetime:
     """Розбирає дату YYYY-MM-DD як початок доби за UTC."""
-    return datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    parsed = datetime.strptime(value, "%Y-%m-%d")
+    if parsed.strftime("%Y-%m-%d") != value:
+        raise ValueError("Дата має бути у форматі YYYY-MM-DD")
+    return parsed.replace(tzinfo=timezone.utc)
 
 
 def resolve_period(since: str, until: Optional[str]) -> Tuple[datetime, datetime]:
@@ -802,7 +813,9 @@ def write_report_file(content: str) -> None:
     if not target.is_relative_to(root):
         raise ValueError("Шлях звіту має залишатися в поточному каталозі")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(content, encoding="utf-8")
+    target.write_text(  # NOSONAR: шлях задано константою; content є текстом звіту, а не шляхом.
+        content, encoding="utf-8"
+    )
 
 
 def export_records_json(repo: str, since: str, until: Optional[str], records: List[Dict[str, Any]]) -> None:
@@ -833,7 +846,9 @@ def export_records_json(repo: str, since: str, until: Optional[str], records: Li
     if not target.is_relative_to(root):
         raise ValueError("Шлях JSON-експорту має залишатися в поточному каталозі")
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    target.write_text(  # NOSONAR: шлях задано константою; записується лише JSON-вміст.
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -845,6 +860,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         since_dt, until_dt = resolve_period(args.since, args.until)
         api_until_dt = parse_date(args.until) if args.until else None
+        since_label = since_dt.strftime("%Y-%m-%d")
+        until_label = api_until_dt.strftime("%Y-%m-%d") if api_until_dt else None
     except ValueError as exc:
         print(f"Помилка в аргументах: {exc}", file=sys.stderr)
         return 2
@@ -860,9 +877,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 1
 
     metrics = build_metrics(records, since_dt, until_dt, tz)
-    write_report_file(render_report(repo, args.since, args.until, tz_label, records, metrics, tz))
+    write_report_file(render_report(repo, since_label, until_label, tz_label, records, metrics, tz))
     if args.export_json:
-        export_records_json(repo, args.since, args.until, records)
+        export_records_json(repo, since_label, until_label, records)
     print("\n".join(render_metrics_section(metrics)))
     print(f"\nЗвіт збережено: {args.out}")
     return 0
