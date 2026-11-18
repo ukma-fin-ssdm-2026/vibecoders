@@ -553,8 +553,8 @@ def fetch_run_jobs(repo: str, run_id: int) -> List[Dict[str, Any]]:
     return []
 
 
-REPORT_PATHS = {"docs/ci-cd/dora-auto.md": Path("docs/ci-cd/dora-auto.md")}
-EXPORT_PATHS = {"docs/ci-cd/evidence/runs-main.json": Path("docs/ci-cd/evidence/runs-main.json")}
+REPORT_OUTPUT_PATH = Path("docs/ci-cd/dora-auto.md")
+EXPORT_JSON_PATH = Path("docs/ci-cd/evidence/runs-main.json")
 
 
 def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
@@ -574,15 +574,15 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--out",
-        choices=list(REPORT_PATHS),
-        default="docs/ci-cd/dora-auto.md",
-        help="Шлях Markdown-звіту (за замовчуванням docs/ci-cd/dora-auto.md).",
+        choices=[REPORT_OUTPUT_PATH.as_posix()],
+        default=REPORT_OUTPUT_PATH.as_posix(),
+        help="Фіксований шлях Markdown-звіту: docs/ci-cd/dora-auto.md.",
     )
     parser.add_argument(
         "--export-json",
-        choices=list(EXPORT_PATHS),
+        choices=[EXPORT_JSON_PATH.as_posix()],
         default=None,
-        help="Шлях для знеособленого JSON-файлу.",
+        help="Фіксований шлях JSON-експорту: docs/ci-cd/evidence/runs-main.json.",
     )
     parser.add_argument(
         "--utc-offset-hours",
@@ -863,11 +863,11 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     metrics = build_metrics(records, since_dt, until_dt, tz)
     write_text_file(
-        REPORT_PATHS[args.out],
+        REPORT_OUTPUT_PATH,
         render_report(repo, args.since, args.until, tz_label, records, metrics, tz),
     )
     if args.export_json:
-        export_records_json(EXPORT_PATHS[args.export_json], repo, args.since, args.until, records)
+        export_records_json(EXPORT_JSON_PATH, repo, args.since, args.until, records)
     print("\n".join(render_metrics_section(metrics)))
     print(f"\nЗвіт збережено: {args.out}")
     return 0
