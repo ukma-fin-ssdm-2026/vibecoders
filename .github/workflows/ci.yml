@@ -104,3 +104,40 @@ jobs:
 
     - name: Run reliability tests
       run: python -m pytest src/api/tests/reliability -v
+
+  publish-container:
+    needs: [validate-and-test, reliability-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.validate-and-test.result == 'success' && needs.reliability-tests.result == 'success'
+    runs-on: [self-hosted, linux]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set lowercase image name
+      id: image
+      env:
+        REPOSITORY: ${{ github.repository }}
+      run: echo "name=ghcr.io/$(printf '%s' "$REPOSITORY" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+    - name: Build and publish image
+      uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.image.outputs.name }}:${{ github.sha }}
+        cache-from: type=gha,scope=ghcr-main
+        cache-to: type=gha,mode=max,scope=ghcr-main
