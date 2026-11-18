@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-03T16:21:05Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-03T16:21:05Z",
+      "messageBody": "Updated metrics and analysis in the SonarCloud report, including security ratings and reliability issues. Added detailed findings and planned actions for improvement.",
+      "messageHeadline": "Revise SonarCloud report with updated metrics",
+      "oid": "62c129614280ec5e4f1b0e6e3d6ef170f47914c5"
+    }
+  ],
+  "number": 195,
+  "title": "Revise SonarCloud report with updated metrics",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/195"
+}

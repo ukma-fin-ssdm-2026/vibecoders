@@ -1,0 +1,52 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-11T14:03:05Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-11T14:03:05Z",
+      "messageBody": "",
+      "messageHeadline": "Document backoff and jitter retry bonus and R-05 resolution",
+      "oid": "a7e3128931f9b7f69ea1933f82b56a981ad7b933"
+    },
+    {
+      "authoredDate": "2026-11-11T14:40:28Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-11-11T14:40:28Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/lab09-retry-bonus",
+      "oid": "985a5f2f41e845776cfeb34ceb9293d43cfbfb32"
+    },
+    {
+      "authoredDate": "2026-11-11T14:42:22Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-11-11T14:42:22Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/lab09-retry-bonus",
+      "oid": "8f7c27435ca82a32d833943c1441deee62677a5d"
+    }
+  ],
+  "number": 217,
+  "title": "Document backoff and jitter retry bonus and R-05 resolution",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/217"
+}

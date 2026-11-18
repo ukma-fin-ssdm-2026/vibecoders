@@ -1,0 +1,121 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-11T09:29:34Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T09:29:34Z",
+      "messageBody": "Align the scavenger hunt, reliability report, and environment guidance with the ID validation and production salt safeguards in PR #212. Record the separate CI job without claiming branch protection.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "docs(reliability): update R-10/R-11 status and guidance",
+      "oid": "942fa53b9d306302d2b60ee86d3211245ee58d1b"
+    },
+    {
+      "authoredDate": "2026-11-11T10:35:27Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T10:35:27Z",
+      "messageBody": "Document malformed-ID cases in the reliability suite, record the additional production salt fail-fast behavior, and link the currently green pre-merge CI run without implying a post-merge check exists.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "docs(reliability): align ID test evidence and CI status",
+      "oid": "71de1281376352a9894872bcd85b37f37a8d4d8c"
+    },
+    {
+      "authoredDate": "2026-11-11T11:06:00Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T11:06:00Z",
+      "messageBody": "Record that seven malformed-ID regression cases fail against the pre-fix store implementation, while game_abc is intentionally a passing control.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "docs(reliability): record legacy ID test failures",
+      "oid": "80306754dd33a355ade3c4f8c36a625ae9750fb0"
+    },
+    {
+      "authoredDate": "2026-11-11T11:12:57Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T11:12:57Z",
+      "messageBody": "Update reliability counts after relocating both identifier and password-salt checks into the dedicated suite, and document recursive traceability discovery and the still-pre-merge CI status.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "docs(reliability): reflect complete R-10/R-11 suite",
+      "oid": "f4989de925cb53410d7fe16713da194aa2a88565"
+    },
+    {
+      "authoredDate": "2026-11-11T11:27:08Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-11-11T11:27:08Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/lab09-status-and-guidance",
+      "oid": "2ac2a12a8f17910147d2a75b948dbebbac045889"
+    },
+    {
+      "authoredDate": "2026-11-11T11:30:50Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-11-11T11:30:50Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/lab09-status-and-guidance",
+      "oid": "be913c367321d691e9f38af241f6b14e6ef50c61"
+    }
+  ],
+  "number": 214,
+  "title": "docs(reliability): align R-10/R-11 and environment guidance",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/214"
+}

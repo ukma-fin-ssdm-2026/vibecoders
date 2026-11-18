@@ -1,0 +1,43 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-11T20:33:07Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T20:33:07Z",
+      "messageBody": "Remove retry comments and duplicate wrapper setup, and cover process-control exceptions. Correct test counts and the R-05 reference in the reliability report.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "[RELIABILITY] narrow retry exceptions and update report",
+      "oid": "7ceda8c04c602c86747bacafcadd79381e02b9ef"
+    },
+    {
+      "authoredDate": "2026-11-12T07:03:05Z",
+      "authors": [
+        {
+          "email": "152533645+Sonafi3@users.noreply.github.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-11-12T07:03:05Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into fix/lab09-retry-review",
+      "oid": "2ecd0acf9c9c300643992fd993c967484e5fb853"
+    }
+  ],
+  "number": 220,
+  "title": "reliability: tighten retry exception handling",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/220"
+}

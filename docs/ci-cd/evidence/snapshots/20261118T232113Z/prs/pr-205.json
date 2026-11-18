@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-05T10:34:08Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-05T10:34:08Z",
+      "messageBody": "",
+      "messageHeadline": "edit sonarcloud-report.md",
+      "oid": "e5a67f805985d2aa48c55cd9eecd4d55cd1c94dc"
+    },
+    {
+      "authoredDate": "2026-11-05T10:35:27Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-05T10:35:27Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/refactoring",
+      "oid": "a11b815dbd2e57f799868ef481d650b6b2fcde8c"
+    }
+  ],
+  "number": 205,
+  "title": "edit sonarcloud-report.md",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/205"
+}

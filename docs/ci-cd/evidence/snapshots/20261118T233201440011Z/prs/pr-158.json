@@ -1,0 +1,97 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T10:15:32Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-29T10:15:32Z",
+      "messageBody": "",
+      "messageHeadline": "docs/test: add AI code review checklist, peer review log",
+      "oid": "fd80134b7bebbfb8b1e4a05a61c9644d13b9a238"
+    },
+    {
+      "authoredDate": "2026-10-29T10:16:10Z",
+      "authors": [
+        {
+          "email": "152533645+Sonafi3@users.noreply.github.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-29T10:16:10Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/lab7-reviews",
+      "oid": "1581fc594db7c9c999bafc0f12610477b175ca89"
+    },
+    {
+      "authoredDate": "2026-10-29T10:20:15Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:20:15Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/lab7-reviews",
+      "oid": "6e7eed880bb0eb6fb394f3db1cb3c6866cd507eb"
+    },
+    {
+      "authoredDate": "2026-10-29T10:30:53Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:30:53Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/lab7-reviews",
+      "oid": "5ee6dc9fe3c8ec2aa5f2300c6ac7491c9f8a92fd"
+    },
+    {
+      "authoredDate": "2026-10-29T10:34:00Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:34:00Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/lab7-reviews",
+      "oid": "24cc9888b473507786801aa52ea31501df5ba44c"
+    },
+    {
+      "authoredDate": "2026-10-29T10:37:41Z",
+      "authors": [
+        {
+          "email": "152533645+Sonafi3@users.noreply.github.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-29T10:37:41Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/lab7-reviews",
+      "oid": "0b6ba9b596464815779f2ffe6612d705775cf48b"
+    }
+  ],
+  "number": 158,
+  "title": "docs/test: add AI code review checklist, peer review log",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/158"
+}

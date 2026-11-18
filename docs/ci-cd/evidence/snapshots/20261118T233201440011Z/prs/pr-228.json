@@ -1,0 +1,58 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-18T13:16:23Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-18T13:16:23Z",
+      "messageBody": "Filter pull request changes before assigning the two required test jobs to shared runners. Keep the required job statuses successful for documentation-only PRs, and run tests if the filter fails.\n\nDocument measured runner usage and leave the post-change measurement table blank.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "ci: skip self-hosted checks for markdown-only PRs",
+      "oid": "9cdea9998ca5bbe840da77fd133d56b00d7b0d1d"
+    },
+    {
+      "authoredDate": "2026-11-18T13:16:34Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        }
+      ],
+      "committedDate": "2026-11-18T13:16:34Z",
+      "messageBody": "…runs",
+      "messageHeadline": "Merge remote-tracking branch 'origin/main' into ci/skip-docs-only-pr-…",
+      "oid": "d5dc2cf9dde304f1cb58d2c420fd56d3f3696dfe"
+    },
+    {
+      "authoredDate": "2026-11-18T13:33:35Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-18T13:33:35Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into ci/skip-docs-only-pr-runs",
+      "oid": "7f3cb4e3e5e0d1576df7072f73637141a5c9f438"
+    }
+  ],
+  "number": 228,
+  "title": "ci: skip self-hosted checks for markdown-only PRs",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/228"
+}

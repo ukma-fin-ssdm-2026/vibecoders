@@ -1,0 +1,20 @@
+[
+  {
+    "attempt": 1,
+    "conclusion": "success",
+    "createdAt": "2026-10-31T11:43:58Z",
+    "databaseId": 41198067666,
+    "headSha": "b503f999caaf1afdfb9968970a63bd2ec188a795",
+    "updatedAt": "2026-10-31T11:46:58Z",
+    "workflowName": "CI Pipeline"
+  },
+  {
+    "attempt": 1,
+    "conclusion": "success",
+    "createdAt": "2026-10-31T11:43:58Z",
+    "databaseId": 41198067593,
+    "headSha": "b503f999caaf1afdfb9968970a63bd2ec188a795",
+    "updatedAt": "2026-10-31T11:48:09Z",
+    "workflowName": "Generate and Deploy API Docs"
+  }
+]

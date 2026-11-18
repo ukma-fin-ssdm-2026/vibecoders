@@ -1,0 +1,52 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-31T15:01:27Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T15:01:27Z",
+      "messageBody": "…aching",
+      "messageHeadline": "feat(db): replace in-memory dicts with SQLAlchemy proxy classes and c…",
+      "oid": "40ff926cac4ac902f697125d08e786909a679427"
+    },
+    {
+      "authoredDate": "2026-10-31T16:30:51Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T16:30:51Z",
+      "messageBody": "…ncy (REL-001)",
+      "messageHeadline": "fix(db): add thread lock to store and configure NullPool for concurre…",
+      "oid": "1b273c1909788f32e832081e575b4d0fd438d5c1"
+    },
+    {
+      "authoredDate": "2026-10-31T16:57:02Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T16:57:02Z",
+      "messageBody": "",
+      "messageHeadline": "fix(tests): use RLock to prevent deadlocks and wipe db before each test",
+      "oid": "b6c75a793c54f90c2565b0035859015a8a831351"
+    }
+  ],
+  "number": 177,
+  "title": "Feature/concurrency test",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/177"
+}

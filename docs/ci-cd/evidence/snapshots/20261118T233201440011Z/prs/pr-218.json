@@ -1,0 +1,37 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-11T14:47:33Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-11T14:47:33Z",
+      "messageBody": "",
+      "messageHeadline": "Fix retry time budget and add CI run link to report",
+      "oid": "149f19216e91b6de418be59eda26555d2851b73f"
+    },
+    {
+      "authoredDate": "2026-11-11T14:49:21Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "iraholdynska"
+        }
+      ],
+      "committedDate": "2026-11-11T14:49:21Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into docs/bonus",
+      "oid": "b1d5e4411138743ab19cf2ec5525cce70190a240"
+    }
+  ],
+  "number": 218,
+  "title": "Fix retry time budget and add CI run link to report",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/218"
+}

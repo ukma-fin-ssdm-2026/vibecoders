@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-31T15:01:27Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T15:01:27Z",
+      "messageBody": "…aching",
+      "messageHeadline": "feat(db): replace in-memory dicts with SQLAlchemy proxy classes and c…",
+      "oid": "40ff926cac4ac902f697125d08e786909a679427"
+    }
+  ],
+  "number": 176,
+  "title": "feat(db): replace in-memory dicts with SQLAlchemy proxy classes and c…",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/176"
+}

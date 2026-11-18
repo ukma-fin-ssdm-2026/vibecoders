@@ -1,0 +1,67 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T10:07:27Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:07:27Z",
+      "messageBody": "",
+      "messageHeadline": "Add mutmut dependency for Python 3.10 or higher",
+      "oid": "038c804991cff7f4447f63aab3a0a8e11be6b076"
+    },
+    {
+      "authoredDate": "2026-10-29T10:20:01Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:20:01Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-3",
+      "oid": "70aa2151b9cac883ce8ca7e8543bb7dc72f5a3c4"
+    },
+    {
+      "authoredDate": "2026-10-29T10:20:42Z",
+      "authors": [
+        {
+          "email": "khamaza.igor@gmail.com",
+          "id": "U_kgDOCstKKw",
+          "login": "Reonor",
+          "name": "Reonor"
+        }
+      ],
+      "committedDate": "2026-10-29T10:20:42Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-3",
+      "oid": "9d226e6c07ef23d7cea54cc6defefa5fcb4fb035"
+    },
+    {
+      "authoredDate": "2026-10-29T10:22:43Z",
+      "authors": [
+        {
+          "email": "khamaza.igor@gmail.com",
+          "id": "U_kgDOCstKKw",
+          "login": "Reonor",
+          "name": "Reonor"
+        }
+      ],
+      "committedDate": "2026-10-29T10:22:43Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into update/lab7_test-plan-3",
+      "oid": "6215f6ef326959a845e0b0e1d4cc831d9cee2c72"
+    }
+  ],
+  "number": 154,
+  "title": "Add mutmut dependency for Python 3.10 or higher",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/154"
+}

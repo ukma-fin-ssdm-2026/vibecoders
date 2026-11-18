@@ -1,0 +1,49 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-11T09:15:38Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T09:15:38Z",
+      "messageBody": "Record the instructor-provided baseline, identify retained Sonar snapshots by commit, correct the password-salt history, and label non-Fowler changes in the changelog.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "docs(refactoring): correct Sonar baselines and PR #165 behavior",
+      "oid": "c4dd0c64676e8134ba241aad2380f77951da1e6c"
+    },
+    {
+      "authoredDate": "2026-11-11T10:37:17Z",
+      "authors": [
+        {
+          "email": "katrinspys2006@gmail.com",
+          "id": "U_kgDOCtWkYw",
+          "login": "katespys",
+          "name": "katespys"
+        },
+        {
+          "email": "223556219+Copilot@users.noreply.github.com",
+          "id": "BOT_kgDODVMyew",
+          "login": "Copilot",
+          "name": "Copilot"
+        }
+      ],
+      "committedDate": "2026-11-11T10:37:17Z",
+      "messageBody": "Add the missing maintainability and debt section, document the six PR 196 changes with invariants and verification, clarify the pre-refactor baseline and test timing, and state that no bonuses are claimed.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "messageHeadline": "docs(refactoring): complete Lab 8 evidence and numbering",
+      "oid": "b71a9f1df6037675de9adf0b530a4d5ec1007c02"
+    }
+  ],
+  "number": 211,
+  "title": "docs(refactoring): correct Sonar baselines and salt history",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/211"
+}

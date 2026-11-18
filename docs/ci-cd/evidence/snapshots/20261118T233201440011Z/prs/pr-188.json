@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-11-01T17:46:57Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-11-01T17:46:57Z",
+      "messageBody": "",
+      "messageHeadline": "add notifications and profile web pages",
+      "oid": "1f3b8a5b86cf9df28e8f4ad3cbf5693a26c0f1c5"
+    }
+  ],
+  "number": 188,
+  "title": "add notifications and profile web pages",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/188"
+}

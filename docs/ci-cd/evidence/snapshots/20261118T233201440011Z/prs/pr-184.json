@@ -1,0 +1,82 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-31T21:48:48Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T21:48:48Z",
+      "messageBody": "…ED_UNTIL to sqlite",
+      "messageHeadline": "fix(db): rename notifications helper for integration and persist LOCK…",
+      "oid": "030c18795f77e56859c48521e66ed6af3b7090f8"
+    },
+    {
+      "authoredDate": "2026-10-31T22:28:24Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T22:28:24Z",
+      "messageBody": "… and payload updates",
+      "messageHeadline": "fix(tests): adapt scenario, auth, and game routes to sqlite migration…",
+      "oid": "d451397fa18bfae321911accc14d8c4717977908"
+    },
+    {
+      "authoredDate": "2026-10-31T22:33:41Z",
+      "authors": [
+        {
+          "email": "152533645+Sonafi3@users.noreply.github.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T22:33:41Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into feature/notification-bd-fix",
+      "oid": "ffe5807f3784ef18078900cf0c7d2c1d9495bbbf"
+    },
+    {
+      "authoredDate": "2026-10-31T22:36:02Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T22:36:02Z",
+      "messageBody": "",
+      "messageHeadline": "style: format db.py with black to pass CI",
+      "oid": "21abd1eb99b1e2237b87fb5b8bea9dca1037853f"
+    },
+    {
+      "authoredDate": "2026-10-31T22:47:11Z",
+      "authors": [
+        {
+          "email": "sofiiazakharuk@gmail.com",
+          "id": "U_kgDOCRd6jQ",
+          "login": "Sonafi3",
+          "name": "Sofiia Zakharuk"
+        }
+      ],
+      "committedDate": "2026-10-31T22:47:11Z",
+      "messageBody": "…conflict",
+      "messageHeadline": "fix(lint): restore missing imports and clean up conftest after merge …",
+      "oid": "9be82f71803083949d93042e3996e883749289d0"
+    }
+  ],
+  "number": 184,
+  "title": "Feature/notification bd fix",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/184"
+}

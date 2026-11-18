@@ -1,0 +1,22 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T13:56:58Z",
+      "authors": [
+        {
+          "email": "i.holdynska@ukma.edu.ua",
+          "id": "U_kgDOCss_Ww",
+          "login": "iraholdynska",
+          "name": "Iryna"
+        }
+      ],
+      "committedDate": "2026-10-29T13:56:58Z",
+      "messageBody": "",
+      "messageHeadline": "Remove committed virtualenv",
+      "oid": "cee36b787f57d3996b00a70aa55c2bb6e8050b3e"
+    }
+  ],
+  "number": 162,
+  "title": "Remove committed virtualenv",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/162"
+}

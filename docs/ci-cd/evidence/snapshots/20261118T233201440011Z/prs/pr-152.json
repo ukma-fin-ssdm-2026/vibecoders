@@ -1,0 +1,52 @@
+{
+  "commits": [
+    {
+      "authoredDate": "2026-10-29T09:23:33Z",
+      "authors": [
+        {
+          "email": "khamaza.igor@gmail.com",
+          "id": "U_kgDOCstKKw",
+          "login": "Reonor",
+          "name": "Reonor"
+        }
+      ],
+      "committedDate": "2026-10-29T09:23:33Z",
+      "messageBody": "Updated team charter with new roles, responsibilitie",
+      "messageHeadline": "Revise Team Charter with updated roles",
+      "oid": "47febec98595bde20a7104025cbdfc0643b21f97"
+    },
+    {
+      "authoredDate": "2026-10-29T10:13:38Z",
+      "authors": [
+        {
+          "email": "k.spys@ukma.edu.ua",
+          "id": "U_kgDOC92NCQ",
+          "login": "katespys2006",
+          "name": "katespys2006"
+        }
+      ],
+      "committedDate": "2026-10-29T10:13:38Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into Reonor-patch-4",
+      "oid": "91e250037e40f2e3d12a52b533b448483e98aeb0"
+    },
+    {
+      "authoredDate": "2026-10-29T10:18:51Z",
+      "authors": [
+        {
+          "email": "khamaza.igor@gmail.com",
+          "id": "U_kgDOCstKKw",
+          "login": "Reonor",
+          "name": "Reonor"
+        }
+      ],
+      "committedDate": "2026-10-29T10:18:51Z",
+      "messageBody": "",
+      "messageHeadline": "Merge branch 'main' into Reonor-patch-4",
+      "oid": "dce1d36be029a9d3c841b91b7284d1b6393d97a6"
+    }
+  ],
+  "number": 152,
+  "title": "Revise Team Charter with updated roles",
+  "url": "https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/152"
+}
