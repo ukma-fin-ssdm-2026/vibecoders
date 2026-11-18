@@ -7,7 +7,35 @@ on:
     branches: [ main ]
 
 jobs:
+  docs_filter:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      run_ci: ${{ steps.filter.outputs.run_ci }}
+
+    steps:
+    - name: Checkout pull request
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Detect non-Markdown changes
+      id: filter
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      run: |
+        set -euo pipefail
+        changed_files="$(git diff --name-only --no-renames "$BASE_SHA" "$HEAD_SHA")"
+        if printf '%s\n' "$changed_files" | grep -qvE '(^|/)[^/]+\.md$'; then
+          echo "run_ci=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "run_ci=false" >> "$GITHUB_OUTPUT"
+        fi
+
   validate-and-test:
+    needs: docs_filter
+    if: ${{ always() && (github.event_name != 'pull_request' || needs.docs_filter.result != 'success' || needs.docs_filter.outputs.run_ci == 'true') }}
     runs-on: [self-hosted, linux]
 
     steps:
@@ -48,6 +76,8 @@ jobs:
         path: htmlcov/
 
   reliability-tests:
+    needs: docs_filter
+    if: ${{ always() && (github.event_name != 'pull_request' || needs.docs_filter.result != 'success' || needs.docs_filter.outputs.run_ci == 'true') }}
     runs-on: [self-hosted, linux]
 
     steps:
