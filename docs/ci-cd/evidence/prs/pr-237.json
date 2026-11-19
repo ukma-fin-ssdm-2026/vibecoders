@@ -1,0 +1,1 @@
+{"files":[{"path":".github/workflows/ci.yml","additions":4,"deletions":0,"changeType":"MODIFIED"}],"mergeCommit":{"oid":"c6f6cded06d00a78197ccb65b6e110510768df6a"},"mergedAt":"2026-11-19T10:43:17Z","number":237,"title":"ci: cancel outdated pull request runs","url":"https://github.com/ukma-fin-ssdm-2026/vibecoders/pull/237"}

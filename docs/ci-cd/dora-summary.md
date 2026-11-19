@@ -156,8 +156,8 @@ python scripts/dora_metrics.py --since 2026-10-29 --until 2026-11-19 --export-js
 
 ### Інші бонуси команди
 
-- Покращення з виміряним ефектом (кеш pip): [`bonus-improvement.md`](bonus-improvement.md); таблицю «ПІСЛЯ» ще не заповнено.
-- Артефакт випуску (образ у ghcr.io): [`bonus-release-artifact.md`](bonus-release-artifact.md); посилання на запуск і пакет ще не додано.
+- Покращення з виміряним ефектом (кеш pip): [`bonus-improvement.md`](bonus-improvement.md). У трьох виміряних запусках повна тривалість jobs не скоротилася: із холодним запуском вона вища за базу на 10,0% (`validate-and-test`) і 12,6% (`reliability-tests`); лише на двох теплих — на 9,5% і 9,9%. Крок встановлення залежностей скоротився, але PR #233 також змінив його спосіб для reliability job, тому ефект не можна приписати лише кешу.
+- Артефакт випуску (образ у ghcr.io): [`bonus-release-artifact.md`](bonus-release-artifact.md). У першому CI run на `main` після PR #230 [`44419440996`](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/44419440996) job `publish-container` був пропущений; успішну публікацію й сторінку пакета наразі не підтверджено.
 
 ## Обмеження
 
