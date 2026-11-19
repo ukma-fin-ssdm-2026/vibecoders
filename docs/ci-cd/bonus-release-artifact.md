@@ -22,9 +22,8 @@ docker pull ghcr.io/ukma-fin-ssdm-2026/vibecoders:<SHA-коміту>
 
 ## Посилання та фактичний стан
 
-- Перший успішний job `publish-container` на `main` після злиття PR #239: [CI run 44510454012](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/44510454012). Job завершився успішно.
-- Build-push output підтверджує опублікований тег `ghcr.io/ukma-fin-ssdm-2026/vibecoders:f03eb2b97b08163c499dba64d7e3124f52110571` для merge-коміту PR #239 і digest `sha256:916200281be9bd6f8f221806509e326bc5275d0027cfc3f590f2d00da2d25942`.
-- Сторінка пакета `vibecoders` у GitHub Packages: **(перевірити)**. URL та видимість пакета не вдалося незалежно підтвердити: поточний GitHub token не має scope `read:packages`, а unauthenticated запит до registry вимагає автентифікації.
+- Успішний запуск `CI Pipeline` на `main` із зеленим `publish-container` (після PR #239): https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/44510454012 (job: https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/44510454012/job/135513897895).
+- Сторінка пакета `vibecoders` у GitHub Packages (приватний пакет, видимий у межах організації): https://github.com/ukma-fin-ssdm-2026/vibecoders/pkgs/container/vibecoders. Образ опубліковано з тегом `f03eb2b97b08163c499dba64d7e3124f52110571` (повний SHA коміту).
 
 ## Перевірити після злиття
 
