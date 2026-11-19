@@ -107,7 +107,7 @@ jobs:
 
   publish-container:
     needs: [validate-and-test, reliability-tests]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.validate-and-test.result == 'success' && needs.reliability-tests.result == 'success'
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.validate-and-test.result == 'success' && needs.reliability-tests.result == 'success' }}
     runs-on: [self-hosted, linux]
     permissions:
       contents: read
