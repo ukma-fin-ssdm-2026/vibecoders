@@ -2,7 +2,7 @@
 
 ## Дія та першопричина
 
-У `validate-and-test` та `reliability-tests` увімкнено кеш pip через `actions/setup-python@v5`. Кожен job має окремий `cache-dependency-path`, щоб зміна відповідного файлу залежностей створювала новий кеш. Для reliability-тестів залежності винесені в `src/api/requirements-reliability.txt`; файл використовується і як ключ кешу, і для встановлення тих самих зафіксованих версій пакетів.
+У `validate-and-test` та `reliability-tests` увімкнено кеш pip через `actions/setup-python@v5`. Кожен job має окремий `cache-dependency-path`, щоб зміна відповідного файлу залежностей створювала новий кеш. Для reliability-тестів залежності винесені в `src/api/requirements-reliability.in` і скомпільовані у `src/api/requirements-reliability.txt` з транзитивними версіями й хешами; CI встановлює їх із `--require-hashes`. При зміні прямих залежностей потрібно оновити lock-файл через `pip-compile --generate-hashes --allow-unsafe --output-file=src/api/requirements-reliability.txt src/api/requirements-reliability.in`.
 
 Дані п'яти запусків `main` у таблиці «ДО» показують, що крок `Install dependencies` у `validate-and-test` тривав 11–12 с (середнє 11,2 с), а `Install reliability-test dependencies` — 9 с у кожному запуску. Крок `Set up Python` тривав 8–10 с у кожному job. Кеш має скоротити насамперед повторне отримання пакетів; час job вимірюється повністю, тож можливі витрати на відновлення кешу теж залишаються у вимірі.
 
