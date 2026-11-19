@@ -22,9 +22,8 @@ docker pull ghcr.io/ukma-fin-ssdm-2026/vibecoders:<SHA-коміту>
 
 ## Посилання та фактичний стан
 
-- Перший запуск `CI Pipeline` на `main` після злиття PR #230: [run 44419440996](https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/44419440996). Основні CI jobs зелені, але `publish-container` має статус **skipped**, а не success.
-- У перевірених запусках `main` після PR #230 успішного job `publish-container` не знайдено, тому підтвердженого посилання на успішну публікацію поки немає.
-- Сторінка пакета `vibecoders` у GitHub Packages: **(перевірити)**. Поточний GitHub token не має `read:packages`; запит до registry також вимагає автентифікації, тож наявність пакета й тегу SHA незалежно не підтверджені.
+- Успішний запуск `CI Pipeline` на `main` із зеленим `publish-container` (після PR #239): https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/44510454012 (job: https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/44510454012/job/135513897895).
+- Сторінка пакета `vibecoders` у GitHub Packages (приватний пакет, видимий у межах організації): https://github.com/ukma-fin-ssdm-2026/vibecoders/pkgs/container/vibecoders. Образ опубліковано з тегом `f03eb2b97b08163c499dba64d7e3124f52110571` (повний SHA коміту).
 
 ## Перевірити після злиття
 
