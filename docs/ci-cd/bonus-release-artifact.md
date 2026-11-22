@@ -20,10 +20,10 @@
 docker pull ghcr.io/ukma-fin-ssdm-2026/vibecoders:<SHA-коміту>
 ```
 
-## Посилання після першої публікації
+## Посилання та фактичний стан
 
-- Запуск workflow на `main`: **[додати посилання на успішний запуск]**
-- Сторінка пакета у GitHub Packages: **[додати посилання на пакет]**
+- Успішний запуск `CI Pipeline` на `main` із зеленим `publish-container` (після PR #239): https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/44510454012 (job: https://github.com/ukma-fin-ssdm-2026/vibecoders/actions/runs/44510454012/job/135513897895).
+- Сторінка пакета `vibecoders` у GitHub Packages (приватний пакет, видимий у межах організації): https://github.com/ukma-fin-ssdm-2026/vibecoders/pkgs/container/vibecoders. Образ опубліковано з тегом `f03eb2b97b08163c499dba64d7e3124f52110571` (повний SHA коміту).
 
 ## Перевірити після злиття
 

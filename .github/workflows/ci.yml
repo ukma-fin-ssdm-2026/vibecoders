@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   docs_filter:
     if: github.event_name == 'pull_request'
@@ -103,7 +107,7 @@ jobs:
 
   publish-container:
     needs: [validate-and-test, reliability-tests]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.validate-and-test.result == 'success' && needs.reliability-tests.result == 'success'
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.validate-and-test.result == 'success' && needs.reliability-tests.result == 'success' }}
     runs-on: [self-hosted, linux]
     permissions:
       contents: read
