@@ -3,6 +3,7 @@ import pytest
 from db import SessionLocal
 from models import Token, User
 
+
 @pytest.mark.requirement("US-007", "SEC-002")
 def test_list_players_forbidden_for_player_who_does_not_run_the_game(client, player_headers):
     response = client.get("/api/v1/games/game_2/players", headers=player_headers)
