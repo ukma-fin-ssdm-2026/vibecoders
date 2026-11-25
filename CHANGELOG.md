@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Інтерфейс редагування гри у веб-клієнті (FR-002, U1): підтримка режиму редагування на `create-game.html` через PATCH-запити зі збереженням лише змінених полів, перевірка прав майстра/власника та кнопка «Редагувати» на `game.html`.
 - Додано скрипт `scripts/dora_metrics.py` для автоматичного розрахунку метрик DORA за історією запусків GitHub Actions і знеособленого експорту JSON.
 - Додано ручний workflow `Flaky tests` для повторного запуску тестів і звітування про нестабільні результати.
 - Bounded retries with exponential backoff and full jitter for idempotent credentials lookup in `resilience.py` and `store.py`.
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Tests
 
+- Тести розмітки, прав доступу, валідації та оновлення календаря для редагування гри в інтерфейсі (FR-002) у `test_web.py`.
 - Reliability tests for R-08, R-09, R-12, R-13, R-14 and R-15: `test_reliability_sync_handlers.py`, `test_reliability_login_lockout.py`, `test_reliability_frontend.py`, `test_reliability_game_queries.py`, `test_reliability_cache.py`.
 
 ## [0.1.1] - 2026-11-05
