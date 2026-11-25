@@ -99,3 +99,121 @@ def test_web_profile_html_served(client):
     response = client.get("/app/profile.html")
     assert response.status_code == 200
     assert '<html lang="uk">' in response.text
+
+
+@pytest.mark.requirement("FR-002")
+def test_web_create_game_html_edit_mode_markup(client):
+    response = client.get("/app/create-game.html")
+    assert response.status_code == 200
+    html = response.text
+    assert 'id="form-title"' in html
+    assert 'id="forbidden-block"' in html
+    assert 'id="not-found-block"' in html
+    assert 'id="create-game-submit-btn"' in html
+    assert 'id="cancel-btn"' in html
+    assert "isEditMode" in html
+    assert "^game_\\d+$" in html
+    assert "Зберегти зміни" in html
+    assert "Редагувати гру" in html
+    assert "toLocalDatetimeInputValue" in html
+    assert "ROOM_BUSY" in html
+    assert "MASTER_BUSY" in html
+    assert "ROOM_BLOCKED" in html
+    assert "ROOM_CAPACITY_EXCEEDED" in html
+    assert "MAX_PLAYERS_BELOW_ENROLLED" in html
+    assert "Немає змін для збереження" in html
+
+
+@pytest.mark.requirement("FR-002")
+def test_web_game_html_edit_button_markup(client):
+    response = client.get("/app/game.html")
+    assert response.status_code == 200
+    html = response.text
+    assert 'id="edit-game-btn"' in html
+    assert "Редагувати" in html
+    assert "create-game.html?id=" in html
+    assert "App.getMe" in html
+    assert "currentGame.master_id" in html
+
+
+@pytest.mark.requirement("FR-002")
+def test_edit_game_scenario_flow_and_calendar_update(client, master_headers):
+    # Майстер змінює назву та час початку гри
+    new_starts_at = "2026-10-10T19:30:00Z"
+    patch_resp = client.patch(
+        "/api/v1/games/game_1",
+        json={"title": "Оновлене Прокляття Страда", "starts_at": new_starts_at},
+        headers=master_headers,
+    )
+    assert patch_resp.status_code == 200
+    patched_data = patch_resp.json()
+    assert patched_data["title"] == "Оновлене Прокляття Страда"
+    assert patched_data["starts_at"].startswith("2026-10-10T19:30:00")
+
+    # Зміна видна в деталях гри
+    get_resp = client.get("/api/v1/games/game_1")
+    assert get_resp.status_code == 200
+    assert get_resp.json()["title"] == "Оновлене Прокляття Страда"
+
+    # Зміна видна в календарі кімнат
+    cal_resp = client.get(
+        "/api/v1/rooms/calendar",
+        params={"starts_at": "2026-10-10T00:00:00Z", "ends_at": "2026-10-11T00:00:00Z"},
+    )
+    assert cal_resp.status_code == 200
+    cal_data = cal_resp.json()
+    room_1_data = next((r for r in cal_data["rooms"] if r["room_id"] == "room_1"), None)
+    assert room_1_data is not None
+    booking = next((b for b in room_1_data["bookings"] if b["game_id"] == "game_1"), None)
+    assert booking is not None
+    assert booking["title"] == "Оновлене Прокляття Страда"
+    assert booking["starts_at"].startswith("2026-10-10T19:30:00")
+
+
+@pytest.mark.requirement("FR-002")
+def test_edit_game_conflict_and_validation_errors(client, master_headers):
+    # Спроба поставити гру на зайнятий час (у цей час user_1 веде game_2: 2026-10-11 16:00-20:00)
+    conflict_resp = client.patch(
+        "/api/v1/games/game_1",
+        json={"starts_at": "2026-10-11T17:00:00Z"},
+        headers=master_headers,
+    )
+    assert conflict_resp.status_code == 409
+    assert conflict_resp.json()["error"]["code"] == "MASTER_BUSY"
+
+    # Порожнє тіло запиту (коли користувач нічого не змінив)
+    empty_resp = client.patch(
+        "/api/v1/games/game_1",
+        json={},
+        headers=master_headers,
+    )
+    assert empty_resp.status_code == 400
+    assert empty_resp.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+@pytest.mark.requirement("FR-002")
+def test_edit_game_access_control(client, player_headers, owner_headers):
+    # Звичайний гравець не може редагувати гру
+    forbidden_player = client.patch(
+        "/api/v1/games/game_1",
+        json={"title": "Хакерська гра"},
+        headers=player_headers,
+    )
+    assert forbidden_player.status_code == 403
+    assert forbidden_player.json()["error"]["code"] == "FORBIDDEN"
+
+    # Гість без токена
+    unauthorized = client.patch(
+        "/api/v1/games/game_1",
+        json={"title": "Гра без входу"},
+    )
+    assert unauthorized.status_code == 401
+
+    # Власник клубу може редагувати будь-яку гру
+    owner_resp = client.patch(
+        "/api/v1/games/game_1",
+        json={"title": "Гра відредагована власником"},
+        headers=owner_headers,
+    )
+    assert owner_resp.status_code == 200
+    assert owner_resp.json()["title"] == "Гра відредагована власником"

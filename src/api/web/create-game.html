@@ -17,13 +17,13 @@
   <main class="main-content">
     <div class="container">
       <div class="page-nav">
-        <a href="games.html" class="nav-back">&larr; До списку ігор</a>
+        <a id="nav-back-link" href="games.html" class="nav-back">&larr; До списку ігор</a>
       </div>
 
       <!-- Повідомлення для гостя -->
       <section id="guest-block" class="card" style="display: none;">
-        <h1>Створення гри</h1>
-        <p>Увійдіть як майстер або власник клубу, щоб створювати ігри.</p>
+        <h1 id="guest-title">Створення гри</h1>
+        <p id="guest-desc">Увійдіть як майстер або власник клубу, щоб створювати ігри.</p>
         <div class="auth-actions" style="margin-top: 1rem;">
           <a href="login.html" class="btn btn-primary">Увійти</a>
         </div>
@@ -31,16 +31,33 @@
 
       <!-- Повідомлення для звичайного гравця (player) -->
       <section id="player-block" class="card" style="display: none;">
-        <h1>Створення гри</h1>
-        <p>Створювати ігри можуть майстри й власник клубу.</p>
+        <h1 id="player-title">Створення гри</h1>
+        <p id="player-desc">Створювати ігри можуть майстри й власник клубу.</p>
         <div class="auth-actions" style="margin-top: 1rem;">
           <a href="games.html" class="btn btn-secondary">До списку ігор</a>
         </div>
       </section>
 
-      <!-- Форма створення гри для master та owner -->
+      <!-- Повідомлення про відсутність прав (не майстер гри і не owner) -->
+      <section id="forbidden-block" class="card" style="display: none;">
+        <h1>Редагувати гру</h1>
+        <p>Редагувати гру може лише її майстер або власник клубу.</p>
+        <div class="auth-actions" style="margin-top: 1rem;">
+          <a id="forbidden-back-link" href="games.html" class="btn btn-secondary">До гри</a>
+        </div>
+      </section>
+
+      <!-- Посилання до списку ігор при 404 або некоректному id -->
+      <div id="not-found-block" class="card" style="display: none;">
+        <p id="not-found-message"></p>
+        <p style="margin-top: 1rem;">
+          <a href="games.html" class="btn btn-secondary">До списку ігор</a>
+        </p>
+      </div>
+
+      <!-- Форма створення/редагування гри для master та owner -->
       <section id="create-game-section" class="card" style="display: none;">
-        <h1>Створення нової гри</h1>
+        <h1 id="form-title">Створення нової гри</h1>
 
         <!-- Область помилок -->
         <div id="error-message" class="alert alert-error" style="display: none;" role="alert"></div>
@@ -90,7 +107,7 @@
 
           <div class="form-actions" style="margin-top: 1.5rem;">
             <button type="submit" id="create-game-submit-btn" class="btn btn-primary">Створити гру</button>
-            <a href="games.html" class="btn btn-secondary" style="margin-left: 0.5rem;">Скасувати</a>
+            <a id="cancel-btn" href="games.html" class="btn btn-secondary" style="margin-left: 0.5rem;">Скасувати</a>
           </div>
         </form>
       </section>
@@ -102,22 +119,25 @@
     document.addEventListener('DOMContentLoaded', async function () {
       App.renderNav();
 
+      var params = new URLSearchParams(window.location.search);
+      var gameId = params.get('id');
+      var isEditMode = Boolean(gameId);
+
       var session = App.getSession();
       var guestBlock = document.getElementById('guest-block');
       var playerBlock = document.getElementById('player-block');
+      var forbiddenBlock = document.getElementById('forbidden-block');
+      var forbiddenBackLink = document.getElementById('forbidden-back-link');
+      var notFoundBlock = document.getElementById('not-found-block');
+      var notFoundMessage = document.getElementById('not-found-message');
       var formSection = document.getElementById('create-game-section');
 
-      if (!session || !session.token) {
-        guestBlock.style.display = 'block';
-        return;
-      }
-
-      if (session.role === 'player') {
-        playerBlock.style.display = 'block';
-        return;
-      }
-
-      formSection.style.display = 'block';
+      var navBackLink = document.getElementById('nav-back-link');
+      var formTitle = document.getElementById('form-title');
+      var guestTitle = document.getElementById('guest-title');
+      var guestDesc = document.getElementById('guest-desc');
+      var playerTitle = document.getElementById('player-title');
+      var playerDesc = document.getElementById('player-desc');
 
       var form = document.getElementById('create-game-form');
       var titleInput = document.getElementById('game-title');
@@ -127,6 +147,7 @@
       var durationInput = document.getElementById('game-duration');
       var maxPlayersInput = document.getElementById('game-max-players');
       var submitBtn = document.getElementById('create-game-submit-btn');
+      var cancelBtn = document.getElementById('cancel-btn');
       var errorContainer = document.getElementById('error-message');
 
       var titleError = document.getElementById('title-error');
@@ -137,6 +158,48 @@
       var maxPlayersError = document.getElementById('max-players-error');
 
       var roomsMap = {};
+      var currentGame = null;
+
+      function toLocalDatetimeInputValue(isoString) {
+        if (!isoString) return '';
+        var date = new Date(isoString);
+        if (Number.isNaN(date.getTime())) return '';
+        function pad(n) {
+          return n < 10 ? '0' + n : String(n);
+        }
+        return (
+          date.getFullYear() +
+          '-' +
+          pad(date.getMonth() + 1) +
+          '-' +
+          pad(date.getDate()) +
+          'T' +
+          pad(date.getHours()) +
+          ':' +
+          pad(date.getMinutes())
+        );
+      }
+
+      function mapApiError(err) {
+        var displayErr = err;
+        if (err.code === 'ROOM_BUSY' || err.code === 'MASTER_BUSY' || err.code === 'ROOM_BLOCKED') {
+          displayErr = new Error('Конфлікт розкладу: ' + err.message);
+        } else if (err.code === 'ROOM_CAPACITY_EXCEEDED') {
+          displayErr = new Error('Занадто багато гравців для кімнати: ' + err.message);
+        } else if (err.code === 'MAX_PLAYERS_BELOW_ENROLLED') {
+          displayErr = new Error('Конфлікт кількості гравців: ' + err.message);
+        } else if (err.code === 'FORBIDDEN') {
+          displayErr = new Error(err.message || 'Недостатньо прав для цієї дії');
+        } else if (err.code === 'GAME_NOT_FOUND' || err.code === 'NOT_FOUND') {
+          displayErr = new Error(err.message || 'Гру не знайдено');
+        } else if (err.code === 'VALIDATION_ERROR' && err.details && err.details.length > 0) {
+          displayErr = new Error(err.message || 'Вхідні дані не пройшли валідацію');
+        }
+        displayErr.status = err.status;
+        displayErr.code = err.code;
+        displayErr.details = err.details;
+        return displayErr;
+      }
 
       async function loadRooms() {
         try {
@@ -157,7 +220,7 @@
             roomSelect.appendChild(opt);
           }
         } catch (err) {
-          App.showError(err, errorContainer);
+          App.showError(mapApiError(err), errorContainer);
         }
       }
 
@@ -178,6 +241,79 @@
         errorSpan.style.display = 'block';
       }
 
+      if (!session || !session.token) {
+        if (isEditMode) {
+          guestTitle.textContent = 'Редагувати гру';
+          guestDesc.textContent = 'Увійдіть як майстер або власник клубу, щоб редагувати гру.';
+        }
+        guestBlock.style.display = 'block';
+        return;
+      }
+
+      if (session.role === 'player') {
+        if (isEditMode) {
+          playerTitle.textContent = 'Редагувати гру';
+          playerDesc.textContent = 'Редагувати гру може лише її майстер або власник клубу.';
+        }
+        playerBlock.style.display = 'block';
+        return;
+      }
+
+      if (isEditMode) {
+        if (!/^game_\d+$/.test(gameId)) {
+          notFoundMessage.textContent = 'Некоректний ідентифікатор гри';
+          notFoundBlock.style.display = 'block';
+          return;
+        }
+
+        document.title = 'Редагувати гру';
+        formTitle.textContent = 'Редагувати гру';
+        submitBtn.textContent = 'Зберегти зміни';
+        cancelBtn.href = 'game.html?id=' + encodeURIComponent(gameId);
+        navBackLink.href = 'game.html?id=' + encodeURIComponent(gameId);
+
+        try {
+          currentGame = await App.api('GET', '/games/' + encodeURIComponent(gameId));
+        } catch (err) {
+          if (err.status === 404) {
+            notFoundMessage.textContent = err.message || 'Гру не знайдено';
+            notFoundBlock.style.display = 'block';
+            return;
+          }
+          App.showError(mapApiError(err), errorContainer);
+          return;
+        }
+
+        var me = null;
+        try {
+          me = await App.getMe();
+        } catch (err) {
+          App.showError(mapApiError(err), errorContainer);
+          return;
+        }
+
+        var canManage = me && (me.role === 'owner' || (currentGame && me.id === currentGame.master_id));
+        if (!canManage) {
+          forbiddenBackLink.href = 'game.html?id=' + encodeURIComponent(gameId);
+          forbiddenBlock.style.display = 'block';
+          return;
+        }
+
+        await loadRooms();
+
+        titleInput.value = currentGame.title;
+        systemInput.value = currentGame.system;
+        roomSelect.value = currentGame.room_id;
+        startsAtInput.value = toLocalDatetimeInputValue(currentGame.starts_at);
+        durationInput.value = currentGame.duration_minutes;
+        maxPlayersInput.value = currentGame.max_players;
+
+        formSection.style.display = 'block';
+      } else {
+        await loadRooms();
+        formSection.style.display = 'block';
+      }
+
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
         clearValidationErrors();
@@ -186,8 +322,8 @@
         var system = systemInput.value.trim();
         var roomId = roomSelect.value;
         var startsAtVal = startsAtInput.value;
-        var duration = parseInt(durationInput.value, 10);
-        var maxPlayers = parseInt(maxPlayersInput.value, 10);
+        var duration = Number.parseInt(durationInput.value, 10);
+        var maxPlayers = Number.parseInt(maxPlayersInput.value, 10);
 
         var hasError = false;
         var firstInvalid = null;
@@ -218,7 +354,8 @@
           firstInvalid = firstInvalid || roomSelect;
         } else {
           var selectedRoom = roomsMap[roomId];
-          if (selectedRoom && selectedRoom.is_blocked) {
+          var isRoomUnchanged = isEditMode && currentGame && currentGame.room_id === roomId;
+          if (!isRoomUnchanged && selectedRoom && selectedRoom.is_blocked) {
             showFieldError(roomSelect, roomError, 'Ця кімната заблокована');
             hasError = true;
             firstInvalid = firstInvalid || roomSelect;
@@ -231,20 +368,20 @@
           firstInvalid = firstInvalid || startsAtInput;
         } else {
           var dateObj = new Date(startsAtVal);
-          if (isNaN(dateObj.getTime())) {
+          if (Number.isNaN(dateObj.getTime())) {
             showFieldError(startsAtInput, startsAtError, 'Некоректний формат дати й часу');
             hasError = true;
             firstInvalid = firstInvalid || startsAtInput;
           }
         }
 
-        if (isNaN(duration) || duration < 30 || duration > 720) {
+        if (Number.isNaN(duration) || duration < 30 || duration > 720) {
           showFieldError(durationInput, durationError, 'Тривалість має бути від 30 до 720 хвилин');
           hasError = true;
           firstInvalid = firstInvalid || durationInput;
         }
 
-        if (isNaN(maxPlayers) || maxPlayers < 2 || maxPlayers > 8) {
+        if (Number.isNaN(maxPlayers) || maxPlayers < 2 || maxPlayers > 8) {
           showFieldError(maxPlayersInput, maxPlayersError, 'Кількість гравців має бути від 2 до 8');
           hasError = true;
           firstInvalid = firstInvalid || maxPlayersInput;
@@ -267,49 +404,66 @@
           return;
         }
 
-        submitBtn.disabled = true;
-
-        var isoStartsAt = new Date(startsAtVal).toISOString();
-        var payload = {
-          title: title,
-          system: system,
-          room_id: roomId,
-          starts_at: isoStartsAt,
-          duration_minutes: duration,
-          max_players: maxPlayers
-        };
-
-        try {
-          var createdGame = await App.api('POST', '/games', payload);
-          window.location.href = 'game.html?id=' + encodeURIComponent(createdGame.id);
-        } catch (err) {
-          submitBtn.disabled = false;
-
-          var displayErr = err;
-          if (err.code === 'ROOM_BUSY' || err.code === 'MASTER_BUSY' || err.code === 'ROOM_BLOCKED') {
-            displayErr = new Error('Конфлікт розкладу: ' + err.message);
-            displayErr.status = err.status;
-            displayErr.code = err.code;
-            displayErr.details = err.details;
-          } else if (err.code === 'ROOM_CAPACITY_EXCEEDED') {
-            displayErr = new Error('Занадто багато гравців для кімнати: ' + err.message);
-            displayErr.status = err.status;
-            displayErr.code = err.code;
-            displayErr.details = err.details;
-          } else if (err.code === 'VALIDATION_ERROR' && err.details && err.details.length > 0) {
-            displayErr = new Error(err.message || 'Вхідні дані не пройшли валідацію');
-            displayErr.status = err.status;
-            displayErr.code = err.code;
-            displayErr.details = err.details;
+        if (isEditMode) {
+          var changes = {};
+          if (title !== currentGame.title) {
+            changes.title = title;
+          }
+          if (system !== currentGame.system) {
+            changes.system = system;
+          }
+          if (roomId !== currentGame.room_id) {
+            changes.room_id = roomId;
+          }
+          var startsAtMs = Math.floor(new Date(startsAtVal).getTime() / 60000);
+          var origStartsAtMs = Math.floor(new Date(currentGame.starts_at).getTime() / 60000);
+          if (startsAtMs !== origStartsAtMs) {
+            changes.starts_at = new Date(startsAtVal).toISOString();
+          }
+          if (duration !== currentGame.duration_minutes) {
+            changes.duration_minutes = duration;
+          }
+          if (maxPlayers !== currentGame.max_players) {
+            changes.max_players = maxPlayers;
           }
 
-          App.showError(displayErr, errorContainer);
+          if (Object.keys(changes).length === 0) {
+            App.showError(new Error('Немає змін для збереження'), errorContainer);
+            return;
+          }
+
+          submitBtn.disabled = true;
+
+          try {
+            await App.api('PATCH', '/games/' + encodeURIComponent(gameId), changes);
+            window.location.href = 'game.html?id=' + encodeURIComponent(gameId);
+          } catch (err) {
+            submitBtn.disabled = false;
+            App.showError(mapApiError(err), errorContainer);
+          }
+        } else {
+          submitBtn.disabled = true;
+
+          var isoStartsAt = new Date(startsAtVal).toISOString();
+          var payload = {
+            title: title,
+            system: system,
+            room_id: roomId,
+            starts_at: isoStartsAt,
+            duration_minutes: duration,
+            max_players: maxPlayers
+          };
+
+          try {
+            var createdGame = await App.api('POST', '/games', payload);
+            window.location.href = 'game.html?id=' + encodeURIComponent(createdGame.id);
+          } catch (err) {
+            submitBtn.disabled = false;
+            App.showError(mapApiError(err), errorContainer);
+          }
         }
       });
-
-      await loadRooms();
     });
   </script>
 </body>
 </html>
-
