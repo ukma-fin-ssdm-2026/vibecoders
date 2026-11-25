@@ -172,7 +172,9 @@
               roomsMap[data.items[i].id] = data.items[i].name;
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          App.showError(e, errorContainer);
+        }
       }
 
       function updateActionState(isEnrolled) {
