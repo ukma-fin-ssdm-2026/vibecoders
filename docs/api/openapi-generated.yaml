@@ -428,8 +428,8 @@ paths:
       tags:
       - Games
       summary: Отримати список гравців гри
-      description: Повертає записаних гравців та лічильник заповненості. Потрібна
-        автентифікація.
+      description: Повертає записаних гравців та лічильник заповненості. Доступно
+        майстру цієї гри та власнику клубу.
       operationId: list_players
       security:
       - HTTPBearer: []
@@ -460,6 +460,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Відсутній або недійсний токен доступу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Недостатньо прав для цієї дії
           content:
             application/json:
               schema:

@@ -243,9 +243,9 @@ def test_delete_game_forbidden_for_player_and_unauthenticated(client, player_hea
 
 
 @pytest.mark.requirement("US-007")
-def test_list_players_requires_authentication(client, player_headers):
+def test_list_players_requires_authentication(client, master_headers):
     assert client.get("/api/v1/games/game_1/players").status_code == 401
-    body = client.get("/api/v1/games/game_1/players", headers=player_headers).json()
+    body = client.get("/api/v1/games/game_1/players", headers=master_headers).json()
     assert body["current_players"] == 1
     assert body["max_players"] == 5
     assert body["players"][0]["user_id"] == "user_2"

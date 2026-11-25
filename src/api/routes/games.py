@@ -207,11 +207,12 @@ def delete_game(user: CurrentUser, game_id: str = GameId):
     "/{game_id}/players",
     response_model=PlayersResponse,
     summary="Отримати список гравців гри",
-    description=("Повертає записаних гравців та лічильник заповненості. " "Потрібна автентифікація."),
-    responses=error_docs(400, 401, 404),
+    description=("Повертає записаних гравців та лічильник заповненості. " "Доступно майстру цієї гри та власнику клубу."),
+    responses=error_docs(400, 401, 403, 404),
 )
 def list_players(user: CurrentUser, game_id: str = GameId):
     record = get_game_or_404(game_id)
+    ensure_can_manage(record, user.id, user.role)
     players = ENROLLMENTS.get(game_id, [])
     return PlayersResponse(
         game_id=game_id,
