@@ -205,6 +205,17 @@
         }
       }
 
+      function renderGameCounter() {
+        if (!currentGame) return;
+        gamePlayersCount.textContent = currentGame.current_players + '/' + currentGame.max_players;
+
+        if (currentGame.current_players >= currentGame.max_players) {
+          gameFullBadge.style.display = 'inline-block';
+        } else {
+          gameFullBadge.style.display = 'none';
+        }
+      }
+
       function updateGameView(game) {
         currentGame = game;
         gameTitle.textContent = game.title;
@@ -215,13 +226,7 @@
         var slotStr = App.formatSlot(game.starts_at, game.duration_minutes);
         gameTime.textContent = formattedDate + (slotStr ? ' (' + slotStr + ')' : '');
 
-        gamePlayersCount.textContent = game.current_players + '/' + game.max_players;
-
-        if (game.current_players >= game.max_players) {
-          gameFullBadge.style.display = 'inline-block';
-        } else {
-          gameFullBadge.style.display = 'none';
-        }
+        renderGameCounter();
 
         var isEnrolled = false;
         try {
@@ -247,6 +252,26 @@
         }
 
         gameDetails.style.display = 'block';
+      }
+
+      async function syncGameDetailsQuietly() {
+        try {
+          var game = await App.api('GET', '/games/' + encodeURIComponent(gameId));
+          if (game && currentGame) {
+            var changed = (currentGame.current_players !== game.current_players) ||
+                          (currentGame.max_players !== game.max_players);
+            currentGame.current_players = game.current_players;
+            currentGame.max_players = game.max_players;
+            if (changed) {
+              renderGameCounter();
+              var isEnrolled = false;
+              try {
+                isEnrolled = sessionStorage.getItem('enrolled_game_' + gameId) === 'true';
+              } catch (e) {}
+              updateActionState(isEnrolled);
+            }
+          }
+        } catch (e) {}
       }
 
       async function fetchGameDetails() {
@@ -349,12 +374,16 @@
         try {
           await App.api('DELETE', '/games/' + encodeURIComponent(gameId) + '/players/' + encodeURIComponent(userId));
           showStatus('Гравця видалено');
-          await fetchGameDetails();
+          if (currentGame) {
+            currentGame.current_players = Math.max((currentGame.current_players || 0) - 1, 0);
+            renderGameCounter();
+          }
           await loadManageSection();
+          syncGameDetailsQuietly();
         } catch (err) {
           if (err.status === 404 && err.code === 'ENROLLMENT_NOT_FOUND') {
-            await fetchGameDetails();
             await loadManageSection();
+            syncGameDetailsQuietly();
           } else {
             App.showError(err, errorContainer);
           }
@@ -396,9 +425,13 @@
           } catch (e) {}
 
           showStatus('Ви записані на гру');
-          await fetchGameDetails();
+          if (currentGame) {
+            currentGame.current_players = Math.min((currentGame.current_players || 0) + 1, currentGame.max_players);
+            renderGameCounter();
+          }
           updateActionState(true);
-          await loadManageSection();
+          loadManageSection();
+          syncGameDetailsQuietly();
         } catch (err) {
           enrollBtn.disabled = false;
 
@@ -408,11 +441,15 @@
             } catch (e) {}
             showStatus('Ви вже записані на цю гру');
             updateActionState(true);
-            await loadManageSection();
+            loadManageSection();
           } else if (err.status === 409 && err.code === 'GAME_FULL') {
+            if (currentGame) {
+              currentGame.current_players = currentGame.max_players;
+              renderGameCounter();
+              updateActionState(false);
+            }
             App.showError(new Error('Вільних місць немає'), errorContainer);
-            await fetchGameDetails();
-            await loadManageSection();
+            syncGameDetailsQuietly();
           } else {
             App.showError(err, errorContainer);
           }
@@ -458,9 +495,13 @@
           } catch (e) {}
 
           showStatus('Запис скасовано');
-          await fetchGameDetails();
+          if (currentGame) {
+            currentGame.current_players = Math.max((currentGame.current_players || 0) - 1, 0);
+            renderGameCounter();
+          }
           updateActionState(false);
-          await loadManageSection();
+          loadManageSection();
+          syncGameDetailsQuietly();
         } catch (err) {
           unenrollBtn.disabled = false;
           App.showError(err, errorContainer);
