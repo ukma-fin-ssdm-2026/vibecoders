@@ -216,6 +216,24 @@
         }
       }
 
+      async function canManageCurrentGame() {
+        if (!session || !session.token) {
+          return false;
+        }
+        if (session.role === 'player') {
+          return false;
+        }
+        try {
+          var me = await App.getMe();
+          if (!me) return false;
+          if (me.role === 'owner') return true;
+          if (currentGame && me.id === currentGame.master_id) return true;
+          return false;
+        } catch (e) {
+          return false;
+        }
+      }
+
       function updateGameView(game) {
         currentGame = game;
         gameTitle.textContent = game.title;
@@ -238,17 +256,13 @@
         if (editGameBtn) {
           editGameBtn.href = 'create-game.html?id=' + encodeURIComponent(gameId);
           editGameBtn.style.display = 'none';
-          if (session && session.token) {
-            App.getMe().then(function (me) {
-              if (me && (me.role === 'owner' || (currentGame && me.id === currentGame.master_id))) {
-                editGameBtn.style.display = 'inline-block';
-              } else {
-                editGameBtn.style.display = 'none';
-              }
-            }).catch(function () {
+          canManageCurrentGame().then(function (canManage) {
+            if (canManage) {
+              editGameBtn.style.display = 'inline-block';
+            } else {
               editGameBtn.style.display = 'none';
-            });
-          }
+            }
+          });
         }
 
         gameDetails.style.display = 'block';
@@ -289,24 +303,10 @@
       }
 
       async function loadManageSection() {
-        if (!session || !session.token) {
+        var canManage = await canManageCurrentGame();
+        if (!canManage) {
           manageSection.hidden = true;
           return;
-        }
-
-        if (session.role !== 'master' && session.role !== 'owner') {
-          manageSection.hidden = true;
-          return;
-        }
-
-        if (session.role === 'master') {
-          try {
-            var me = await App.getMe();
-            if (me && me.id && currentGame && currentGame.master_id && me.id !== currentGame.master_id) {
-              manageSection.hidden = true;
-              return;
-            }
-          } catch (e) {}
         }
 
         try {
