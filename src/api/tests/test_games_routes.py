@@ -206,6 +206,41 @@ def test_patch_game_changes_only_given_fields(client, master_headers):
 
 
 @pytest.mark.requirement("US-002")
+def test_patch_game_can_keep_its_existing_schedule(client, master_headers):
+    response = client.patch(
+        "/api/v1/games/game_1",
+        json={"starts_at": "2026-10-10T18:00:00Z"},
+        headers=master_headers,
+    )
+    assert response.status_code == 200
+    assert response.json()["starts_at"].startswith("2026-10-10T18:00:00")
+
+
+@pytest.mark.requirement("US-002")
+def test_patch_game_allows_editing_past_game(client, master_headers):
+    GAMES["game_1"] = GAMES["game_1"].model_copy(
+        update={"starts_at": datetime(2000, 10, 10, 18, 0, tzinfo=timezone.utc)}
+    )
+    response = client.patch("/api/v1/games/game_1", json={"title": "Архівна гра"}, headers=master_headers)
+    assert response.status_code == 200
+    assert response.json()["title"] == "Архівна гра"
+
+
+@pytest.mark.requirement("US-002")
+def test_patch_game_below_enrolled_count_returns_409(client, master_headers):
+    ENROLLMENTS["game_1"] = ENROLLMENTS["game_1"] * 3
+    response = client.patch("/api/v1/games/game_1", json={"max_players": 2}, headers=master_headers)
+    assert response.status_code == 409
+    assert response.json() == {
+        "error": {
+            "code": "MAX_PLAYERS_BELOW_ENROLLED",
+            "message": "Нове обмеження менше за кількість уже записаних гравців",
+            "details": [],
+        }
+    }
+
+
+@pytest.mark.requirement("US-002")
 def test_patch_game_empty_body_returns_400(client, master_headers):
     response = client.patch("/api/v1/games/game_1", json={}, headers=master_headers)
     assert response.status_code == 400
