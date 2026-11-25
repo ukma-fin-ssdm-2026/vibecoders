@@ -26,7 +26,10 @@
 
       <!-- Картка деталей гри -->
       <article id="game-details" class="card game-detail-card" style="display: none;">
-        <h1 id="game-title">Завантаження…</h1>
+        <div class="game-header-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+          <h1 id="game-title" style="margin-top: 0;">Завантаження…</h1>
+          <a id="edit-game-btn" href="#" class="btn btn-secondary btn-sm" style="display: none; white-space: nowrap;">Редагувати</a>
+        </div>
 
         <div class="game-info-grid">
           <p class="game-meta">
@@ -121,6 +124,7 @@
       var gameTime = document.getElementById('game-time');
       var gamePlayersCount = document.getElementById('game-players-count');
       var gameFullBadge = document.getElementById('game-full-badge');
+      var editGameBtn = document.getElementById('edit-game-btn');
 
       var guestAction = document.getElementById('guest-action');
       var userAction = document.getElementById('user-action');
@@ -223,6 +227,23 @@
         } catch (e) {}
 
         updateActionState(isEnrolled);
+
+        if (editGameBtn) {
+          editGameBtn.href = 'create-game.html?id=' + encodeURIComponent(gameId);
+          editGameBtn.style.display = 'none';
+          if (session && session.token) {
+            App.getMe().then(function (me) {
+              if (me && (me.role === 'owner' || (currentGame && me.id === currentGame.master_id))) {
+                editGameBtn.style.display = 'inline-block';
+              } else {
+                editGameBtn.style.display = 'none';
+              }
+            }).catch(function () {
+              editGameBtn.style.display = 'none';
+            });
+          }
+        }
+
         gameDetails.style.display = 'block';
       }
 
