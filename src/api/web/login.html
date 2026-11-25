@@ -123,7 +123,7 @@
           try {
             next = decodeURIComponent(next);
           } catch (e) {}
-          if (/^[a-z0-9-]+\.html(\?id=game_\d+)?$/.test(next)) {
+          if (/^[a-z0-9-]+\.html(\?[a-zA-Z0-9_=&%-]+)?$/.test(next)) {
             return next;
           }
         }

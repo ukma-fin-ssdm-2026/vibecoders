@@ -246,7 +246,15 @@
       if (!response.ok) {
         if (response.status === 401 && session && session.token) {
           App.clearSession();
-          window.location.href = 'index.html';
+          var currentPath = (typeof window !== 'undefined' && window.location && window.location.pathname) || '';
+          var page = currentPath.substring(currentPath.lastIndexOf('/') + 1) || 'index.html';
+          var currentSearch = (typeof window !== 'undefined' && window.location && window.location.search) || '';
+          var nextTarget = page + currentSearch;
+          if (page === 'login.html' || page === 'register.html') {
+            window.location.href = 'login.html';
+          } else {
+            window.location.href = 'login.html?next=' + encodeURIComponent(nextTarget);
+          }
         }
 
         var errCode = (data && data.error && data.error.code) || 'HTTP_' + response.status;
