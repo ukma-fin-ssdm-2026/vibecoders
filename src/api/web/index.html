@@ -83,7 +83,9 @@
           }).length;
           notificationsCount.textContent = 'Нові сповіщення: ' + unreadCount;
           notificationsCount.style.display = 'block';
-        } catch (err) {}
+        } catch (err) {
+          App.showError(err, errorContainer);
+        }
       }
 
       function updateView() {

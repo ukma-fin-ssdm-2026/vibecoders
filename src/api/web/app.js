@@ -246,7 +246,15 @@
       if (!response.ok) {
         if (response.status === 401 && session && session.token) {
           App.clearSession();
-          window.location.href = 'index.html';
+          var currentPath = (typeof window !== 'undefined' && window.location && window.location.pathname) || '';
+          var page = currentPath.substring(currentPath.lastIndexOf('/') + 1) || 'index.html';
+          var currentSearch = (typeof window !== 'undefined' && window.location && window.location.search) || '';
+          var nextTarget = page + currentSearch;
+          if (page === 'login.html' || page === 'register.html') {
+            window.location.href = 'login.html';
+          } else {
+            window.location.href = 'login.html?next=' + encodeURIComponent(nextTarget);
+          }
         }
 
         var errCode = (data && data.error && data.error.code) || 'HTTP_' + response.status;
@@ -266,6 +274,29 @@
       return data;
     },
 
+    describeError: function (err) {
+      if (!err) return '';
+      if (err.status === 429) {
+        if (typeof err.retryAfter === 'number' && err.retryAfter > 0) {
+          return 'Забагато невдалих спроб входу. Спробуйте через ' + err.retryAfter + ' с';
+        }
+        return 'Забагато невдалих спроб входу. Спробуйте пізніше';
+      }
+      if (err.status === 503 || err.code === 'SERVICE_UNAVAILABLE') {
+        if (typeof err.retryAfter === 'number' && err.retryAfter > 0) {
+          return 'Сервіс тимчасово недоступний. Спробуйте через ' + err.retryAfter + ' с';
+        }
+        return 'Сервіс тимчасово недоступний. Спробуйте пізніше';
+      }
+      if (err.code === 'TIMEOUT') {
+        return 'Сервер не відповів вчасно. Спробуйте пізніше';
+      }
+      if (err.code === 'NETWORK_ERROR') {
+        return 'Не вдалося з\'єднатися із сервером. Перевірте підключення до інтернету';
+      }
+      return err.message || 'Виникла невідома помилка';
+    },
+
     showError: function (err, container) {
       if (!container) return;
       while (container.firstChild) {
@@ -278,10 +309,7 @@
       }
 
       container.style.display = 'block';
-      var messageText = err.message || 'Виникла невідома помилка';
-      if (err.status === 429 && err.retryAfter) {
-        messageText += '. Спробуйте через ' + err.retryAfter + ' с';
-      }
+      var messageText = App.describeError(err);
 
       var msgNode = document.createTextNode(messageText);
       container.appendChild(msgNode);

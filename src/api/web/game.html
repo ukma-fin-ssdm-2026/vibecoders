@@ -172,7 +172,9 @@
               roomsMap[data.items[i].id] = data.items[i].name;
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          App.showError(e, errorContainer);
+        }
       }
 
       function updateActionState(isEnrolled) {
@@ -203,6 +205,35 @@
         }
       }
 
+      function renderGameCounter() {
+        if (!currentGame) return;
+        gamePlayersCount.textContent = currentGame.current_players + '/' + currentGame.max_players;
+
+        if (currentGame.current_players >= currentGame.max_players) {
+          gameFullBadge.style.display = 'inline-block';
+        } else {
+          gameFullBadge.style.display = 'none';
+        }
+      }
+
+      async function canManageCurrentGame() {
+        if (!session || !session.token) {
+          return false;
+        }
+        if (session.role === 'player') {
+          return false;
+        }
+        try {
+          var me = await App.getMe();
+          if (!me) return false;
+          if (me.role === 'owner') return true;
+          if (currentGame && me.id === currentGame.master_id) return true;
+          return false;
+        } catch (e) {
+          return false;
+        }
+      }
+
       function updateGameView(game) {
         currentGame = game;
         gameTitle.textContent = game.title;
@@ -213,13 +244,7 @@
         var slotStr = App.formatSlot(game.starts_at, game.duration_minutes);
         gameTime.textContent = formattedDate + (slotStr ? ' (' + slotStr + ')' : '');
 
-        gamePlayersCount.textContent = game.current_players + '/' + game.max_players;
-
-        if (game.current_players >= game.max_players) {
-          gameFullBadge.style.display = 'inline-block';
-        } else {
-          gameFullBadge.style.display = 'none';
-        }
+        renderGameCounter();
 
         var isEnrolled = false;
         try {
@@ -231,20 +256,36 @@
         if (editGameBtn) {
           editGameBtn.href = 'create-game.html?id=' + encodeURIComponent(gameId);
           editGameBtn.style.display = 'none';
-          if (session && session.token) {
-            App.getMe().then(function (me) {
-              if (me && (me.role === 'owner' || (currentGame && me.id === currentGame.master_id))) {
-                editGameBtn.style.display = 'inline-block';
-              } else {
-                editGameBtn.style.display = 'none';
-              }
-            }).catch(function () {
+          canManageCurrentGame().then(function (canManage) {
+            if (canManage) {
+              editGameBtn.style.display = 'inline-block';
+            } else {
               editGameBtn.style.display = 'none';
-            });
-          }
+            }
+          });
         }
 
         gameDetails.style.display = 'block';
+      }
+
+      async function syncGameDetailsQuietly() {
+        try {
+          var game = await App.api('GET', '/games/' + encodeURIComponent(gameId));
+          if (game && currentGame) {
+            var changed = (currentGame.current_players !== game.current_players) ||
+                          (currentGame.max_players !== game.max_players);
+            currentGame.current_players = game.current_players;
+            currentGame.max_players = game.max_players;
+            if (changed) {
+              renderGameCounter();
+              var isEnrolled = false;
+              try {
+                isEnrolled = sessionStorage.getItem('enrolled_game_' + gameId) === 'true';
+              } catch (e) {}
+              updateActionState(isEnrolled);
+            }
+          }
+        } catch (e) {}
       }
 
       async function fetchGameDetails() {
@@ -262,24 +303,10 @@
       }
 
       async function loadManageSection() {
-        if (!session || !session.token) {
+        var canManage = await canManageCurrentGame();
+        if (!canManage) {
           manageSection.hidden = true;
           return;
-        }
-
-        if (session.role !== 'master' && session.role !== 'owner') {
-          manageSection.hidden = true;
-          return;
-        }
-
-        if (session.role === 'master') {
-          try {
-            var me = await App.getMe();
-            if (me && me.id && currentGame && currentGame.master_id && me.id !== currentGame.master_id) {
-              manageSection.hidden = true;
-              return;
-            }
-          } catch (e) {}
         }
 
         try {
@@ -347,12 +374,16 @@
         try {
           await App.api('DELETE', '/games/' + encodeURIComponent(gameId) + '/players/' + encodeURIComponent(userId));
           showStatus('Гравця видалено');
-          await fetchGameDetails();
+          if (currentGame) {
+            currentGame.current_players = Math.max((currentGame.current_players || 0) - 1, 0);
+            renderGameCounter();
+          }
           await loadManageSection();
+          syncGameDetailsQuietly();
         } catch (err) {
           if (err.status === 404 && err.code === 'ENROLLMENT_NOT_FOUND') {
-            await fetchGameDetails();
             await loadManageSection();
+            syncGameDetailsQuietly();
           } else {
             App.showError(err, errorContainer);
           }
@@ -394,9 +425,13 @@
           } catch (e) {}
 
           showStatus('Ви записані на гру');
-          await fetchGameDetails();
+          if (currentGame) {
+            currentGame.current_players = Math.min((currentGame.current_players || 0) + 1, currentGame.max_players);
+            renderGameCounter();
+          }
           updateActionState(true);
-          await loadManageSection();
+          loadManageSection();
+          syncGameDetailsQuietly();
         } catch (err) {
           enrollBtn.disabled = false;
 
@@ -406,11 +441,15 @@
             } catch (e) {}
             showStatus('Ви вже записані на цю гру');
             updateActionState(true);
-            await loadManageSection();
+            loadManageSection();
           } else if (err.status === 409 && err.code === 'GAME_FULL') {
+            if (currentGame) {
+              currentGame.current_players = currentGame.max_players;
+              renderGameCounter();
+              updateActionState(false);
+            }
             App.showError(new Error('Вільних місць немає'), errorContainer);
-            await fetchGameDetails();
-            await loadManageSection();
+            syncGameDetailsQuietly();
           } else {
             App.showError(err, errorContainer);
           }
@@ -456,9 +495,13 @@
           } catch (e) {}
 
           showStatus('Запис скасовано');
-          await fetchGameDetails();
+          if (currentGame) {
+            currentGame.current_players = Math.max((currentGame.current_players || 0) - 1, 0);
+            renderGameCounter();
+          }
           updateActionState(false);
-          await loadManageSection();
+          loadManageSection();
+          syncGameDetailsQuietly();
         } catch (err) {
           unenrollBtn.disabled = false;
           App.showError(err, errorContainer);
