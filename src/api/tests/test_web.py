@@ -217,3 +217,52 @@ def test_edit_game_access_control(client, player_headers, owner_headers):
     )
     assert owner_resp.status_code == 200
     assert owner_resp.json()["title"] == "Гра відредагована власником"
+
+
+@pytest.mark.technical
+def test_web_app_describe_error_and_show_error(client):
+    response = client.get("/app/app.js")
+    assert response.status_code == 200
+    js = response.text
+    assert "describeError" in js
+    assert "Забагато невдалих спроб входу" in js
+    assert "Сервіс тимчасово недоступний" in js
+    assert "Сервер не відповів вчасно" in js
+    assert "Не вдалося" in js and "сервером" in js
+
+
+@pytest.mark.technical
+def test_web_401_redirect_to_login_with_next(client):
+    app_js_resp = client.get("/app/app.js")
+    assert app_js_resp.status_code == 200
+    assert "login.html?next=" in app_js_resp.text
+
+    login_html_resp = client.get("/app/login.html")
+    assert login_html_resp.status_code == 200
+    assert "getNextUrl" in login_html_resp.text
+
+
+@pytest.mark.requirement("PERF-001", "US-001")
+def test_web_game_optimistic_seat_counter(client):
+    response = client.get("/app/game.html")
+    assert response.status_code == 200
+    html = response.text
+    assert "renderGameCounter" in html
+    assert "syncGameDetailsQuietly" in html
+    assert "(currentGame.current_players || 0) + 1" in html
+    assert "(currentGame.current_players || 0) - 1" in html
+
+
+@pytest.mark.requirement("US-007", "SEC-002")
+def test_web_game_player_list_role_access(client, player_headers):
+    # Перевірка розмітки: спільна функція перевірки прав та відсутність запиту для player
+    response = client.get("/app/game.html")
+    assert response.status_code == 200
+    html = response.text
+    assert "canManageCurrentGame" in html
+    assert "session.role === 'player'" in html
+
+    # Перевірка контракту бекенду (B7): звичайний гравець отримує 403 при спробі списку гравців
+    players_resp = client.get("/api/v1/games/game_1/players", headers=player_headers)
+    assert players_resp.status_code == 403
+    assert players_resp.json()["error"]["code"] == "FORBIDDEN"
