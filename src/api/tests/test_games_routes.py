@@ -206,6 +206,41 @@ def test_patch_game_changes_only_given_fields(client, master_headers):
 
 
 @pytest.mark.requirement("US-002")
+def test_patch_game_can_keep_its_existing_schedule(client, master_headers):
+    response = client.patch(
+        "/api/v1/games/game_1",
+        json={"starts_at": "2026-10-10T18:00:00Z"},
+        headers=master_headers,
+    )
+    assert response.status_code == 200
+    assert response.json()["starts_at"].startswith("2026-10-10T18:00:00")
+
+
+@pytest.mark.requirement("US-002")
+def test_patch_game_allows_editing_past_game(client, master_headers):
+    GAMES["game_1"] = GAMES["game_1"].model_copy(
+        update={"starts_at": datetime(2000, 10, 10, 18, 0, tzinfo=timezone.utc)}
+    )
+    response = client.patch("/api/v1/games/game_1", json={"title": "Архівна гра"}, headers=master_headers)
+    assert response.status_code == 200
+    assert response.json()["title"] == "Архівна гра"
+
+
+@pytest.mark.requirement("US-002")
+def test_patch_game_below_enrolled_count_returns_409(client, master_headers):
+    ENROLLMENTS["game_1"] = ENROLLMENTS["game_1"] * 3
+    response = client.patch("/api/v1/games/game_1", json={"max_players": 2}, headers=master_headers)
+    assert response.status_code == 409
+    assert response.json() == {
+        "error": {
+            "code": "MAX_PLAYERS_BELOW_ENROLLED",
+            "message": "Нове обмеження менше за кількість уже записаних гравців",
+            "details": [],
+        }
+    }
+
+
+@pytest.mark.requirement("US-002")
 def test_patch_game_empty_body_returns_400(client, master_headers):
     response = client.patch("/api/v1/games/game_1", json={}, headers=master_headers)
     assert response.status_code == 400
@@ -243,9 +278,9 @@ def test_delete_game_forbidden_for_player_and_unauthenticated(client, player_hea
 
 
 @pytest.mark.requirement("US-007")
-def test_list_players_requires_authentication(client, player_headers):
+def test_list_players_requires_authentication(client, master_headers):
     assert client.get("/api/v1/games/game_1/players").status_code == 401
-    body = client.get("/api/v1/games/game_1/players", headers=player_headers).json()
+    body = client.get("/api/v1/games/game_1/players", headers=master_headers).json()
     assert body["current_players"] == 1
     assert body["max_players"] == 5
     assert body["players"][0]["user_id"] == "user_2"
