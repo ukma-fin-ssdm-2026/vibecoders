@@ -60,7 +60,7 @@ def test_register_creates_player_with_hashed_password_and_token(client):
                 "/api/v1/games/game_1/players",
                 headers={"Authorization": f"Bearer {body['access_token']}"},
             ).status_code
-            == 200
+            == 403
         )
     finally:
         db.close()
@@ -110,11 +110,12 @@ def test_login_delegates_password_check_to_verify_password(client):
 
 
 @pytest.mark.technical
-def test_issued_token_grants_access_to_protected_endpoint(client):
+def test_issued_player_token_is_forbidden_from_game_player_list(client):
     login = client.post("/api/v1/auth/login", json={"email": "player@club.test", "password": "player-pass-1"})
     headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
     response = client.get("/api/v1/games/game_1/players", headers=headers)
-    assert response.status_code == 200
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "FORBIDDEN"
 
 
 # SEC-003: після 5 невдалих спроб входу за 15 хвилин акаунт блокується на 15 хвилин.
