@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Зрозумілі повідомлення про помилки API та тайм-аути/мережеві збої через `App.describeError`, оновлення лічильника вільних місць без перезавантаження (PERF-001) та розмежування перегляду списку гравців за ролями (U2, `game.html`).
+- Перенаправлення 401 при наявній сесії на `login.html?next=...` з підтримкою безпечного повернення до поточної сторінки (U2).
 - Інтерфейс редагування гри у веб-клієнті (FR-002, U1): підтримка режиму редагування на `create-game.html` через PATCH-запити зі збереженням лише змінених полів, перевірка прав майстра/власника та кнопка «Редагувати» на `game.html`.
 - Додано скрипт `scripts/dora_metrics.py` для автоматичного розрахунку метрик DORA за історією запусків GitHub Actions і знеособленого експорту JSON.
 - Додано ручний workflow `Flaky tests` для повторного запуску тестів і звітування про нестабільні результати.
@@ -17,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Підключено відображення помилок через `App.showError` для раніше проковтнутих catch-блоків на сторінках `games.html`, `index.html` та `game.html` (U2).
 - Обмежено аргументи GitHub CLI, нормалізовано дати перед API-викликом і дозволено лише фіксовані шляхи звітів, щоб недовірені значення не ставали аргументами команд чи шляхами запису.
 - Remove duplicate definitions and redundant initial engine in `db.py` (R-05).
 - Run route handlers in the thread pool instead of the event loop: `async def` without `await` replaced with `def` (R-08).
@@ -28,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Tests
 
+- Тести опису помилок, 401-редиректу, оптимістичного лічильника місць та обмеження списку гравців за ролями (`test_web.py`).
 - Тести розмітки, прав доступу, валідації та оновлення календаря для редагування гри в інтерфейсі (FR-002) у `test_web.py`.
 - Reliability tests for R-08, R-09, R-12, R-13, R-14 and R-15: `test_reliability_sync_handlers.py`, `test_reliability_login_lockout.py`, `test_reliability_frontend.py`, `test_reliability_game_queries.py`, `test_reliability_cache.py`.
 
